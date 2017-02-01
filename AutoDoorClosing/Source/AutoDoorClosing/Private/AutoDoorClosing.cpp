@@ -11,7 +11,7 @@ DECLARE_HOOK(GotoDoorState, void, APrimalStructureDoor*, char);
 
 void LoadConfig();
 
-// Our timer
+// Timer
 float ClosingTimer = 5.0;
 
 void Init()
