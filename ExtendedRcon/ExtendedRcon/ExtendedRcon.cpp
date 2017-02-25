@@ -1,56 +1,46 @@
-#include "RconPluginPrivatePCH.h"
-#include "AllowWindowsPlatformTypes.h"
 #include <windows.h>
 #include <iostream>
+#include <sstream>
 #include "API/Base.h"
+#include "Tools.h"
 
-AShooterPlayerController* FindPlayerControllerFromSteamId(unsigned __int64 steamId)
-{
-	AShooterPlayerController* result = nullptr;
-
-	auto playerControllers = Ark::GetWorld()->GetPlayerControllerListField();
-	for (auto playerController : playerControllers)
-	{
-		APlayerState* playerState = playerController->GetPlayerStateField();
-		__int64 currentSteamId = playerState->GetUniqueIdField()->UniqueNetId->GetUniqueNetIdField();
-
-		if (currentSteamId == steamId)
-		{
-			AShooterPlayerController* aShooterPC = static_cast<AShooterPlayerController*>(playerController.Get());
-
-			result = aShooterPC;
-			break;
-		}
-	}
-
-	return result;
-}
+#pragma comment(lib, "ArkApi.lib")
 
 void GiveItemNum(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
 {
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(5))
 	{
-		__int64 steamId = FCString::Atoi64(*Parsed[1]);
+		unsigned __int64 steamId;
+		int itemId;
+		int quantity;
+		float quality;
+		bool forceBP;
+
+		try
+		{
+			steamId = std::stoull(*Parsed[1]);
+			itemId = std::stoi(*Parsed[2]);
+			quantity = std::stoi(*Parsed[3]);
+			quality = std::stof(*Parsed[4]);
+			forceBP = std::stoi(*Parsed[5]) != 0;
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
 		if (aShooterPC)
 		{
-			int itemId = FCString::Atoi(*Parsed[2]);
-			int quantity = FCString::Atoi(*Parsed[3]);
-			float quality = FCString::Atof(*Parsed[4]);
-			bool forceBP = Parsed[5] != "0";
-
 			aShooterPC->GiveItemNum(itemId, quantity, quality, forceBP);
 
 			// Send a reply
-			FString reply = "Successfully gave items\n";
+			FString reply = L"Successfully gave items\n";
 			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 		}
 	}
@@ -61,25 +51,34 @@ void AddExperience(RCONClientConnection* rconClientConnection, RCONPacket* rconP
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(4))
 	{
-		__int64 steamId = FCString::Atoi64(*Parsed[1]);
+		unsigned __int64 steamId;
+		float howMuch;
+		bool fromTribeShare;
+		bool bPreventSharing;
+
+		try
+		{
+			steamId = std::stoull(*Parsed[1]);
+			howMuch = std::stof(*Parsed[2]);
+			fromTribeShare = std::stoi(*Parsed[3]) != 0;
+			bPreventSharing = std::stoi(*Parsed[4]) != 0;
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
 		if (aShooterPC)
 		{
-			float howMuch = FCString::Atof(*Parsed[2]);
-			bool fromTribeShare = Parsed[3] != "0";
-			bool bPreventSharing = Parsed[4] != "0";
-
 			aShooterPC->AddExperience(howMuch, fromTribeShare, bPreventSharing);
 
 			// Send a reply
-			FString reply = "Successfully added experience\n";
+			FString reply = L"Successfully added experience\n";
 			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 		}
 	}
@@ -90,25 +89,34 @@ void SetPlayerPos(RCONClientConnection* rconClientConnection, RCONPacket* rconPa
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(4))
 	{
-		__int64 steamId = FCString::Atoi64(*Parsed[1]);
+		unsigned __int64 steamId;
+		float x;
+		float y;
+		float z;
+
+		try
+		{
+			steamId = std::stoull(*Parsed[1]);
+			x = std::stof(*Parsed[2]);
+			y = std::stof(*Parsed[3]);
+			z = std::stof(*Parsed[4]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
 		if (aShooterPC)
 		{
-			float x = FCString::Atof(*Parsed[2]);
-			float y = FCString::Atof(*Parsed[3]);
-			float z = FCString::Atof(*Parsed[4]);
-
 			aShooterPC->SetPlayerPos(x, y, z);
 
 			// Send a reply
-			FString reply = "Successfully teleported player\n";
+			FString reply = L"Successfully teleported player\n";
 			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 		}
 	}
@@ -119,13 +127,20 @@ void GetPlayerPos(RCONClientConnection* rconClientConnection, RCONPacket* rconPa
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(1))
 	{
-		__int64 steamId = FCString::Atoi64(*Parsed[1]);
+		unsigned __int64 steamId;
+
+		try
+		{
+			steamId = std::stoull(*Parsed[1]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
 		if (aShooterPC)
@@ -133,7 +148,43 @@ void GetPlayerPos(RCONClientConnection* rconClientConnection, RCONPacket* rconPa
 			FVector pos = aShooterPC->GetDefaultActorLocationField();
 
 			// Send a reply
-			FString reply = pos.ToString() + "\n";
+			wchar_t buffer[256];
+			swprintf_s(buffer, TEXT("%s\n"), *pos.ToString());
+
+			FString reply(buffer);
+			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
+		}
+	}
+}
+
+void KillPlayer(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
+{
+	FString msg = rconPacket->Body;
+
+	TArray<FString> Parsed;
+	msg.ParseIntoArray(&Parsed, L" ", true);
+
+	if (Parsed.IsValidIndex(1))
+	{
+		unsigned __int64 steamId;
+
+		try
+		{
+			steamId = std::stoull(*Parsed[1]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
+
+		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
+		if (aShooterPC)
+		{
+			UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(aShooterPC->GetCheatManagerField());
+			cheatManager->KillPlayer(aShooterPC->GetLinkedPlayerIDField());
+
+			// Send a reply
+			FString reply = L"Successfully killed player\n";
 			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 		}
 	}
@@ -144,18 +195,26 @@ void TeleportToPlayer(RCONClientConnection* rconClientConnection, RCONPacket* rc
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(2))
 	{
-		__int64 steamId = FCString::Atoi64(*Parsed[1]);
+		unsigned __int64 steamId;
+		unsigned __int64 steamId2;
+
+		try
+		{
+			steamId = std::stoull(*Parsed[1]);
+			steamId2 = std::stoull(*Parsed[2]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
 		if (aShooterPC)
 		{
-			__int64 steamId2 = FCString::Atoi64(*Parsed[2]);
 			AShooterPlayerController* aShooterPC2 = FindPlayerControllerFromSteamId(steamId2);
 			if (aShooterPC2)
 			{
@@ -163,7 +222,7 @@ void TeleportToPlayer(RCONClientConnection* rconClientConnection, RCONPacket* rc
 				cheatManager->TeleportToPlayer(aShooterPC2->GetLinkedPlayerIDField());
 
 				// Send a reply
-				FString reply = "Successfully teleported player\n";
+				FString reply = L"Successfully teleported player\n";
 				rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 			}
 		}
@@ -175,13 +234,20 @@ void ListPlayerDinos(RCONClientConnection* rconClientConnection, RCONPacket* rco
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(1))
 	{
-		__int64 steamId = FCString::Atoi64(*Parsed[1]);
+		unsigned __int64 steamId;
+
+		try
+		{
+			steamId = std::stoull(*Parsed[1]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
 		if (aShooterPC)
@@ -190,12 +256,15 @@ void ListPlayerDinos(RCONClientConnection* rconClientConnection, RCONPacket* rco
 			UGameplayStatics::GetAllActorsOfClass(Ark::GetWorld(), APrimalDinoCharacter::GetPrivateStaticClass(), FoundActors);
 
 			FString* pDinoName = new FString();
-			FString reply = "";
+
+			std::stringstream ss;
 
 			int playerTeam = aShooterPC->GetTargetingTeamField();
 
-			for (AActor* actor : *FoundActors)
+			for (uint32_t i = 0; i < FoundActors->Num(); i++)
 			{
+				AActor* actor = FoundActors->Data[i];
+
 				APrimalDinoCharacter* dino = static_cast<APrimalDinoCharacter*>(actor);
 
 				int dinoTeam = dino->GetTargetingTeamField();
@@ -204,45 +273,51 @@ void ListPlayerDinos(RCONClientConnection* rconClientConnection, RCONPacket* rco
 				{
 					dino->GetDescriptiveName(pDinoName);
 
-					reply += *pDinoName + ", ID1=" + FString::FromInt(dino->GetDinoID1Field()) + ", ID2=" + FString::FromInt(dino->GetDinoID2Field()) + "\n";
+					ss << pDinoName->c_str() << ", ID1=" << dino->GetDinoID1Field() << ", ID2=" << dino->GetDinoID2Field() << "\n";
 				}
 			}
 
-			FMemory::Free(FoundActors);
-			FMemory::Free(pDinoName);
+			wchar_t* wcstring = ConvertToWideStr(ss.str());
 
+			FString reply(wcstring);
 			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
+
+			delete FoundActors;
+			delete pDinoName;
+			delete[] wcstring;
 		}
 	}
 }
 
-void ListTribes(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
+void GetTribeIdOfPlayer(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
 {
-	FString reply = "";
+	FString msg = rconPacket->Body;
 
-	AShooterGameMode* gameMode = Ark::GetGameMode();
+	TArray<FString> Parsed;
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
-	FTribeData* tribeData = new FTribeData();
-
-	auto tribeIds = gameMode->GetTribesIdsField();
-	for (auto& tribeId : tribeIds)
+	if (Parsed.IsValidIndex(1))
 	{
-		gameMode->GetTribeData(tribeData, tribeId);
+		unsigned __int64 playerId;
 
-		if (tribeData)
+		try
 		{
-			int tribeDataId = tribeData->GetTribeIDField();
-
-			if (tribeDataId)
-			{
-				reply += tribeData->GetTribeNameField() + " - " + FString::FromInt(tribeDataId) + "\n";
-			}
+			playerId = std::stoull(*Parsed[1]);
 		}
+		catch (const std::exception&)
+		{
+			return;
+		}
+
+		AShooterGameMode* gameMode = Ark::GetGameMode();
+		int tribeId = gameMode->GetTribeIDOfPlayerID(playerId);
+
+		wchar_t buffer[256];
+		swprintf_s(buffer, TEXT("Tribe ID - %d\n"), tribeId);
+
+		FString reply(buffer);
+		rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 	}
-
-	FMemory::Free(tribeData);
-
-	rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 }
 
 void SpawnDino(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
@@ -250,20 +325,27 @@ void SpawnDino(RCONClientConnection* rconClientConnection, RCONPacket* rconPacke
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(3))
 	{
-		__int64 steamId = FCString::Atoi64(*Parsed[1]);
+		unsigned __int64 steamId;
+		int dinoLvl;
+
+		try
+		{
+			steamId = std::stoull(*Parsed[1]);
+			dinoLvl = std::stoi(*Parsed[3]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
 		if (aShooterPC)
 		{
 			FString bpPath = Parsed[2];
-
-			int dinoLvl = FCString::Atoi(*Parsed[3]);
 
 			AActor* actor = aShooterPC->SpawnActor(&bpPath, 50, 0, 0, true);
 			if (actor && actor->IsA(APrimalDinoCharacter::GetPrivateStaticClass()))
@@ -273,7 +355,7 @@ void SpawnDino(RCONClientConnection* rconClientConnection, RCONPacket* rconPacke
 				dino->BeginPlay();
 
 				// Send a reply
-				FString reply = "Successfully spawned dino\n";
+				FString reply = L"Successfully spawned dino\n";
 				rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 			}
 		}
@@ -285,26 +367,33 @@ void SpawnTamed(RCONClientConnection* rconClientConnection, RCONPacket* rconPack
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(3))
 	{
-		__int64 steamId = FCString::Atoi64(*Parsed[1]);
+		unsigned __int64 steamId;
+		int dinoLvl;
+
+		try
+		{
+			steamId = std::stoull(*Parsed[1]);
+			dinoLvl = std::stoi(*Parsed[3]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
 		if (aShooterPC)
 		{
 			FString className = Parsed[2];
 
-			int dinoLvl = FCString::Atoi(*Parsed[3]);
-
 			UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(aShooterPC->GetCheatManagerField());
 			cheatManager->GMSummon(&className, dinoLvl);
 
 			// Send a reply
-			FString reply = "Successfully spawned dino\n";
+			FString reply = L"Successfully spawned dino\n";
 			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 		}
 	}
@@ -315,9 +404,7 @@ void SpawnAtPos(RCONClientConnection* rconClientConnection, RCONPacket* rconPack
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(5))
 	{
@@ -326,13 +413,24 @@ void SpawnAtPos(RCONClientConnection* rconClientConnection, RCONPacket* rconPack
 		AShooterPlayerController* aShooterPC = static_cast<AShooterPlayerController*>(aPC);
 		if (aShooterPC)
 		{
+			int dinoLvl;
+			float x;
+			float y;
+			float z;
+
+			try
+			{
+				dinoLvl = std::stoi(*Parsed[2]);
+				x = std::stof(*Parsed[3]);
+				y = std::stof(*Parsed[4]);
+				z = std::stof(*Parsed[5]);
+			}
+			catch (const std::exception&)
+			{
+				return;
+			}
+
 			FString bpPath = Parsed[1];
-
-			int dinoLvl = FCString::Atoi(*Parsed[2]);
-
-			float x = FCString::Atof(*Parsed[3]);
-			float y = FCString::Atof(*Parsed[4]);
-			float z = FCString::Atof(*Parsed[5]);
 
 			AActor* actor = aShooterPC->SpawnActor(&bpPath, 100, 0, 0, true);
 			if (actor && actor->IsA(APrimalDinoCharacter::GetPrivateStaticClass()))
@@ -347,7 +445,7 @@ void SpawnAtPos(RCONClientConnection* rconClientConnection, RCONPacket* rconPack
 				dino->BeginPlay();
 
 				// Send a reply
-				FString reply = "Successfully spawned dino\n";
+				FString reply = L"Successfully spawned dino\n";
 				rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 			}
 		}
@@ -359,31 +457,45 @@ void GetTribeLog(RCONClientConnection* rconClientConnection, RCONPacket* rconPac
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(1))
 	{
-		__int64 tribeId = FCString::Atoi64(*Parsed[1]);
+		__int64 tribeId;
 
-		FString reply = "";
+		try
+		{
+			tribeId = std::stoull(*Parsed[1]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		FTribeData* tribeData = new FTribeData();
 		Ark::GetGameMode()->GetTribeData(tribeData, tribeId);
 
 		if (tribeData)
 		{
+			std::stringstream ss;
+
 			auto logs = tribeData->GetTribeLogField();
-			for (FString log : logs)
+			for (uint32_t i = 0; i < logs.Num(); i++)
 			{
-				reply += log + "\n";
+				auto log = logs[i];
+
+				ss << log.c_str() << "\n";
 			}
+
+			wchar_t* wcstring = ConvertToWideStr(ss.str());
+
+			FString reply(wcstring);
+			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
+
+			delete[] wcstring;
 		}
 
-		FMemory::Free(tribeData);
-
-		rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
+		delete tribeData;
 	}
 }
 
@@ -392,21 +504,32 @@ void GetDinoPos(RCONClientConnection* rconClientConnection, RCONPacket* rconPack
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(2))
 	{
-		int dinoId1 = FCString::Atoi(*Parsed[1]);
-		int dinoId2 = FCString::Atoi(*Parsed[2]);
+		int dinoId1;
+		int dinoId2;
+
+		try
+		{
+			dinoId1 = std::stoi(*Parsed[1]);
+			dinoId2 = std::stoi(*Parsed[2]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(Ark::GetWorld(), dinoId1, dinoId2);
 		if (dino)
 		{
 			FVector pos = dino->GetRootComponentField()->GetRelativeLocationField();
 
-			FString reply = pos.ToString() + "\n";
+			wchar_t buffer[256];
+			swprintf_s(buffer, TEXT("%s\n"), *pos.ToString());
+
+			FString reply(buffer);
 			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 		}
 	}
@@ -417,28 +540,38 @@ void SetDinoPos(RCONClientConnection* rconClientConnection, RCONPacket* rconPack
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(5))
 	{
-		int dinoId1 = FCString::Atoi(*Parsed[1]);
-		int dinoId2 = FCString::Atoi(*Parsed[2]);
+		int dinoId1;
+		int dinoId2;
+		float x;
+		float y;
+		float z;
+
+		try
+		{
+			dinoId1 = std::stoi(*Parsed[1]);
+			dinoId2 = std::stoi(*Parsed[2]);
+			x = std::stof(*Parsed[3]);
+			y = std::stof(*Parsed[4]);
+			z = std::stof(*Parsed[5]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(Ark::GetWorld(), dinoId1, dinoId2);
 		if (dino)
 		{
-			float x = FCString::Atof(*Parsed[3]);
-			float y = FCString::Atof(*Parsed[4]);
-			float z = FCString::Atof(*Parsed[5]);
-
 			FVector pos = {x, y, z};
 			FRotator rot = {0, 0, 0};
 
 			dino->TeleportTo(&pos, &rot, true, false);
 
-			FString reply = "Successfully teleported dino\n";
+			FString reply = L"Successfully teleported dino\n";
 			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 		}
 	}
@@ -449,23 +582,31 @@ void AddDinoExperience(RCONClientConnection* rconClientConnection, RCONPacket* r
 	FString msg = rconPacket->Body;
 
 	TArray<FString> Parsed;
-
-	const TCHAR* Delims[] = {TEXT(" ")};
-	msg.ParseIntoArray(Parsed, Delims, 1);
+	msg.ParseIntoArray(&Parsed, L" ", true);
 
 	if (Parsed.IsValidIndex(3))
 	{
-		int dinoId1 = FCString::Atoi(*Parsed[1]);
-		int dinoId2 = FCString::Atoi(*Parsed[2]);
+		int dinoId1;
+		int dinoId2;
+		float howMuch;
+
+		try
+		{
+			dinoId1 = std::stoi(*Parsed[1]);
+			dinoId2 = std::stoi(*Parsed[2]);
+			howMuch = std::stof(*Parsed[3]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(Ark::GetWorld(), dinoId1, dinoId2);
 		if (dino)
 		{
-			float howMuch = FCString::Atof(*Parsed[3]);
+			dino->GetMyCharacterStatusComponentField()->AddExperience(howMuch, false, EXPType::XP_GENERIC);
 
-			dino->GetMyCharacterStatusComponentField()->AddExperience(howMuch, false, EXPType::Generic);
-
-			FString reply = "Successfully added experience to dino\n";
+			FString reply = L"Successfully added experience to dino\n";
 			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
 		}
 	}
@@ -473,20 +614,21 @@ void AddDinoExperience(RCONClientConnection* rconClientConnection, RCONPacket* r
 
 void Init()
 {
-	Ark::AddRconCommand("GiveItemNum", &GiveItemNum);
-	Ark::AddRconCommand("AddExperience", &AddExperience);
-	Ark::AddRconCommand("SetPlayerPos", &SetPlayerPos);
-	Ark::AddRconCommand("GetPlayerPos ", &GetPlayerPos);
-	Ark::AddRconCommand("TeleportToPlayer", &TeleportToPlayer);
-	Ark::AddRconCommand("ListPlayerDinos", &ListPlayerDinos);
-	Ark::AddRconCommand("ListTribes", &ListTribes);
-	Ark::AddRconCommand("SpawnDino", &SpawnDino);
-	Ark::AddRconCommand("SpawnTamed", &SpawnTamed);
-	Ark::AddRconCommand("SpawnAtPos", &SpawnAtPos);
-	Ark::AddRconCommand("GetTribeLog", &GetTribeLog);
-	Ark::AddRconCommand("GetDinoPos", &GetDinoPos);
-	Ark::AddRconCommand("SetDinoPos", &SetDinoPos);
-	Ark::AddRconCommand("AddDinoExperience", &AddDinoExperience);
+	Ark::AddRconCommand(L"GiveItemNum", &GiveItemNum);
+	Ark::AddRconCommand(L"AddExperience", &AddExperience);
+	Ark::AddRconCommand(L"SetPlayerPos", &SetPlayerPos);
+	Ark::AddRconCommand(L"GetPlayerPos ", &GetPlayerPos);
+	Ark::AddRconCommand(L"KillPlayer ", &KillPlayer);
+	Ark::AddRconCommand(L"TeleportToPlayer", &TeleportToPlayer);
+	Ark::AddRconCommand(L"ListPlayerDinos", &ListPlayerDinos);
+	Ark::AddRconCommand(L"GetTribeIdOfPlayer", &GetTribeIdOfPlayer);
+	Ark::AddRconCommand(L"SpawnDino", &SpawnDino);
+	Ark::AddRconCommand(L"SpawnTamed", &SpawnTamed);
+	Ark::AddRconCommand(L"SpawnAtPos", &SpawnAtPos);
+	Ark::AddRconCommand(L"GetTribeLog", &GetTribeLog);
+	Ark::AddRconCommand(L"GetDinoPos", &GetDinoPos);
+	Ark::AddRconCommand(L"SetDinoPos", &SetDinoPos);
+	Ark::AddRconCommand(L"AddDinoExperience", &AddDinoExperience);
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
@@ -503,20 +645,3 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 	}
 	return TRUE;
 }
-
-#define LOCTEXT_NAMESPACE "FRconPluginModule"
-
-void FRconPluginModule::StartupModule()
-{
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-}
-
-void FRconPluginModule::ShutdownModule()
-{
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
-}
-
-#undef LOCTEXT_NAMESPACE
-
-IMPLEMENT_MODULE(FRconPluginModule, RconPlugin)
