@@ -1,10 +1,12 @@
 #include <windows.h>
 #include <iostream>
 #include <fstream>
+#include <Pathcch.h>
 #include "API/Base.h"
 #include "json.hpp"
 
 #pragma comment(lib, "ArkApi.lib")
+#pragma comment(lib, "Pathcch.lib")
 
 nlohmann::json json;
 nlohmann::json jsonPlayers;
@@ -12,6 +14,18 @@ nlohmann::json jsonPlayers;
 void LoadConfig();
 void LoadPlayersConfig();
 void SavePlayersConfig();
+
+std::wstring GetCurrentDir()
+{
+	wchar_t buffer[MAX_PATH];
+	GetModuleFileNameW(nullptr, buffer, sizeof(buffer));
+
+	PathCchRemoveFileSpec(buffer, sizeof(buffer));
+
+	std::wstring dirPath(buffer);
+
+	return dirPath;
+}
 
 void GiveKit(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
 {
@@ -48,7 +62,7 @@ void GiveKit(AShooterPlayerController* playerController, FString* message, EChat
 
 void SavePlayersConfig()
 {
-	std::ofstream file("BeyondApi/Plugins/ArkKits/playersConfig.json");
+	std::ofstream file(GetCurrentDir() + L"/BeyondApi/Plugins/ArkKits/playersConfig.json");
 	file << jsonPlayers.dump(2);
 	file.close();
 }
@@ -63,7 +77,7 @@ void Init()
 
 void LoadConfig()
 {
-	std::ifstream file("BeyondApi/Plugins/ArkKits/config.json");
+	std::ifstream file(GetCurrentDir() + L"/BeyondApi/Plugins/ArkKits/config.json");
 	if (!file.is_open())
 	{
 		std::cout << "Could not open file config.json" << std::endl;
@@ -76,7 +90,7 @@ void LoadConfig()
 
 void LoadPlayersConfig()
 {
-	std::ifstream file("BeyondApi/Plugins/ArkKits/playersConfig.json");
+	std::ifstream file(GetCurrentDir() + L"/BeyondApi/Plugins/ArkKits/playersConfig.json");
 	if (!file.is_open())
 	{
 		std::cout << "Could not open file playersConfig.json" << std::endl;
