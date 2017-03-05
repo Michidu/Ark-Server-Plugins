@@ -1,10 +1,13 @@
+#include <Windows.h>
 #include <iostream>
 #include <fstream>
 #include <random>
+#include <Pathcch.h>
 #include "API/Base.h"
 #include "json.hpp"
 
 #pragma comment(lib, "ArkApi.lib")
+#pragma comment(lib, "Pathcch.lib")
 
 DECLARE_HOOK(APrimalDinoCharacter_BeginPlay, void, APrimalDinoCharacter*);
 
@@ -15,6 +18,18 @@ void RandomizeDinoColor(APrimalDinoCharacter* dino);
 int GetRandomColor();
 int GetRandomNumber(int min, int max);
 
+std::wstring GetCurrentDir()
+{
+	wchar_t buffer[MAX_PATH];
+	GetModuleFileNameW(nullptr, buffer, sizeof(buffer));
+
+	PathCchRemoveFileSpec(buffer, sizeof(buffer));
+
+	std::wstring dirPath(buffer);
+
+	return dirPath;
+}
+
 void Init()
 {
 	LoadConfig();
@@ -24,7 +39,7 @@ void Init()
 
 void LoadConfig()
 {
-	std::ifstream file("BeyondApi/Plugins/DinoColors/colors.json");
+	std::ifstream file(GetCurrentDir() + L"/BeyondApi/Plugins/DinoColors/colors.json");
 	if (!file.is_open())
 	{
 		std::cout << "Could not open file colors.json" << std::endl;
