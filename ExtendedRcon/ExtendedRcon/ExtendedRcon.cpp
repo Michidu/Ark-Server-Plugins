@@ -180,8 +180,7 @@ void KillPlayer(RCONClientConnection* rconClientConnection, RCONPacket* rconPack
 		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
 		if (aShooterPC)
 		{
-			UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(aShooterPC->GetCheatManagerField());
-			cheatManager->KillPlayer(aShooterPC->GetLinkedPlayerIDField());
+			aShooterPC->GetPlayerCharacter()->Suicide();
 
 			// Send a reply
 			FString reply = L"Successfully killed player\n";
@@ -271,7 +270,7 @@ void ListPlayerDinos(RCONClientConnection* rconClientConnection, RCONPacket* rco
 
 				if (dinoTeam == playerTeam)
 				{
-					dino->GetDescriptiveName(pDinoName);
+					dino->GetDinoDescriptiveName(pDinoName);
 
 					ss << pDinoName->c_str() << ", ID1=" << dino->GetDinoID1Field() << ", ID2=" << dino->GetDinoID2Field() << "\n";
 				}
@@ -612,6 +611,27 @@ void AddDinoExperience(RCONClientConnection* rconClientConnection, RCONPacket* r
 	}
 }
 
+void ClientChat(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
+{
+	FString msg = rconPacket->Body;
+
+	TArray<FString> Parsed;
+	msg.ParseIntoArray(&Parsed, L"'", true);
+
+	if (Parsed.IsValidIndex(2))
+	{
+		auto playerControllers = Ark::GetWorld()->GetPlayerControllerListField();
+		for (uint32_t i = 0; i < playerControllers.Num(); ++i)
+		{
+			auto playerController = playerControllers[i];
+
+			AShooterPlayerController* aShooterPC = static_cast<AShooterPlayerController*>(playerController.Get());
+
+			SendChatMessage(aShooterPC, Parsed[2], *Parsed[1]);
+		}
+	}
+}
+
 void Init()
 {
 	Ark::AddRconCommand(L"GiveItemNum", &GiveItemNum);
@@ -629,6 +649,7 @@ void Init()
 	Ark::AddRconCommand(L"GetDinoPos", &GetDinoPos);
 	Ark::AddRconCommand(L"SetDinoPos", &SetDinoPos);
 	Ark::AddRconCommand(L"AddDinoExperience", &AddDinoExperience);
+	Ark::AddRconCommand(L"ClientChat", &ClientChat);
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)

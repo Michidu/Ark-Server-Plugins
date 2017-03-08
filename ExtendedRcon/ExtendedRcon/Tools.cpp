@@ -5,7 +5,7 @@ AShooterPlayerController* FindPlayerControllerFromSteamId(unsigned __int64 steam
 	AShooterPlayerController* result = nullptr;
 
 	auto playerControllers = Ark::GetWorld()->GetPlayerControllerListField();
-	for (uint32_t i = 0; i < playerControllers.Num(); i++)
+	for (uint32_t i = 0; i < playerControllers.Num(); ++i)
 	{
 		auto playerController = playerControllers[i];
 
