@@ -611,6 +611,39 @@ void AddDinoExperience(RCONClientConnection* rconClientConnection, RCONPacket* r
 	}
 }
 
+void KillDino(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
+{
+	FString msg = rconPacket->Body;
+
+	TArray<FString> Parsed;
+	msg.ParseIntoArray(&Parsed, L" ", true);
+
+	if (Parsed.IsValidIndex(2))
+	{
+		int dinoId1;
+		int dinoId2;
+
+		try
+		{
+			dinoId1 = std::stoi(*Parsed[1]);
+			dinoId2 = std::stoi(*Parsed[2]);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
+
+		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(Ark::GetWorld(), dinoId1, dinoId2);
+		if (dino)
+		{
+			dino->Suicide();
+
+			FString reply = L"Killed dino\n";
+			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
+		}
+	}
+}
+
 void ClientChat(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
 {
 	FString msg = rconPacket->Body;
@@ -649,6 +682,7 @@ void Init()
 	Ark::AddRconCommand(L"GetDinoPos", &GetDinoPos);
 	Ark::AddRconCommand(L"SetDinoPos", &SetDinoPos);
 	Ark::AddRconCommand(L"AddDinoExperience", &AddDinoExperience);
+	Ark::AddRconCommand(L"KillDino", &KillDino);
 	Ark::AddRconCommand(L"ClientChat", &ClientChat);
 }
 
