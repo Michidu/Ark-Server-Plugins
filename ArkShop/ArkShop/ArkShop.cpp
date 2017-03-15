@@ -8,7 +8,6 @@
 #include "Kits.h"
 
 #pragma comment(lib, "ArkApi.lib")
-#pragma comment(lib, "Pathcch.lib")
 
 nlohmann::json json;
 

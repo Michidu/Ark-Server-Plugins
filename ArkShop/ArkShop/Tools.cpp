@@ -1,6 +1,5 @@
 #include <windows.h>
 #include <fstream>
-#include <Pathcch.h>
 #include <chrono>
 #include <random>
 #include "Tools.h"
@@ -79,7 +78,7 @@ namespace Tools
 
 	void Log(const std::string& text)
 	{
-		static std::ofstream file("BeyondApi/Plugins/EliteArk/logs.txt", std::ios_base::app);
+		static std::ofstream file(GetCurrentDir() + "/BeyondApi/Plugins/ArkShop/logs.txt", std::ios_base::app);
 
 		auto time = std::chrono::system_clock::now();
 		std::time_t tTime = std::chrono::system_clock::to_time_t(time);
@@ -89,11 +88,11 @@ namespace Tools
 
 		buffer[strlen(buffer) - 1] = '\0';
 
-		std::string timeStr(buffer);
+		std::string timeStr = buffer;
 
-		std::string finaleText = timeStr + ": " + text + "\n";
+		std::string finalText = timeStr + ": " + text + "\n";
 
-		file << finaleText;
+		file << finalText;
 
 		file.flush();
 	}
