@@ -255,6 +255,7 @@ void ListPlayerDinos(RCONClientConnection* rconClientConnection, RCONPacket* rco
 			UGameplayStatics::GetAllActorsOfClass(Ark::GetWorld(), APrimalDinoCharacter::GetPrivateStaticClass(), FoundActors);
 
 			FString* pDinoName = new FString();
+			FString* className = new FString();
 
 			std::stringstream ss;
 
@@ -270,9 +271,10 @@ void ListPlayerDinos(RCONClientConnection* rconClientConnection, RCONPacket* rco
 
 				if (dinoTeam == playerTeam)
 				{
-					dino->GetDinoDescriptiveName(pDinoName);
+					dino->GetDescriptiveName(pDinoName);
+					dino->GetDinoNameTagField().ToString(className);
 
-					ss << pDinoName->c_str() << ", ID1=" << dino->GetDinoID1Field() << ", ID2=" << dino->GetDinoID2Field() << "\n";
+					ss << pDinoName->ToString() << "(" << className->ToString() << ")" ", ID1=" << dino->GetDinoID1Field() << ", ID2=" << dino->GetDinoID2Field() << "\n";
 				}
 			}
 
@@ -283,6 +285,7 @@ void ListPlayerDinos(RCONClientConnection* rconClientConnection, RCONPacket* rco
 
 			delete FoundActors;
 			delete pDinoName;
+			delete className;
 			delete[] wcstring;
 		}
 	}
@@ -483,7 +486,7 @@ void GetTribeLog(RCONClientConnection* rconClientConnection, RCONPacket* rconPac
 			{
 				auto log = logs[i];
 
-				ss << log.c_str() << "\n";
+				ss << log.ToString() << "\n";
 			}
 
 			wchar_t* wcstring = ConvertToWideStr(ss.str());
