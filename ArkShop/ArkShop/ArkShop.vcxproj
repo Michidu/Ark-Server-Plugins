@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Kits.h" />
+    <ClInclude Include="Store.h" />
     <ClInclude Include="ShopAPI.h" />
     <ClInclude Include="ArkShop.h" />
     <ClInclude Include="DBHelper.h" />
@@ -161,6 +162,7 @@
     <ClCompile Include="DBHelper.cpp" />
     <ClCompile Include="Kits.cpp" />
     <ClCompile Include="Points.cpp" />
+    <ClCompile Include="Store.cpp" />
     <ClCompile Include="ShopAPI.cpp" />
     <ClCompile Include="sqlite3.c" />
     <ClCompile Include="TimedRewards.cpp" />

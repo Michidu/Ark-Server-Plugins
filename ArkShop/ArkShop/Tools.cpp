@@ -28,7 +28,7 @@ namespace Tools
 		{
 			auto playerController = playerControllers[i];
 
-			std::string currentName = playerController->GetPlayerStateField()->GetPlayerNameField().c_str();
+			std::string currentName = playerController->GetPlayerStateField()->GetPlayerNameField().ToString();
 
 			if (currentName == steamName)
 			{

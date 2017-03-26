@@ -6,6 +6,7 @@
 #include "TimedRewards.h"
 #include "Points.h"
 #include "Kits.h"
+#include "Store.h"
 
 #pragma comment(lib, "ArkApi.lib")
 
@@ -35,6 +36,7 @@ namespace
 		LoadConfig();
 
 		Points::Init();
+		Store::Init();
 		Kits::Init();
 
 		bool rewardsEnabled = json["General"]["TimedPointsReward"]["Enabled"];

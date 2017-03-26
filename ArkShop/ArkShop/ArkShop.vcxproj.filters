@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source">
+    <Filter Include="Source Code">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
@@ -39,31 +39,37 @@
     <ClInclude Include="Kits.h">
       <Filter>Header</Filter>
     </ClInclude>
+    <ClInclude Include="Store.h">
+      <Filter>Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ArkShop.cpp">
-      <Filter>Source</Filter>
+      <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="Tools.cpp">
-      <Filter>Source</Filter>
+      <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="DBHelper.cpp">
-      <Filter>Source</Filter>
+      <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="Points.cpp">
-      <Filter>Source</Filter>
+      <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="TimedRewards.cpp">
-      <Filter>Source</Filter>
+      <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="sqlite3.c">
-      <Filter>Source</Filter>
+      <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="ShopAPI.cpp">
-      <Filter>Source</Filter>
+      <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="Kits.cpp">
-      <Filter>Source</Filter>
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="Store.cpp">
+      <Filter>Source Code</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

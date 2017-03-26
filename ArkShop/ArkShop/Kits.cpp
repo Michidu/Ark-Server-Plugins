@@ -26,7 +26,7 @@ namespace Kits
 
 				if (DBHelper::IsPlayerEntryExists(steamId))
 				{
-					std::string kitName = Parsed[1].c_str();
+					std::string kitName = Parsed[1].ToString();
 
 					auto kitsList = json["Kits"];
 
@@ -154,7 +154,7 @@ namespace Kits
 
 				if (DBHelper::IsPlayerEntryExists(steamId))
 				{
-					std::string kitName = Parsed[1].c_str();
+					std::string kitName = Parsed[1].ToString();
 
 					int amount;
 
@@ -242,7 +242,7 @@ namespace Kits
 
 			if (Parsed.IsValidIndex(3))
 			{
-				std::string kitName = Parsed[2].c_str();
+				std::string kitName = Parsed[2].ToString();
 
 				__int64 steamId;
 				int newAmount;
@@ -286,7 +286,7 @@ namespace Kits
 	void Init()
 	{
 		Ark::AddChatCommand(L"/kit", &Kit);
-		//Ark::AddChatCommand(L"/BuyKit", &BuyKit);
+		Ark::AddChatCommand(L"/BuyKit", &BuyKit);
 
 		Ark::AddConsoleCommand(L"AddKits", &AddKits);
 	}

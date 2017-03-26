@@ -63,6 +63,21 @@ namespace Tools
 		delete[] buffer;
 	}
 
+	template <typename... Args>
+	void SendNotification(AShooterPlayerController* playerController, const wchar_t* msg, FLinearColor color, float displayScale, float displayTime, Args&&... args)
+	{
+		size_t size = swprintf(nullptr, 0, msg, std::forward<Args>(args)...) + 1;
+
+		wchar_t* buffer = new wchar_t[size];
+		_snwprintf_s(buffer, size, _TRUNCATE, msg, std::forward<Args>(args)...);
+
+		FString cmd(buffer);
+
+		playerController->ClientServerSOTFNotificationCustom(&cmd, color, displayScale, displayTime, 0, 0);
+
+		delete[] buffer;
+	}
+
 	__int64 GetSteamId(AShooterPlayerController* playerController);
 	AShooterPlayerController* FindPlayerFromName(const std::string& steamName);
 	AShooterPlayerController* FindPlayerFromSteamId(unsigned __int64 steamId);

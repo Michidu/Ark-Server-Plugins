@@ -7,10 +7,6 @@ namespace Points
 	namespace
 	{
 		void PrintPoints(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode);
-		void Buy(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode);
-		bool BuyItem(AShooterPlayerController* playerController, const TArray<FString>& Parsed, const nlohmann::basic_json<>& itemEntry, __int64 steamId);
-		bool BuyDino(AShooterPlayerController* playerController, const nlohmann::basic_json<>& itemEntry, __int64 steamId);
-		bool BuyBeacon(AShooterPlayerController* playerController, const nlohmann::basic_json<>& itemEntry, __int64 steamId);
 		void Trade(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode);
 		void AddPointsCmd(APlayerController* playerController, FString* cmd, bool shouldLog);
 		void GetPlayerPoints(APlayerController* playerController, FString* cmd, bool shouldLog);
@@ -29,190 +25,6 @@ namespace Points
 			}
 		}
 
-		void Buy(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
-		{
-			__int64 steamId = Tools::GetSteamId(playerController);
-
-			if (DBHelper::IsPlayerEntryExists(steamId))
-			{
-				TArray<FString> Parsed;
-				message->ParseIntoArray(&Parsed, L" ", true);
-
-				if (Parsed.IsValidIndex(1))
-				{
-					std::string strItemId = Parsed[1].c_str();
-
-					auto itemsList = json["ShopItems"];
-
-					auto itemEntryIter = itemsList.find(strItemId);
-					if (itemEntryIter == itemsList.end())
-					{
-						Tools::SendDirectMessage(playerController, TEXT("Wrong id"));
-						return;
-					}
-
-					auto itemEntry = itemEntryIter.value();
-
-					std::string type = itemEntry["type"];
-
-					bool success = false;
-
-					if (type == "item")
-						success = BuyItem(playerController, Parsed, itemEntry, steamId);
-					else if (type == "dino")
-						success = BuyDino(playerController, itemEntry, steamId);
-					else if (type == "beacon")
-						success = BuyBeacon(playerController, itemEntry, steamId);
-
-					Tools::Log(std::to_string(steamId) + " bought id - " + strItemId + ". Success: " + std::to_string(success));
-				}
-				else
-				{
-					Tools::SendDirectMessage(playerController, TEXT("Usage: /buy id <amount>"));
-				}
-			}
-		}
-
-		bool BuyItem(AShooterPlayerController* playerController, const TArray<FString>& Parsed, const nlohmann::basic_json<>& itemEntry, __int64 steamId)
-		{
-			bool success = false;
-
-			if (Parsed.IsValidIndex(2))
-			{
-				std::string strItemId = Parsed[1].c_str();
-
-				int amount;
-
-				try
-				{
-					amount = std::stoi(*Parsed[2]);
-				}
-				catch (const std::exception& e)
-				{
-					std::cout << "Error in BuyItem() - " << e.what() << std::endl;
-					return false;
-				}
-
-				if (amount <= 0)
-					return false;
-
-				int price = itemEntry["price"];
-
-				int finalPrice = price * amount;
-
-				int points = GetPoints(steamId);
-
-				if (points >= finalPrice)
-				{
-					if (SpendPoints(finalPrice, steamId))
-					{
-						auto itemsMap = itemEntry["items"];
-						for (auto iter = itemsMap.begin(); iter != itemsMap.end(); ++iter)
-						{
-							auto item = iter.value();
-
-							float quality = item["quality"];
-							bool forceBlueprint = item["forceBlueprint"];
-							int defaultAmount = item["amount"];
-							std::string blueprint = item["blueprint"];
-
-							wchar_t buffer[512];
-							swprintf_s(buffer, L"%hs", blueprint.c_str());
-
-							FString bpPath(buffer);
-
-							int finalAmount = defaultAmount * amount;
-
-							playerController->GiveItem(&bpPath, finalAmount, quality, forceBlueprint);
-						}
-
-						Tools::SendDirectMessage(playerController, TEXT("You have successfully bought item"));
-
-						success = true;
-					}
-				}
-				else
-				{
-					Tools::SendDirectMessage(playerController, TEXT("You don't have enough points"));
-				}
-			}
-			else
-			{
-				Tools::SendDirectMessage(playerController, TEXT("Please, specify amount"));
-			}
-
-			return success;
-		}
-
-		bool BuyDino(AShooterPlayerController* playerController, const nlohmann::basic_json<>& itemEntry, __int64 steamId)
-		{
-			bool success = false;
-
-			int price = itemEntry["price"];
-			int level = itemEntry["level"];
-			std::string className = itemEntry["className"];
-
-			int points = GetPoints(steamId);
-
-			if (points >= price)
-			{
-				SpendPoints(price, steamId);
-
-				wchar_t buffer[256];
-				swprintf_s(buffer, L"%hs", className.c_str());
-
-				FString dinoClass(buffer);
-
-				level = static_cast<int>(std::ceil(level / 1.5f));
-
-				UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(playerController->GetCheatManagerField());
-				cheatManager->GMSummon(&dinoClass, level);
-
-				Tools::SendDirectMessage(playerController, TEXT("You have successfully bought dino"));
-
-				success = true;
-			}
-			else
-			{
-				Tools::SendDirectMessage(playerController, TEXT("You don't have enough points"));
-			}
-
-			return success;
-		}
-
-		bool BuyBeacon(AShooterPlayerController* playerController, const nlohmann::basic_json<>& itemEntry, __int64 steamId)
-		{
-			bool success = false;
-
-			int price = itemEntry["price"];
-			std::string className = itemEntry["className"];
-
-			int points = GetPoints(steamId);
-
-			if (points >= price)
-			{
-				SpendPoints(price, steamId);
-
-				wchar_t buffer[256];
-				swprintf_s(buffer, L"%hs", className.c_str());
-
-				FString beaconClass(buffer);
-
-				UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(playerController->GetCheatManagerField());
-				cheatManager->Summon(&beaconClass);
-
-				Tools::SendDirectMessage(playerController, TEXT("You have successfully bought beacon"));
-
-				success = true;
-			}
-			else
-			{
-				Tools::SendDirectMessage(playerController, TEXT("You don't have enough points"));
-			}
-
-			return success;
-		}
-
 		void Trade(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
 		{
 			__int64 senderSteamId = Tools::GetSteamId(playerController);
@@ -224,7 +36,7 @@ namespace Points
 
 				if (Parsed.IsValidIndex(2))
 				{
-					std::string receiverName = Parsed[1].c_str();
+					std::string receiverName = Parsed[1].ToString();
 
 					int amount;
 
@@ -407,7 +219,6 @@ namespace Points
 	void Init()
 	{
 		Ark::AddChatCommand(L"/points", &PrintPoints);
-		Ark::AddChatCommand(L"/buy", &Buy);
 		Ark::AddChatCommand(L"/trade", &Trade);
 
 		Ark::AddConsoleCommand(L"AddPoints", &AddPointsCmd);
