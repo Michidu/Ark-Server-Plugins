@@ -2,7 +2,7 @@
 
 #include "ArkShop.h"
 
-namespace Store
+namespace Market
 {
 	void Init();
 }

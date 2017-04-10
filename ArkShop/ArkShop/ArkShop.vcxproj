@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Kits.h" />
+    <ClInclude Include="Market.h" />
     <ClInclude Include="Store.h" />
     <ClInclude Include="ShopAPI.h" />
     <ClInclude Include="ArkShop.h" />
@@ -161,6 +162,7 @@
     <ClCompile Include="ArkShop.cpp" />
     <ClCompile Include="DBHelper.cpp" />
     <ClCompile Include="Kits.cpp" />
+    <ClCompile Include="Market.cpp" />
     <ClCompile Include="Points.cpp" />
     <ClCompile Include="Store.cpp" />
     <ClCompile Include="ShopAPI.cpp" />

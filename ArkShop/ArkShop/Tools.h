@@ -64,7 +64,7 @@ namespace Tools
 	}
 
 	template <typename... Args>
-	void SendNotification(AShooterPlayerController* playerController, const wchar_t* msg, FLinearColor color, float displayScale, float displayTime, Args&&... args)
+	void SendNotification(AShooterPlayerController* playerController, const wchar_t* msg, FLinearColor color, float displayScale, float displayTime, UTexture2D* icon, Args&&... args)
 	{
 		size_t size = swprintf(nullptr, 0, msg, std::forward<Args>(args)...) + 1;
 
@@ -73,7 +73,7 @@ namespace Tools
 
 		FString cmd(buffer);
 
-		playerController->ClientServerSOTFNotificationCustom(&cmd, color, displayScale, displayTime, 0, 0);
+		playerController->ClientServerSOTFNotificationCustom(&cmd, color, displayScale, displayTime, icon, nullptr);
 
 		delete[] buffer;
 	}

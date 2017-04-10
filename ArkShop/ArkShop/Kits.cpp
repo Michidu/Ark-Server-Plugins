@@ -7,13 +7,10 @@ namespace Kits
 {
 	namespace
 	{
-		void Kit(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode);
 		nlohmann::basic_json<> GetPlayerKitsConfig(__int64 steamId);
 		void GiveKit(AShooterPlayerController* playerController, const nlohmann::basic_json<>& kitEntry);
 		bool SaveConfig(const std::string& dump, __int64 steamId);
 		void ListKits(AShooterPlayerController* playerController);
-		void AddKits(APlayerController* playerController, FString* cmd, bool shouldLog);
-		void BuyKit(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode);
 
 		void Kit(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
 		{
@@ -265,6 +262,30 @@ namespace Kits
 			}
 		}
 
+		void ResetKitsCmd(APlayerController* playerController, FString* cmd, bool shouldLog)
+		{
+			TArray<FString> Parsed;
+			cmd->ParseIntoArray(&Parsed, L" ", true);
+
+			AShooterPlayerController* aShooterController = static_cast<AShooterPlayerController*>(playerController);
+
+			if (Parsed.IsValidIndex(1))
+			{
+				if (Parsed[1].ToString() == "confirm")
+				{
+					auto db = GetDB();
+
+					db << "UPDATE Players SET Kits = \"{}\";";
+
+					Tools::SendDirectMessage(aShooterController, TEXT("Successfully reset kits"));
+				}
+			}
+			else
+			{
+				Tools::SendDirectMessage(aShooterController, TEXT("You are going to reset kits for ALL players\nType 'ResetKits confirm' if you want to continue"));
+			}
+		}
+
 		bool SaveConfig(const std::string& dump, __int64 steamId)
 		{
 			auto db = GetDB();
@@ -289,6 +310,7 @@ namespace Kits
 		Ark::AddChatCommand(L"/BuyKit", &BuyKit);
 
 		Ark::AddConsoleCommand(L"AddKits", &AddKits);
+		Ark::AddConsoleCommand(L"ResetKits", &ResetKitsCmd);
 	}
 
 	void AddKit(const std::string& kitName, int newAmount, __int64 steamId)

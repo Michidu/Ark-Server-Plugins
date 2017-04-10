@@ -6,13 +6,6 @@ namespace Points
 {
 	namespace
 	{
-		void PrintPoints(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode);
-		void Trade(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode);
-		void AddPointsCmd(APlayerController* playerController, FString* cmd, bool shouldLog);
-		void GetPlayerPoints(APlayerController* playerController, FString* cmd, bool shouldLog);
-		void AddPointsRcon(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld);
-		void GetPlayerPointsRcon(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld);
-
 		void PrintPoints(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
 		{
 			__int64 steamId = Tools::GetSteamId(playerController);
@@ -116,7 +109,59 @@ namespace Points
 			}
 		}
 
-		void GetPlayerPoints(APlayerController* playerController, FString* cmd, bool shouldLog)
+		void SetPointsCmd(APlayerController* playerController, FString* cmd, bool shouldLog)
+		{
+			TArray<FString> Parsed;
+			cmd->ParseIntoArray(&Parsed, L" ", true);
+
+			if (Parsed.IsValidIndex(2))
+			{
+				__int64 steamId;
+				int amount;
+
+				try
+				{
+					steamId = std::stoll(*Parsed[1]);
+					amount = std::stoi(*Parsed[2]);
+				}
+				catch (const std::exception& e)
+				{
+					std::cout << "Error in SetPointsCmd() - " << e.what() << std::endl;
+					return;
+				}
+
+				if (DBHelper::IsPlayerEntryExists(steamId))
+				{
+					SetPoints(steamId, amount);
+				}
+			}
+		}
+
+		void ResetPointsCmd(APlayerController* playerController, FString* cmd, bool shouldLog)
+		{
+			TArray<FString> Parsed;
+			cmd->ParseIntoArray(&Parsed, L" ", true);
+
+			AShooterPlayerController* aShooterController = static_cast<AShooterPlayerController*>(playerController);
+
+			if (Parsed.IsValidIndex(1))
+			{
+				if (Parsed[1].ToString() == "confirm")
+				{
+					auto db = GetDB();
+
+					db << "UPDATE Players SET Points = 0;";
+
+					Tools::SendDirectMessage(aShooterController, TEXT("Successfully reset points"));
+				}
+			}
+			else
+			{
+				Tools::SendDirectMessage(aShooterController, TEXT("You are going to reset points for ALL players\nType 'ResetPoints confirm' if you want to continue"));
+			}
+		}
+
+		void GetPlayerPointsCmd(APlayerController* playerController, FString* cmd, bool shouldLog)
 		{
 			TArray<FString> Parsed;
 			cmd->ParseIntoArray(&Parsed, L" ", true);
@@ -131,7 +176,7 @@ namespace Points
 				}
 				catch (const std::exception& e)
 				{
-					std::cout << "Error in GetPlayerPoints() - " << e.what() << std::endl;
+					std::cout << "Error in GetPlayerPointsCmd() - " << e.what() << std::endl;
 					return;
 				}
 
@@ -181,6 +226,39 @@ namespace Points
 			}
 		}
 
+		void SetPointsRcon(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
+		{
+			FString msg = rconPacket->Body;
+
+			TArray<FString> Parsed;
+			msg.ParseIntoArray(&Parsed, L" ", true);
+
+			if (Parsed.IsValidIndex(2))
+			{
+				__int64 steamId;
+				int amount;
+
+				try
+				{
+					steamId = std::stoll(*Parsed[1]);
+					amount = std::stoi(*Parsed[2]);
+				}
+				catch (const std::exception& e)
+				{
+					std::cout << "Error in SetPointsRcon() - " << e.what() << std::endl;
+					return;
+				}
+
+				if (DBHelper::IsPlayerEntryExists(steamId))
+				{
+					SetPoints(steamId, amount);
+
+					FString reply(L"Successfully set points\n");
+					rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
+				}
+			}
+		}
+
 		void GetPlayerPointsRcon(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
 		{
 			FString msg = rconPacket->Body;
@@ -222,9 +300,12 @@ namespace Points
 		Ark::AddChatCommand(L"/trade", &Trade);
 
 		Ark::AddConsoleCommand(L"AddPoints", &AddPointsCmd);
-		Ark::AddConsoleCommand(L"GetPlayerPoints", &GetPlayerPoints);
+		Ark::AddConsoleCommand(L"SetPoints", &SetPointsCmd);
+		Ark::AddConsoleCommand(L"GetPlayerPoints", &GetPlayerPointsCmd);
+		Ark::AddConsoleCommand(L"ResetPoints", &ResetPointsCmd);
 
 		Ark::AddRconCommand(L"AddPoints", &AddPointsRcon);
+		Ark::AddRconCommand(L"SetPoints", &SetPointsRcon);
 		Ark::AddRconCommand(L"GetPlayerPoints", &GetPlayerPointsRcon);
 	}
 
@@ -284,5 +365,22 @@ namespace Points
 		}
 
 		return points;
+	}
+
+	bool SetPoints(__int64 steamId, int newAmount)
+	{
+		auto db = GetDB();
+
+		try
+		{
+			db << "UPDATE Players SET Points = ? WHERE SteamId = ?;" << newAmount << steamId;
+		}
+		catch (sqlite::sqlite_exception& e)
+		{
+			std::cout << "SetPoints() Unexpected DB error " << e.what() << std::endl;
+			return false;
+		}
+
+		return true;
 	}
 }

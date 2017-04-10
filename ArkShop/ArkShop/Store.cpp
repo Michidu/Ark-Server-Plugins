@@ -7,11 +7,9 @@ namespace Store
 {
 	namespace
 	{
-		void Buy(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode);
 		bool BuyItem(AShooterPlayerController* playerController, const TArray<FString>& Parsed, const nlohmann::basic_json<>& itemEntry, __int64 steamId);
 		bool BuyDino(AShooterPlayerController* playerController, const nlohmann::basic_json<>& itemEntry, __int64 steamId);
 		bool BuyBeacon(AShooterPlayerController* playerController, const nlohmann::basic_json<>& itemEntry, __int64 steamId);
-		void ShowItems(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode);
 
 		void Buy(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
 		{
@@ -52,7 +50,7 @@ namespace Store
 				}
 				else
 				{
-					Tools::SendDirectMessage(playerController, TEXT("Usage: /buy id <amount>"));
+					Tools::SendDirectMessage(playerController, TEXT("Usage: /buy id amount"));
 				}
 			}
 		}
@@ -264,7 +262,7 @@ namespace Store
 
 					ss << ", Id: " << iter.key() << ", Price: " << price << "\n";
 
-					Tools::SendNotification(playerController, TEXT("%hs"), {1,0.549f,0,1}, 0.8f, displayTime, ss.str().c_str());
+					Tools::SendNotification(playerController, TEXT("%hs"), {1,0.549f,0,1}, 0.8f, displayTime, nullptr, ss.str().c_str());
 				}
 			}
 		}

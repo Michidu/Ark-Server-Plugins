@@ -9,4 +9,5 @@ namespace Points
 	bool AddPoints(int amount, __int64 steamId);
 	bool SpendPoints(int amount, __int64 steamId);
 	int GetPoints(__int64 steamId);
+	bool SetPoints(__int64 steamId, int newAmount);
 }

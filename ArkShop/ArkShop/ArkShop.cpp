@@ -7,6 +7,7 @@
 #include "Points.h"
 #include "Kits.h"
 #include "Store.h"
+#include "Market.h"
 
 #pragma comment(lib, "ArkApi.lib")
 
@@ -21,7 +22,7 @@ namespace
 	void AddPlayerToRewards(__int64 steamId);
 	void RemovePlayerRewards(__int64 steamId);
 	void ReloadShopConfig(APlayerController* playerController, FString* cmd, bool shouldLog);
-	
+
 	void Init()
 	{
 		auto db = GetDB();
