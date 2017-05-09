@@ -45,6 +45,7 @@ namespace Tools
 			chatMessage->RadioFrequency = 0;
 			chatMessage->ChatType = EChatType::GlobalChat;
 			chatMessage->SenderIcon = 0;
+			chatMessage->UserId = L"";
 
 			void* mem = malloc(sizeof(FChatMessage));
 			if (mem)

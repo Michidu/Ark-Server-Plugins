@@ -263,7 +263,7 @@ void ListPlayerDinos(RCONClientConnection* rconClientConnection, RCONPacket* rco
 
 			for (uint32_t i = 0; i < FoundActors->Num(); i++)
 			{
-				AActor* actor = FoundActors->Data[i];
+				AActor* actor = (*FoundActors)[i];
 
 				APrimalDinoCharacter* dino = static_cast<APrimalDinoCharacter*>(actor);
 
