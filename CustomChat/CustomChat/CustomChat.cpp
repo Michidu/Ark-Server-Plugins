@@ -9,12 +9,16 @@
 
 namespace CustomChat
 {
+	void ReloadChatConfig(APlayerController* playerController, FString* cmd, bool shouldLog);
+
 	nlohmann::json json;
 
 	void Init()
 	{
 		LoadConfig();
 		BindCommands();
+
+		Ark::AddConsoleCommand(L"ReloadChatConfig", &ReloadChatConfig);
 	}
 
 	void LoadConfig()
@@ -32,6 +36,8 @@ namespace CustomChat
 
 	void BindCommands()
 	{
+		int i = 0;
+
 		auto itemsMap = json["ChatCommands"];
 		for (auto iter = itemsMap.begin(); iter != itemsMap.end(); ++iter)
 		{
@@ -41,8 +47,10 @@ namespace CustomChat
 
 			wchar_t* wCmd = Tools::ConvertToWideStr(cmd);
 
-			Ark::AddChatCommand(wCmd, [item](AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
+			Ark::AddChatCommand(wCmd, [i](AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
 			                    {
+				                    auto item = json["ChatCommands"][i];
+
 				                    std::string reply = item["Reply"];
 				                    std::string type = item["Type"];
 
@@ -72,7 +80,17 @@ namespace CustomChat
 
 				                    delete[] msg;
 			                    });
+			++i;
 		}
+	}
+
+	void ReloadChatConfig(APlayerController* playerController, FString* cmd, bool shouldLog)
+	{
+		LoadConfig();
+
+		AShooterPlayerController* aShooterController = static_cast<AShooterPlayerController*>(playerController);
+
+		Tools::SendDirectMessage(aShooterController, TEXT("Reloaded config"));
 	}
 }
 

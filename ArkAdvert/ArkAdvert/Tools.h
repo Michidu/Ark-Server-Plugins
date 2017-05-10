@@ -6,6 +6,53 @@
 
 namespace Tools
 {
+	class Timer
+	{
+	public:
+		template <class callable, class... arguments>
+		Timer(int after, bool async, callable&& f, arguments&&... args)
+		{
+			std::function<typename std::result_of<callable(arguments ...)>::type()> task(std::bind(std::forward<callable>(f), std::forward<arguments>(args)...));
+
+			if (async)
+			{
+				std::thread([after, task]()
+					{
+						std::this_thread::sleep_for(std::chrono::milliseconds(after));
+						task();
+					}).detach();
+			}
+			else
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(after));
+				task();
+			}
+		}
+	};
+
+	template <typename... Args>
+	void SendColoredMessageToAll(const wchar_t* msg, FLinearColor color, Args&&... args)
+	{
+		size_t size = swprintf(nullptr, 0, msg, std::forward<Args>(args)...) + 1;
+
+		wchar_t* buffer = new wchar_t[size];
+		_snwprintf_s(buffer, size, _TRUNCATE, msg, std::forward<Args>(args)...);
+
+		FString cmd(buffer);
+
+		auto playerControllers = Ark::GetWorld()->GetPlayerControllerListField();
+		for (uint32_t i = 0; i < playerControllers.Num(); ++i)
+		{
+			auto playerController = playerControllers[i];
+
+			AShooterPlayerController* aShooterPC = static_cast<AShooterPlayerController*>(playerController.Get());
+
+			aShooterPC->ClientServerChatDirectMessage(&cmd, color, false);
+		}
+
+		delete[] buffer;
+	}
+
 	template <typename... Args>
 	void SendColoredMessage(AShooterPlayerController* playerController, const wchar_t* msg, FLinearColor color, Args&&... args)
 	{
@@ -22,7 +69,7 @@ namespace Tools
 	}
 
 	template <typename... Args>
-	void SendChatMessage(AShooterPlayerController* playerController, const FString& senderName, const wchar_t* msg, Args&&... args)
+	void SendChatMessageToAll(const FString& senderName, const wchar_t* msg, Args&&... args)
 	{
 		size_t size = swprintf(nullptr, 0, msg, std::forward<Args>(args)...) + 1;
 
@@ -49,33 +96,23 @@ namespace Tools
 			chatMessage->UserId = L"";
 
 			void* mem = malloc(sizeof(FChatMessage));
-			if (mem)
+			FChatMessage* chat = new(mem) FChatMessage(chatMessage);
+
+			auto playerControllers = Ark::GetWorld()->GetPlayerControllerListField();
+			for (uint32_t i = 0; i < playerControllers.Num(); ++i)
 			{
-				FChatMessage* chat = new(mem) FChatMessage(chatMessage);
+				auto playerController = playerControllers[i];
 
-				playerController->ClientChatMessage(chat);
+				AShooterPlayerController* aShooterPC = static_cast<AShooterPlayerController*>(playerController.Get());
 
-				chat->~FChatMessage();
-				free(mem);
+				aShooterPC->ClientChatMessage(chat);
 			}
+
+			chat->~FChatMessage();
+			free(mem);
 
 			free(chatMessage);
 		}
-
-		delete[] buffer;
-	}
-
-	template <typename... Args>
-	void SendNotification(AShooterPlayerController* playerController, const wchar_t* msg, FLinearColor color, float displayScale, float displayTime, Args&&... args)
-	{
-		size_t size = swprintf(nullptr, 0, msg, std::forward<Args>(args)...) + 1;
-
-		wchar_t* buffer = new wchar_t[size];
-		_snwprintf_s(buffer, size, _TRUNCATE, msg, std::forward<Args>(args)...);
-
-		FString cmd(buffer);
-
-		playerController->ClientServerSOTFNotificationCustom(&cmd, color, displayScale, displayTime, 0, 0);
 
 		delete[] buffer;
 	}
@@ -96,6 +133,6 @@ namespace Tools
 		delete[] buffer;
 	}
 
-	wchar_t* ConvertToWideStr(const std::string& str);
+	int GetRandomNumber(int min, int max);
 	std::string GetCurrentDir();
 }
