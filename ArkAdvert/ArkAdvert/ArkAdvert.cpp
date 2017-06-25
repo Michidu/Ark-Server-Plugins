@@ -21,7 +21,9 @@ namespace ArkAdvert
 	{
 		LoadConfig();
 
-		Ark::SetHook("AShooterGameMode", "StartNewShooterPlayer", &Hook_AShooterGameMode_StartNewShooterPlayer, reinterpret_cast<LPVOID*>(&AShooterGameMode_StartNewShooterPlayer_original));
+		bool welcomeMsgEnabled = json["AdvertMessages"]["WelcomeMsgEnabled"];
+		if (welcomeMsgEnabled)
+			Ark::SetHook("AShooterGameMode", "StartNewShooterPlayer", &Hook_AShooterGameMode_StartNewShooterPlayer, reinterpret_cast<LPVOID*>(&AShooterGameMode_StartNewShooterPlayer_original));
 
 		int interval = json["AdvertMessages"]["Interval"];
 		NextAdvTime = std::chrono::system_clock::now() + std::chrono::seconds(interval);
@@ -48,9 +50,12 @@ namespace ArkAdvert
 	{
 		AShooterGameMode_StartNewShooterPlayer_original(_this, NewPlayer, bForceCreateNewPlayerData, bIsFromLogin, charConfig, ArkPlayerData);
 
-		AShooterPlayerController* player = static_cast<AShooterPlayerController*>(NewPlayer);
+		if (bIsFromLogin)
+		{
+			AShooterPlayerController* player = static_cast<AShooterPlayerController*>(NewPlayer);
 
-		Tools::Timer(1000, true, &WelcomeMsg, player);
+			Tools::Timer(5000, true, &WelcomeMsg, player);
+		}
 	}
 
 	void WelcomeMsg(AShooterPlayerController* player)
