@@ -105,4 +105,20 @@ namespace Tools
 
 		return std::string(buffer).substr(0, pos);
 	}
+
+	std::wstring ConvertToWideStr(const std::string& text)
+	{
+		const size_t size = text.size();
+
+		std::wstring wstr;
+		if (size > 0) 
+		{
+			wstr.resize(size);
+
+			size_t convertedChars;
+			mbstowcs_s(&convertedChars, &wstr[0], size + 1, text.c_str(), _TRUNCATE);
+		}
+
+		return wstr;
+	}
 }

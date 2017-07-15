@@ -1,5 +1,4 @@
 #pragma once
-#include <windows.h>
 #include "API/Base.h"
 
 template <typename... Args>

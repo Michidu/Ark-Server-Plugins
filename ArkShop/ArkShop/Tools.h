@@ -85,4 +85,5 @@ namespace Tools
 	int GetRandomNumber(int min, int max);
 	void Log(const std::string& text);
 	std::string GetCurrentDir();
+	std::wstring ConvertToWideStr(const std::string& text);
 }

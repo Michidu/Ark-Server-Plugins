@@ -46,6 +46,46 @@ void GiveItemNum(RCONClientConnection* rconClientConnection, RCONPacket* rconPac
 	}
 }
 
+void GiveItem(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
+{
+	FString msg = rconPacket->Body;
+
+	TArray<FString> Parsed;
+	msg.ParseIntoArray(&Parsed, L" ", true);
+
+	if (Parsed.IsValidIndex(5))
+	{
+		unsigned __int64 steamId;
+		FString bpPath;
+		int quantity;
+		float quality;
+		bool forceBP;
+
+		try
+		{
+			steamId = std::stoull(*Parsed[1]);
+			bpPath = Parsed[2];
+			quantity = std::stoi(*Parsed[3]);
+			quality = std::stof(*Parsed[4]);
+			forceBP = std::stoi(*Parsed[5]) != 0;
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
+
+		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
+		if (aShooterPC)
+		{
+			aShooterPC->GiveItem(&bpPath, quantity, quality, forceBP);
+
+			// Send a reply
+			FString reply = L"Successfully gave items\n";
+			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
+		}
+	}
+}
+
 void AddExperience(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
 {
 	FString msg = rconPacket->Body;
@@ -668,9 +708,45 @@ void ClientChat(RCONClientConnection* rconClientConnection, RCONPacket* rconPack
 	}
 }
 
+void UnlockEngram(RCONClientConnection* rconClientConnection, RCONPacket* rconPacket, UWorld* uWorld)
+{
+	FString msg = rconPacket->Body;
+
+	TArray<FString> Parsed;
+	msg.ParseIntoArray(&Parsed, L" ", true);
+
+	if (Parsed.IsValidIndex(2))
+	{
+		unsigned __int64 steamId;
+		FString bpPath;
+
+		try
+		{
+			steamId = std::stoull(*Parsed[1]);
+			bpPath = Parsed[2];
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
+
+		AShooterPlayerController* aShooterPC = FindPlayerControllerFromSteamId(steamId);
+		if (aShooterPC)
+		{
+			UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(aShooterPC->GetCheatManagerField());
+			cheatManager->UnlockEngram(&bpPath);
+
+			// Send a reply
+			FString reply = L"Successfully unlocked engram\n";
+			rconClientConnection->SendMessageW(rconPacket->Id, 0, &reply);
+		}
+	}
+}
+
 void Init()
 {
 	Ark::AddRconCommand(L"GiveItemNum", &GiveItemNum);
+	Ark::AddRconCommand(L"GiveItem", &GiveItem);
 	Ark::AddRconCommand(L"AddExperience", &AddExperience);
 	Ark::AddRconCommand(L"SetPlayerPos", &SetPlayerPos);
 	Ark::AddRconCommand(L"GetPlayerPos ", &GetPlayerPos);
@@ -687,6 +763,7 @@ void Init()
 	Ark::AddRconCommand(L"AddDinoExperience", &AddDinoExperience);
 	Ark::AddRconCommand(L"KillDino", &KillDino);
 	Ark::AddRconCommand(L"ClientChat", &ClientChat);
+	Ark::AddRconCommand(L"UnlockEngram", &UnlockEngram);
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)

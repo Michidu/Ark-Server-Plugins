@@ -135,7 +135,7 @@ namespace
 			if (data->SteamId == steamId)
 			{
 				auto& v = TimedRewards::OnlinePlayers;
-				v.erase(std::remove(v.begin(), v.end(), data), v.end());
+				v.erase(remove(v.begin(), v.end(), data), v.end());
 
 				delete data;
 				break;

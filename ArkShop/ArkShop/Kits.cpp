@@ -100,7 +100,7 @@ namespace Kits
 		void GiveKit(AShooterPlayerController* playerController, const nlohmann::basic_json<>& kitEntry)
 		{
 			// Give items
-			auto itemsMap = kitEntry["Items"];
+			auto itemsMap = kitEntry.value("Items", nlohmann::json::array());
 			for (auto iter = itemsMap.begin(); iter != itemsMap.end(); ++iter)
 			{
 				auto item = iter.value();
@@ -110,8 +110,7 @@ namespace Kits
 				bool forceBlueprint = item["forceBlueprint"];
 				std::string blueprint = item["blueprint"];
 
-				wchar_t buffer[512];
-				swprintf_s(buffer, L"%hs", blueprint.c_str());
+				std::wstring buffer = Tools::ConvertToWideStr(blueprint);
 
 				FString bpPath(buffer);
 
@@ -121,7 +120,7 @@ namespace Kits
 			// Give dinos
 			UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(playerController->GetCheatManagerField());
 
-			auto dinosMap = kitEntry["Dinos"];
+			auto dinosMap = kitEntry.value("Dinos", nlohmann::json::array());
 			for (auto iter = dinosMap.begin(); iter != dinosMap.end(); ++iter)
 			{
 				auto dino = iter.value();
@@ -129,12 +128,11 @@ namespace Kits
 				int level = dino["level"];
 				std::string className = dino["className"];
 
-				wchar_t buffer[256];
-				swprintf_s(buffer, L"%hs", className.c_str());
+				std::wstring buffer = Tools::ConvertToWideStr(className);
 
 				FString dinoClass(buffer);
 
-				level = static_cast<int>(std::ceil(level / 1.5f));
+				level = static_cast<int>(ceil(level / 1.5f));
 
 				cheatManager->GMSummon(&dinoClass, level);
 			}

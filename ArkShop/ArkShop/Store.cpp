@@ -98,8 +98,7 @@ namespace Store
 							int defaultAmount = item["amount"];
 							std::string blueprint = item["blueprint"];
 
-							wchar_t buffer[512];
-							swprintf_s(buffer, L"%hs", blueprint.c_str());
+							std::wstring buffer = Tools::ConvertToWideStr(blueprint);
 
 							FString bpPath(buffer);
 
@@ -140,12 +139,11 @@ namespace Store
 			{
 				Points::SpendPoints(price, steamId);
 
-				wchar_t buffer[256];
-				swprintf_s(buffer, L"%hs", className.c_str());
+				std::wstring buffer = Tools::ConvertToWideStr(className);
 
 				FString dinoClass(buffer);
 
-				level = static_cast<int>(std::ceil(level / 1.5f));
+				level = static_cast<int>(ceil(level / 1.5f));
 
 				UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(playerController->GetCheatManagerField());
 				cheatManager->GMSummon(&dinoClass, level);
@@ -175,8 +173,7 @@ namespace Store
 			{
 				Points::SpendPoints(price, steamId);
 
-				wchar_t buffer[256];
-				swprintf_s(buffer, L"%hs", className.c_str());
+				std::wstring buffer = Tools::ConvertToWideStr(className);
 
 				FString beaconClass(buffer);
 
@@ -235,11 +232,11 @@ namespace Store
 					return;
 
 				auto start = itemsList.begin();
-				std::advance(start, startIndex);
+				advance(start, startIndex);
 
 				for (auto iter = start; iter != itemsList.end(); ++iter)
 				{
-					size_t i = std::distance(itemsList.begin(), iter);
+					size_t i = distance(itemsList.begin(), iter);
 					if (i == startIndex + itemsPerPage)
 						break;
 

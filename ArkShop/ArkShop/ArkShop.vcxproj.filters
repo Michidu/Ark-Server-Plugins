@@ -42,6 +42,9 @@
     <ClInclude Include="Store.h">
       <Filter>Header</Filter>
     </ClInclude>
+    <ClInclude Include="Market.h">
+      <Filter>Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ArkShop.cpp">
@@ -69,6 +72,9 @@
       <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="Store.cpp">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="Market.cpp">
       <Filter>Source Code</Filter>
     </ClCompile>
   </ItemGroup>
