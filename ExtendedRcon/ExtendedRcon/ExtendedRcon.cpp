@@ -749,8 +749,8 @@ void Init()
 	Ark::AddRconCommand(L"GiveItem", &GiveItem);
 	Ark::AddRconCommand(L"AddExperience", &AddExperience);
 	Ark::AddRconCommand(L"SetPlayerPos", &SetPlayerPos);
-	Ark::AddRconCommand(L"GetPlayerPos ", &GetPlayerPos);
-	Ark::AddRconCommand(L"KillPlayer ", &KillPlayer);
+	Ark::AddRconCommand(L"GetPlayerPos", &GetPlayerPos);
+	Ark::AddRconCommand(L"KillPlayer", &KillPlayer);
 	Ark::AddRconCommand(L"TeleportToPlayer", &TeleportToPlayer);
 	Ark::AddRconCommand(L"ListPlayerDinos", &ListPlayerDinos);
 	Ark::AddRconCommand(L"GetTribeIdOfPlayer", &GetTribeIdOfPlayer);
