@@ -1,97 +1,109 @@
-#include <windows.h>
+#include <API/ARK/Ark.h>
+#include <API/UE/Math/ColorList.h>
+#include <Logger/Logger.h>
+
 #include <fstream>
-#include "CustomChat.h"
+
 #include "json.hpp"
-#include "API/Base.h"
-#include "Tools.h"
 
 #pragma comment(lib, "ArkApi.lib")
 
-namespace CustomChat
+nlohmann::json config;
+
+void BindCommands()
 {
-	void ReloadChatConfig(APlayerController* playerController, FString* cmd, bool shouldLog);
+	int i = 0;
 
-	nlohmann::json json;
-
-	void Init()
+	auto items_map = config["ChatCommands"];
+	for (const auto& item : items_map)
 	{
-		LoadConfig();
-		BindCommands();
+		std::string cmd = item["Command"];
 
-		Ark::AddConsoleCommand(L"ReloadChatConfig", &ReloadChatConfig);
+		ArkApi::GetCommands().
+			AddChatCommand(cmd.c_str(),
+			               [i](AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type mode)
+			               {
+				               auto item = config["ChatCommands"][i];
+
+				               std::string reply = item["Reply"];
+				               std::string type = item["Type"];
+
+				               if (type == "ServerChat")
+				               {
+					               auto config_color = item["Color"];
+					               FLinearColor color{config_color[0], config_color[1], config_color[2], config_color[3]};
+
+					               ArkApi::GetApiUtils().SendServerMessage(player_controller, color, reply.c_str());
+				               }
+				               else if (type == "ClientChat")
+				               {
+					               ArkApi::GetApiUtils().SendChatMessage(player_controller, "Server", reply.c_str());
+				               }
+				               else if (type == "Notification")
+				               {
+					               float display_scale = item["DisplayScale"];
+					               float display_time = item["DisplayTime"];
+
+					               auto config_color = item["Color"];
+					               FLinearColor color{config_color[0], config_color[1], config_color[2], config_color[3]};
+
+					               ArkApi::GetApiUtils().SendNotification(player_controller, color, display_scale, display_time,
+					                                                      nullptr, reply.c_str());
+				               }
+			               });
+
+		++i;
+	}
+}
+
+void ReadConfig()
+{
+	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/CustomChat/config.json";
+	std::ifstream file{config_path};
+	if (!file.is_open())
+		throw std::runtime_error("Can't open config.json");
+
+	file >> config;
+
+	file.close();
+}
+
+void ReloadConfig(APlayerController* player_controller, FString*, bool)
+{
+	AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
+
+	try
+	{
+		ReadConfig();
+	}
+	catch (const std::exception& error)
+	{
+		ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, "Failed to reload config");
+
+		Log::GetLog()->error(error.what());
+		return;
 	}
 
-	void LoadConfig()
-	{
-		std::ifstream file(Tools::GetCurrentDir() + "/BeyondApi/Plugins/CustomChat/config.json");
-		if (!file.is_open())
-		{
-			std::cout << "Could not open file config.json" << std::endl;
-			throw;
-		}
+	ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Reloaded config");
+}
 
-		file >> json;
-		file.close();
+void Load()
+{
+	Log::Get().Init("CustomChat");
+
+	try
+	{
+		ReadConfig();
+	}
+	catch (const std::exception& error)
+	{
+		Log::GetLog()->error(error.what());
+		throw;
 	}
 
-	void BindCommands()
-	{
-		int i = 0;
+	BindCommands();
 
-		auto itemsMap = json["ChatCommands"];
-		for (auto iter = itemsMap.begin(); iter != itemsMap.end(); ++iter)
-		{
-			auto item = iter.value();
-
-			std::string cmd = item["Command"];
-
-			wchar_t* wCmd = Tools::ConvertToWideStr(cmd);
-
-			Ark::AddChatCommand(wCmd, [i](AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
-			                    {
-				                    auto item = json["ChatCommands"][i];
-
-				                    std::string reply = item["Reply"];
-				                    std::string type = item["Type"];
-
-				                    wchar_t* msg = Tools::ConvertToWideStr(reply);
-
-				                    if (type == "ServerChat")
-				                    {
-					                    auto configColor = item["Color"];
-					                    FLinearColor color = {configColor[0], configColor[1], configColor[2], configColor[3]};
-
-					                    Tools::SendColoredMessage(playerController, msg, color);
-				                    }
-				                    else if (type == "ClientChat")
-				                    {
-					                    Tools::SendChatMessage(playerController, TEXT("SERVER"), msg);
-				                    }
-				                    else if (type == "Notification")
-				                    {
-					                    float displayScale = item["DisplayScale"];
-					                    float displayTime = item["DisplayTime"];
-
-					                    auto configColor = item["Color"];
-					                    FLinearColor color = {configColor[0], configColor[1], configColor[2], configColor[3]};
-
-					                    Tools::SendNotification(playerController, msg, color, displayScale, displayTime);
-				                    }
-
-				                    delete[] msg;
-			                    });
-			++i;
-		}
-	}
-
-	void ReloadChatConfig(APlayerController* playerController, FString* cmd, bool shouldLog)
-	{
-		LoadConfig();
-
-		AShooterPlayerController* aShooterController = static_cast<AShooterPlayerController*>(playerController);
-
-		Tools::SendDirectMessage(aShooterController, TEXT("Reloaded config"));
-	}
+	ArkApi::GetCommands().AddConsoleCommand("CustomChat.Reload", &ReloadConfig);
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
@@ -99,10 +111,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-		CustomChat::Init();
+		Load();
 		break;
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
 		break;
 	}

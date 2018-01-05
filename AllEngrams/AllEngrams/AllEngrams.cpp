@@ -1,59 +1,76 @@
-#include <windows.h>
+#include <API/ARK/Ark.h>
+#include <Logger/Logger.h>
+
 #include <fstream>
-#include <iostream>
-#include "AllEngrams.h"
-#include "Tools.h"
 
 #pragma comment(lib, "ArkApi.lib")
 
-namespace
+TArray<FString> all_engrams;
+
+// Helper function for dumping all learnt engrams
+void DumpEngrams(APlayerController* player_controller, FString* message, bool)
 {
-	// Helper function for dumping all learnt engrams (Not used)
-	void DumpEngrams(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
+	AShooterPlayerState* player_state = static_cast<AShooterPlayerState*>(player_controller->PlayerStateField()());
+
+	std::ofstream f("Engrams.txt");
+
+	auto& engrams = player_state->EngramItemBlueprintsField()();
+	for (const auto& item : engrams)
 	{
-		AShooterPlayerState* playerState = static_cast<AShooterPlayerState*>(playerController->GetPlayerStateField());
-		auto engrams = playerState->GetEngramItemBlueprintsField();
+		FString asset_name;
+		item.uClass->GetFullName(&asset_name, nullptr);
 
-		std::ofstream f("Engrams.txt");
-
-		for (uint32_t i = 0; i < engrams.Num(); ++i)
-		{
-			auto item = engrams[i];
-
-			FString assetName;
-			item.uClass->GetFullName(&assetName, nullptr);
-
-			f << assetName.ToString() << "\n";
-		}
-
-		f.close();
+		f << asset_name.ToString() << "\n";
 	}
 
-	void GiveEngrams(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
+	f.close();
+}
+
+void GiveEngrams(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type mode)
+{
+	UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField()());
+
+	for (FString& engram : all_engrams)
 	{
-		UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(playerController->GetCheatManagerField());
+		cheat_manager->UnlockEngram(&engram);
+	}
+}
 
-		std::wifstream file(Tools::GetCurrentDir() + "/BeyondApi/Plugins/AllEngrams/Engrams.txt");
-		if (!file.good())
-		{
-			std::cerr << "Can't open Engrams.txt\n";
-			return;
-		}
+bool ReadEngrams()
+{
+	std::ifstream file(ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/AllEngrams/Engrams.txt");
+	if (!file.good())
+		return false;
 
-		std::wstring str;
-		while (getline(file, str))
-		{
-			FString fStr = &str[0];
-			cheatManager->UnlockEngram(&fStr);
-		}
-
-		file.close();
+	std::string str;
+	while (getline(file, str))
+	{
+		all_engrams.Add(FString(str.c_str()));
 	}
 
-	void Init()
+	file.close();
+
+	return true;
+}
+
+void Load()
+{
+	Log::Get().Init("AllEngrams");
+
+	if (!ReadEngrams())
 	{
-		Ark::AddChatCommand(L"/GiveEngrams", &GiveEngrams);
+		Log::GetLog()->error("Failed to read engrams");
+		return;
 	}
+
+	ArkApi::GetCommands().AddChatCommand("/GiveEngrams", &GiveEngrams);
+	ArkApi::GetCommands().AddConsoleCommand("DumpEngrams", &DumpEngrams);
+}
+
+void Unload()
+{
+	ArkApi::GetCommands().RemoveChatCommand("/GiveEngrams");
+	ArkApi::GetCommands().RemoveConsoleCommand("DumpEngrams");
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
@@ -61,11 +78,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-		Init();
+		Load();
 		break;
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
+		Unload();
 		break;
 	}
 	return TRUE;
