@@ -23,7 +23,7 @@ namespace TimedRewards
 
 				if (diff.count() <= 0)
 				{
-					Points::AddPoints(pointsAmount, data->SteamId);
+					Points::AddPoints(pointsAmount, data->SteamId, true);
 
 					data->NextRewardTime = now + std::chrono::minutes(pointsInterval);
 				}

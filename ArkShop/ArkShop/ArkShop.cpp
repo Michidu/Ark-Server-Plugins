@@ -27,12 +27,54 @@ namespace
 	{
 		auto db = GetDB();
 
-		db << "create table if not exists Players ("
-			"Id integer primary key autoincrement not null,"
-			"SteamId integer default 0,"
-			"Kits text default '{}',"
-			"Points integer default 0"
-			");";
+		//setup and migrate database
+		int hasTablePlayers = false;
+		db << "PRAGMA table_info(Players);" >> [&]() { hasTablePlayers = true; };
+		if (!hasTablePlayers)
+		{
+			try
+			{
+				db << "begin;";
+				db << "create table if not exists Players ("
+					"Id integer primary key autoincrement not null,"
+					"SteamId integer default 0,"
+					"Kits text default '{}',"
+					"Points integer default 0,"
+					"TimedRewardAmountOverride integer default null"
+					");";
+				db << "PRAGMA user_version = 1;";
+				db << "commit;";
+			}
+			catch (sqlite::sqlite_exception &e)
+			{
+				db << "rollback;";
+				Tools::Log("Failed to setup database");
+				throw;
+			}
+		}
+		else
+		{
+			int userVersion = 0;
+			db << "PRAGMA user_version;" >> userVersion;
+
+			if (userVersion == 0)
+			{
+				try
+				{
+					userVersion = 1;
+					db << "begin;";
+					db << u"alter table Players add column TimedRewardAmountOverride integer default null;";
+					db << "PRAGMA user_version = " + std::to_string(userVersion) + ";";
+					db << "commit;";
+				}
+				catch (sqlite::sqlite_exception &e)
+				{
+					db << "rollback;";
+					Tools::Log("Failed to migrate database to version 1");
+					throw;
+				}
+			}
+		}
 
 		LoadConfig();
 

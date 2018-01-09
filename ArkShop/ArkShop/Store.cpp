@@ -63,7 +63,7 @@ namespace Store
 			{
 				std::string strItemId = Parsed[1].ToString();
 
-				int amount;
+				int amount = 0;
 
 				try
 				{
@@ -81,6 +81,8 @@ namespace Store
 				int price = itemEntry["price"];
 
 				int finalPrice = price * amount;
+				if (finalPrice <= 0)
+					return false;
 
 				int points = Points::GetPoints(steamId);
 
@@ -103,6 +105,8 @@ namespace Store
 							FString bpPath(buffer);
 
 							int finalAmount = defaultAmount * amount;
+							if (finalAmount <= 0)
+								return false;
 
 							playerController->GiveItem(&bpPath, finalAmount, quality, forceBlueprint);
 						}

@@ -151,7 +151,7 @@ namespace Kits
 				{
 					std::string kitName = Parsed[1].ToString();
 
-					int amount;
+					int amount = 0;
 
 					try
 					{
@@ -185,6 +185,8 @@ namespace Kits
 					}
 
 					int finalPrice = price * amount;
+					if (finalPrice <= 0)
+						return;
 
 					if (Points::GetPoints(steamId) >= finalPrice)
 					{
