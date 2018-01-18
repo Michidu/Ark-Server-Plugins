@@ -2,13 +2,16 @@
 #include <Logger/Logger.h>
 
 #include <fstream>
+#include "json.hpp"
 
 #pragma comment(lib, "ArkApi.lib")
+
+nlohmann::json config;
 
 TArray<FString> all_engrams;
 
 // Helper function for dumping all learnt engrams
-void DumpEngrams(APlayerController* player_controller, FString* message, bool)
+void DumpEngrams(APlayerController* player_controller, FString*, bool)
 {
 	AShooterPlayerState* player_state = static_cast<AShooterPlayerState*>(player_controller->PlayerStateField()());
 
@@ -26,13 +29,26 @@ void DumpEngrams(APlayerController* player_controller, FString* message, bool)
 	f.close();
 }
 
-void GiveEngrams(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type mode)
+void GiveEngrams(AShooterPlayerController* player_controller, FString*, EChatSendMode::Type)
 {
-	UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField()());
+	APrimalCharacter* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField()());
+	UPrimalCharacterStatusComponent* char_component = primal_character->MyCharacterStatusComponentField()();
 
-	for (FString& engram : all_engrams)
+	const int required_lvl = config.value("RequiredLevel", 0);
+	const int level = char_component->BaseCharacterLevelField()() + char_component->ExtraCharacterLevelField()();
+	if (level >= required_lvl)
 	{
-		cheat_manager->UnlockEngram(&engram);
+		UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField()());
+
+		for (FString& engram : all_engrams)
+		{
+			cheat_manager->UnlockEngram(&engram);
+		}
+	}
+	else
+	{
+		ArkApi::GetApiUtils().SendChatMessage(player_controller, "Server",
+		                                      "You should be at least level {} or higher to use this command", required_lvl);
 	}
 }
 
@@ -53,6 +69,18 @@ bool ReadEngrams()
 	return true;
 }
 
+void ReadConfig()
+{
+	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/AllEngrams/config.json";
+	std::ifstream file{config_path};
+	if (!file.is_open())
+		throw std::runtime_error("Can't open config.json");
+
+	file >> config;
+
+	file.close();
+}
+
 void Load()
 {
 	Log::Get().Init("AllEngrams");
@@ -61,6 +89,16 @@ void Load()
 	{
 		Log::GetLog()->error("Failed to read engrams");
 		return;
+	}
+
+	try
+	{
+		ReadConfig();
+	}
+	catch (const std::exception& error)
+	{
+		Log::GetLog()->error(error.what());
+		throw;
 	}
 
 	ArkApi::GetCommands().AddChatCommand("/GiveEngrams", &GiveEngrams);

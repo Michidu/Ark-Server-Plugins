@@ -17,7 +17,7 @@ void GiveItemNum(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet,
 
 	if (parsed.IsValidIndex(5))
 	{
-		unsigned __int64 steam_id;
+		uint64 steam_id;
 		int item_id;
 		int quantity;
 		float quality;
@@ -63,7 +63,7 @@ void GiveItem(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UW
 
 	if (parsed.IsValidIndex(5))
 	{
-		unsigned __int64 steam_id;
+		uint64 steam_id;
 		FString blueprint;
 		int quantity;
 		float quality;
@@ -152,7 +152,7 @@ void AddExperience(RCONClientConnection* rcon_connection, RCONPacket* rcon_packe
 
 	if (parsed.IsValidIndex(4))
 	{
-		unsigned __int64 steam_id;
+		uint64 steam_id;
 		float how_much;
 		bool from_tribe_share;
 		bool prevent_sharing;
@@ -196,7 +196,7 @@ void SetPlayerPos(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet
 
 	if (parsed.IsValidIndex(4))
 	{
-		unsigned __int64 steam_id;
+		uint64 steam_id;
 		float x;
 		float y;
 		float z;
@@ -240,7 +240,7 @@ void GetPlayerPos(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet
 
 	if (parsed.IsValidIndex(1))
 	{
-		unsigned __int64 steam_id;
+		uint64 steam_id;
 
 		try
 		{
@@ -297,7 +297,7 @@ void TeleportAllPlayers(RCONClientConnection* rcon_connection, RCONPacket* rcon_
 		const auto& player_controllers = ArkApi::GetApiUtils().GetWorld()->PlayerControllerListField()();
 		for (TWeakObjectPtr<APlayerController> player_controller : player_controllers)
 		{
-			AShooterPlayerController* shooter_pc = static_cast<AShooterPlayerController*>(player_controller.Get());
+			auto shooter_pc = static_cast<AShooterPlayerController*>(player_controller.Get());
 
 			shooter_pc->SetPlayerPos(x, y, z);
 		}
@@ -319,7 +319,7 @@ void KillPlayer(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, 
 
 	if (parsed.IsValidIndex(1))
 	{
-		unsigned __int64 steam_id;
+		uint64 steam_id;
 
 		try
 		{
@@ -358,8 +358,8 @@ void TeleportToPlayer(RCONClientConnection* rcon_connection, RCONPacket* rcon_pa
 
 	if (parsed.IsValidIndex(2))
 	{
-		unsigned __int64 steam_id;
-		unsigned __int64 steam_id2;
+		uint64 steam_id;
+		uint64 steam_id2;
 
 		try
 		{
@@ -386,10 +386,9 @@ void TeleportToPlayer(RCONClientConnection* rcon_connection, RCONPacket* rcon_pa
 			return;
 		}
 
-		UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(shooter_pc->CheatManagerField()());
-		cheat_manager->TeleportToPlayer(shooter_pc2->LinkedPlayerIDField()());
+		std::optional<FString> result = ArkApi::IApiUtils::TeleportToPlayer(shooter_pc, shooter_pc2, false);
 
-		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully teleported player");
+		SendRconReply(rcon_connection, rcon_packet->Id, result.value_or("Successfully teleported player"));
 	}
 	else
 	{
@@ -406,7 +405,7 @@ void ListPlayerDinos(RCONClientConnection* rcon_connection, RCONPacket* rcon_pac
 
 	if (parsed.IsValidIndex(1))
 	{
-		unsigned __int64 steam_id;
+		uint64 steam_id;
 
 		try
 		{
@@ -446,8 +445,7 @@ void ListPlayerDinos(RCONClientConnection* rcon_connection, RCONPacket* rcon_pac
 				dino->GetDescriptiveName(&dino_name);
 				dino->DinoNameTagField()().ToString(&class_name);
 
-				reply += dino_name + " (" + class_name + ")" + ", ID1=" + FString::FromInt(dino->DinoID1Field()()) + ", ID2="
-					+ FString::FromInt(dino->DinoID2Field()()) + "\n";
+				reply += FString::Format(TEXT("{}({}), ID1={}, ID2={}\n"), *dino_name, *class_name, dino->DinoID1Field()(), dino->DinoID2Field()());
 			}
 
 			Sleep(0);
@@ -471,7 +469,7 @@ void GetTribeIdOfPlayer(RCONClientConnection* rcon_connection, RCONPacket* rcon_
 
 	if (parsed.IsValidIndex(1))
 	{
-		unsigned __int64 steam_id;
+		uint64 steam_id;
 
 		try
 		{
@@ -506,7 +504,7 @@ void SpawnDino(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, U
 
 	if (parsed.IsValidIndex(7))
 	{
-		unsigned __int64 steam_id;
+		uint64 steam_id;
 		int dino_lvl;
 		bool force_tame;
 		float x;
@@ -796,7 +794,7 @@ void UnlockEngram(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet
 
 	if (parsed.IsValidIndex(2))
 	{
-		unsigned __int64 steam_id;
+		uint64 steam_id;
 		FString blueprint;
 
 		try
