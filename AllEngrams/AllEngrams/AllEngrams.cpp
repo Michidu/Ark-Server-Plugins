@@ -31,6 +31,9 @@ void DumpEngrams(APlayerController* player_controller, FString*, bool)
 
 void GiveEngrams(AShooterPlayerController* player_controller, FString*, EChatSendMode::Type)
 {
+	if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+		return;
+
 	APrimalCharacter* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField()());
 	UPrimalCharacterStatusComponent* char_component = primal_character->MyCharacterStatusComponentField()();
 
