@@ -1,10 +1,10 @@
-#include "Kits.h"
+#include <Kits.h>
 
 #include <Permissions.h>
+#include <Points.h>
+#include <DBHelper.h>
 
 #include "ArkShop.h"
-#include "DBHelper.h"
-#include "Points.h"
 #include "ShopLog.h"
 
 namespace ArkShop::Kits
@@ -170,10 +170,10 @@ namespace ArkShop::Kits
 		auto items_map = kit_entry.value("Items", nlohmann::json::array());
 		for (const auto& item : items_map)
 		{
-			const int amount = item["amount"];
-			const float quality = item["quality"];
-			const bool force_blueprint = item["forceBlueprint"];
-			std::string blueprint = item["blueprint"];
+			const int amount = item["Amount"];
+			const float quality = item["Quality"];
+			const bool force_blueprint = item["ForceBlueprint"];
+			std::string blueprint = item["Blueprint"];
 
 			FString fblueprint(blueprint.c_str());
 
@@ -184,8 +184,8 @@ namespace ArkShop::Kits
 		auto dinos_map = kit_entry.value("Dinos", nlohmann::json::array());
 		for (const auto& dino : dinos_map)
 		{
-			const int level = dino["level"];
-			std::string blueprint = dino["blueprint"];
+			const int level = dino["Level"];
+			std::string blueprint = dino["Blueprint"];
 
 			const FString fblueprint(blueprint.c_str());
 
@@ -198,6 +198,9 @@ namespace ArkShop::Kits
 	 */
 	void RedeemKit(AShooterPlayerController* player_controller, const FString& kit_name)
 	{
+		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+			return;
+
 		const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
 
 		if (DBHelper::IsPlayerExists(steam_id))
@@ -301,6 +304,9 @@ namespace ArkShop::Kits
 
 	void BuyKit(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type)
 	{
+		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+			return;
+
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);
 

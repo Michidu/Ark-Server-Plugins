@@ -2,11 +2,12 @@
 
 #include <fstream>
 
+#include <Points.h>
+#include <Kits.h>
+#include <Store.h>
+#include <DBHelper.h>
+
 #include "TimedRewards.h"
-#include "Points.h"
-#include "Kits.h"
-#include "Store.h"
-#include "DBHelper.h"
 
 #pragma comment(lib, "ArkApi.lib")
 #pragma comment(lib, "Permissions.lib")

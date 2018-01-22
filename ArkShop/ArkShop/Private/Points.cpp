@@ -1,7 +1,7 @@
-#include "Points.h"
+#include <Points.h>
+#include <DBHelper.h>
 
 #include "ArkShop.h"
-#include "DBHelper.h"
 
 namespace ArkShop::Points
 {

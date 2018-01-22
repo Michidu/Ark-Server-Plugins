@@ -1,0 +1,47 @@
+{
+  "AdvertMessages":{
+    "WelcomeMsgEnabled":true,
+    "WelcomeMsg":"Welcome to my server!",
+    "WelcomeMsgColor":[
+      1.0,
+      0,
+      0,
+      1.0
+    ],
+    "Interval":120,
+    "Messages":[
+      {
+        "Message":"Message 1",
+        "Type":"ServerChat",
+        "Color":[
+          1.0,
+          1.0,
+          1.0,
+          0.8
+        ]
+      },
+      {
+        "Message":"Message 2",
+        "Type":"ClientChat",
+        "Color":[
+          0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "Message":"Message 3",
+        "Type":"Notification",
+        "Color":[
+          1.0,
+          1.0,
+          1.0,
+          0.8
+        ],
+        "DisplayScale":1.3,
+        "DisplayTime":5.0
+      }
+    ]
+  }
+}

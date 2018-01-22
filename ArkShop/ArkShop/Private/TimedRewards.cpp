@@ -1,7 +1,7 @@
 #include "TimedRewards.h"
 
 #include <Permissions.h>
-#include "Points.h"
+#include <Points.h>
 
 namespace ArkShop
 {

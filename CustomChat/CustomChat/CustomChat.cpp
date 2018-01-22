@@ -1,8 +1,8 @@
+#include <fstream>
+
 #include <API/ARK/Ark.h>
 #include <API/UE/Math/ColorList.h>
 #include <Logger/Logger.h>
-
-#include <fstream>
 
 #include "json.hpp"
 

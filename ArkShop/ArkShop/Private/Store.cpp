@@ -1,6 +1,6 @@
-#include "Store.h"
+#include <Store.h>
+#include <Points.h>
 
-#include "Points.h"
 #include "ArkShop.h"
 #include "DBHelper.h"
 #include "ShopLog.h"
@@ -18,7 +18,7 @@ namespace ArkShop::Store
 		if (amount <= 0)
 			amount = 1;
 
-		const unsigned price = item_entry["price"];
+		const unsigned price = item_entry["Price"];
 		const int final_price = price * amount;
 		if (final_price <= 0)
 			return false;
@@ -27,13 +27,13 @@ namespace ArkShop::Store
 
 		if (points >= final_price && Points::SpendPoints(final_price, steam_id))
 		{
-			auto items_map = item_entry["items"];
+			auto items_map = item_entry["Items"];
 			for (const auto& item : items_map)
 			{
-				const float quality = item["quality"];
-				const bool force_blueprint = item["forceBlueprint"];
-				const int default_amount = item["amount"];
-				std::string blueprint = item["blueprint"];
+				const float quality = item["Quality"];
+				const bool force_blueprint = item["ForceBlueprint"];
+				const int default_amount = item["Amount"];
+				std::string blueprint = item["Blueprint"];
 
 				const int final_amount = default_amount * amount;
 				if (final_amount <= 0)
@@ -64,9 +64,9 @@ namespace ArkShop::Store
 	{
 		bool success = false;
 
-		const int price = item_entry["price"];
-		const int level = item_entry["level"];
-		std::string blueprint = item_entry["blueprint"];
+		const int price = item_entry["Price"];
+		const int level = item_entry["Level"];
+		std::string blueprint = item_entry["Blueprint"];
 
 		const int points = Points::GetPoints(steam_id);
 
@@ -97,8 +97,8 @@ namespace ArkShop::Store
 	{
 		bool success = false;
 
-		const int price = item_entry["price"];
-		std::string class_name = item_entry["className"];
+		const int price = item_entry["Price"];
+		std::string class_name = item_entry["ClassName"];
 
 		const int points = Points::GetPoints(steam_id);
 
@@ -123,8 +123,50 @@ namespace ArkShop::Store
 		return success;
 	}
 
+	/**
+	* \brief Buy experience from shop
+	*/
+	bool BuyExperience(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry,
+	                   uint64 steam_id)
+	{
+		bool success = false;
+
+		const int price = item_entry["Price"];
+		const float amount = item_entry["Amount"];
+		const bool give_to_dino = item_entry["GiveToDino"];
+
+		if (!give_to_dino && ArkApi::IApiUtils::IsRidingDino(player_controller))
+		{
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+			                                      *GetText("RidingDino"));
+			return false;
+		}
+
+		const int points = Points::GetPoints(steam_id);
+
+		if (points >= price && Points::SpendPoints(price, steam_id))
+		{
+			player_controller->AddExperience(amount, false, true);
+
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+			                                      *GetText("BoughtExp"));
+
+			success = true;
+		}
+		else
+		{
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+			                                      *GetText("NoPoints"));
+		}
+
+		return success;
+	}
+
 	bool Buy(AShooterPlayerController* player_controller, const FString& item_id, int amount)
 	{
+		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+			return false;
+
 		if (amount <= 0)
 			amount = 1;
 
@@ -146,7 +188,7 @@ namespace ArkShop::Store
 
 			auto item_entry = item_entry_iter.value();
 
-			const std::string type = item_entry["type"];
+			const std::string type = item_entry["Type"];
 
 			if (type == "item")
 				success = BuyItem(player_controller, item_entry, steam_id, amount);
@@ -154,6 +196,8 @@ namespace ArkShop::Store
 				success = BuyDino(player_controller, item_entry, steam_id);
 			else if (type == "beacon")
 				success = BuyBeacon(player_controller, item_entry, steam_id);
+			else if (type == "experience")
+				success = BuyExperience(player_controller, item_entry, steam_id);
 
 			if (success)
 			{
@@ -251,15 +295,15 @@ namespace ArkShop::Store
 
 			auto item = iter.value();
 
-			const int price = item["price"];
-			const std::string type = item["type"];
-			const std::string description = item.value("description", "No description");
+			const int price = item["Price"];
+			const std::string type = item["Type"];
+			const std::string description = item.value("Description", "No description");
 
 			ss << i + 1 << ") " << description;
 
 			if (type == "dino")
 			{
-				const int level = item["level"];
+				const int level = item["Level"];
 
 				ss << ", Level: " << level;
 			}
