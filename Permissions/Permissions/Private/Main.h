@@ -1,5 +1,5 @@
 #pragma once
 
-#include "json.hpp"
+#include "hdr/sqlite_modern_cpp.h"
 
-extern nlohmann::json config;
+sqlite::database& GetDB();

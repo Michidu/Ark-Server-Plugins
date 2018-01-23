@@ -37,33 +37,13 @@ void DumpEngrams(APlayerController* player_controller, FString*, bool)
 	f.close();
 }
 
-bool CanUseCommand(uint64 steam_id)
-{
-	const std::string permissions = config.value("Permissions", "");
-	if (permissions.empty())
-		return true;
-
-	const FString fpermissions(permissions.c_str());
-
-	TArray<FString> groups;
-	fpermissions.ParseIntoArray(groups, L",", true);
-
-	for (const auto& group : groups)
-	{
-		if (Permissions::IsPlayerInGroup(steam_id, group))
-			return true;
-	}
-
-	return false;
-}
-
 void GiveEngrams(AShooterPlayerController* player_controller, FString*, EChatSendMode::Type)
 {
 	if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
 		return;
 
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
-	if (!CanUseCommand(steam_id))
+	if (!Permissions::IsPlayerHasPermission(steam_id, "AllEngrams.GiveEngrams"))
 	{
 		ArkApi::GetApiUtils().SendChatMessage(player_controller, *GetText("Sender"), *GetText("NoPermissions"));
 		return;

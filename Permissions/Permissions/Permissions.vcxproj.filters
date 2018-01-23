@@ -9,14 +9,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Private\json.hpp">
-      <Filter>Private</Filter>
-    </ClInclude>
     <ClInclude Include="Public\Permissions.h">
       <Filter>Public</Filter>
     </ClInclude>
     <ClInclude Include="Private\Main.h">
       <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\DBHelper.h">
+      <Filter>Public</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -24,6 +24,12 @@
       <Filter>Private</Filter>
     </ClCompile>
     <ClCompile Include="Private\Main.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\sqlite3.c">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\DBHelper.cpp">
       <Filter>Private</Filter>
     </ClCompile>
   </ItemGroup>
