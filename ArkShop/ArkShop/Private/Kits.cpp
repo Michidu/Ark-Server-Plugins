@@ -264,14 +264,18 @@ namespace ArkShop::Kits
 			const std::string kit_name_str = iter.key();
 			const FString kit_name(kit_name_str.c_str());
 
-			if (const int amount = GetKitAmount(steam_id, kit_name);
-				amount > 0 && CanUseKit(steam_id, kit_name))
-			{
-				auto iter_value = iter.value();
+			auto iter_value = iter.value();
 
+			const int price = iter_value.value("Price", -1);
+
+			if (const int amount = GetKitAmount(steam_id, kit_name);
+				(amount > 0 || price != -1) && CanUseKit(steam_id, kit_name))
+			{
 				const std::string description = iter_value.value("Description", "No description");
 
-				kits_str += FString::Format("\"{}\" - {}. {} left\n", kit_name_str, description, amount);
+				std::string price_str = price != -1 ? fmt::format("Price: {}", price) : "";
+
+				kits_str += FString::Format("\"{}\" - {}. {} left. {}\n", kit_name_str, description, amount, price_str);
 			}
 		}
 

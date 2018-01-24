@@ -38,8 +38,8 @@ namespace ArkShop
 
 		for (auto group_iter = groups_map.begin(); group_iter != groups_map.end(); ++group_iter)
 		{
-			const std::string group_name = group_iter.key();
-			if (group_name == "Default")
+			const FString group_name(group_iter.key().c_str());
+			if (group_name == L"Default")
 				continue;
 
 			if (Permissions::IsPlayerInGroup(steam_id, group_name))

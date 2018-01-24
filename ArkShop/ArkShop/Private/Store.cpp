@@ -305,10 +305,10 @@ namespace ArkShop::Store
 			{
 				const int level = item["Level"];
 
-				ss << ", Level: " << level;
+				ss << ". Level: " << level;
 			}
 
-			ss << ", Id: " << iter.key() << ", Price: " << price << "\n";
+			ss << ". Id: " << iter.key() << ". Price: " << price << "\n";
 		}
 
 		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::White, text_size, display_time, nullptr,
