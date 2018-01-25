@@ -48,11 +48,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <LibraryPath>F:\Projects;$(LibraryPath)</LibraryPath>
-<<<<<<< HEAD
-    <IncludePath>$(IncludePath)</IncludePath>
-=======
     <IncludePath>$(MSBuildStartupDirectory)\..\Permissions\Permissions\Public;$(MSBuildStartupDirectory)\..\..\ARK-Server-API\version\Core\Public;$(IncludePath)</IncludePath>
->>>>>>> v2.0
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
