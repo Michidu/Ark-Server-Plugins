@@ -1,59 +1,136 @@
-#include <windows.h>
 #include <fstream>
-#include <iostream>
-#include "AllEngrams.h"
-#include "Tools.h"
+
+#include <API/ARK/Ark.h>
+#include <Logger/Logger.h>
+#include <Permissions.h>
+
+#include "json.hpp"
 
 #pragma comment(lib, "ArkApi.lib")
+#pragma comment(lib, "Permissions.lib")
 
-namespace
+nlohmann::json config;
+
+TArray<FString> all_engrams;
+
+FString GetText(const std::string& str)
 {
-	// Helper function for dumping all learnt engrams (Not used)
-	void DumpEngrams(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
+	return FString(config["Messages"].value(str, "No message").c_str());
+}
+
+// Helper function for dumping all learnt engrams
+void DumpEngrams(APlayerController* player_controller, FString*, bool)
+{
+	AShooterPlayerState* player_state = static_cast<AShooterPlayerState*>(player_controller->PlayerStateField()());
+
+	std::ofstream f("Engrams.txt");
+
+	auto& engrams = player_state->EngramItemBlueprintsField()();
+	for (const auto& item : engrams)
 	{
-		AShooterPlayerState* playerState = static_cast<AShooterPlayerState*>(playerController->GetPlayerStateField());
-		auto engrams = playerState->GetEngramItemBlueprintsField();
+		FString asset_name;
+		item.uClass->GetFullName(&asset_name, nullptr);
 
-		std::ofstream f("Engrams.txt");
-
-		for (uint32_t i = 0; i < engrams.Num(); ++i)
-		{
-			auto item = engrams[i];
-
-			FString assetName;
-			item.uClass->GetFullName(&assetName, nullptr);
-
-			f << assetName.ToString() << "\n";
-		}
-
-		f.close();
+		f << asset_name.ToString() << "\n";
 	}
 
-	void GiveEngrams(AShooterPlayerController* playerController, FString* message, EChatSendMode::Type mode)
+	f.close();
+}
+
+void GiveEngrams(AShooterPlayerController* player_controller, FString*, EChatSendMode::Type)
+{
+	if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+		return;
+
+	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
+	if (!Permissions::IsPlayerHasPermission(steam_id, "AllEngrams.GiveEngrams"))
 	{
-		UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(playerController->GetCheatManagerField());
-
-		std::wifstream file(Tools::GetCurrentDir() + "/BeyondApi/Plugins/AllEngrams/Engrams.txt");
-		if (!file.good())
-		{
-			std::cerr << "Can't open Engrams.txt\n";
-			return;
-		}
-
-		std::wstring str;
-		while (getline(file, str))
-		{
-			FString fStr = &str[0];
-			cheatManager->UnlockEngram(&fStr);
-		}
-
-		file.close();
+		ArkApi::GetApiUtils().SendChatMessage(player_controller, *GetText("Sender"), *GetText("NoPermissions"));
+		return;
 	}
 
-	void Init()
+	APrimalCharacter* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField()());
+	UPrimalCharacterStatusComponent* char_component = primal_character->MyCharacterStatusComponentField()();
+
+	const int required_lvl = config.value("RequiredLevel", 0);
+	const int level = char_component->BaseCharacterLevelField()() + char_component->ExtraCharacterLevelField()();
+	if (level >= required_lvl)
 	{
-		Ark::AddChatCommand(L"/GiveEngrams", &GiveEngrams);
+		UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField()());
+
+		for (FString& engram : all_engrams)
+		{
+			cheat_manager->UnlockEngram(&engram);
+		}
+
+		AShooterPlayerState* player_state = static_cast<AShooterPlayerState*>(player_controller->PlayerStateField()());
+
+		const int points_amount = config.value("AmountOfPoints", 0);
+		player_state->FreeEngramPointsField() = points_amount;
 	}
+	else
+	{
+		ArkApi::GetApiUtils().SendChatMessage(player_controller, *GetText("Sender"), *GetText("LowLevel"), required_lvl);
+	}
+}
+
+bool ReadEngrams()
+{
+	std::ifstream file(ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/AllEngrams/Engrams.txt");
+	if (!file.good())
+		return false;
+
+	std::string str;
+	while (getline(file, str))
+	{
+		all_engrams.Add(FString(str.c_str()));
+	}
+
+	file.close();
+
+	return true;
+}
+
+void ReadConfig()
+{
+	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/AllEngrams/config.json";
+	std::ifstream file{config_path};
+	if (!file.is_open())
+		throw std::runtime_error("Can't open config.json");
+
+	file >> config;
+
+	file.close();
+}
+
+void Load()
+{
+	Log::Get().Init("AllEngrams");
+
+	if (!ReadEngrams())
+	{
+		Log::GetLog()->error("Failed to read engrams");
+		return;
+	}
+
+	try
+	{
+		ReadConfig();
+	}
+	catch (const std::exception& error)
+	{
+		Log::GetLog()->error(error.what());
+		throw;
+	}
+
+	ArkApi::GetCommands().AddChatCommand("/GiveEngrams", &GiveEngrams);
+	ArkApi::GetCommands().AddConsoleCommand("DumpEngrams", &DumpEngrams);
+}
+
+void Unload()
+{
+	ArkApi::GetCommands().RemoveChatCommand("/GiveEngrams");
+	ArkApi::GetCommands().RemoveConsoleCommand("DumpEngrams");
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
@@ -61,11 +138,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-		Init();
+		Load();
 		break;
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
+		Unload();
 		break;
 	}
 	return TRUE;

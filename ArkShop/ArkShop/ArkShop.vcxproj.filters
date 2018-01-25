@@ -1,81 +1,69 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Code">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="Private">
+      <UniqueIdentifier>{abaf9be5-da36-4c3a-bf83-03dbf2877e54}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resources">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="Public">
+      <UniqueIdentifier>{f8043985-4572-4ac5-9526-d41f4c2bacf2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ArkShop.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="Public\Points.h">
+      <Filter>Public</Filter>
     </ClInclude>
-    <ClInclude Include="Tools.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="Public\Base.h">
+      <Filter>Public</Filter>
     </ClInclude>
-    <ClInclude Include="DBHelper.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="Public\DBHelper.h">
+      <Filter>Public</Filter>
     </ClInclude>
-    <ClInclude Include="Points.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="Private\ArkShop.h">
+      <Filter>Private</Filter>
     </ClInclude>
-    <ClInclude Include="TimedRewards.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="Private\json.hpp">
+      <Filter>Private</Filter>
     </ClInclude>
-    <ClInclude Include="sqlite3.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="Private\Tools.h">
+      <Filter>Private</Filter>
     </ClInclude>
-    <ClInclude Include="ShopAPI.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="Public\Store.h">
+      <Filter>Public</Filter>
     </ClInclude>
-    <ClInclude Include="Kits.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="Private\TimedRewards.h">
+      <Filter>Private</Filter>
     </ClInclude>
-    <ClInclude Include="Store.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="Public\Kits.h">
+      <Filter>Public</Filter>
     </ClInclude>
-    <ClInclude Include="Market.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="Private\sqlite3.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\ShopLog.h">
+      <Filter>Private</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ArkShop.cpp">
-      <Filter>Source Code</Filter>
+    <ClCompile Include="Private\ArkShop.cpp">
+      <Filter>Private</Filter>
     </ClCompile>
-    <ClCompile Include="Tools.cpp">
-      <Filter>Source Code</Filter>
+    <ClCompile Include="Private\Points.cpp">
+      <Filter>Private</Filter>
     </ClCompile>
-    <ClCompile Include="DBHelper.cpp">
-      <Filter>Source Code</Filter>
+    <ClCompile Include="Private\DBHelper.cpp">
+      <Filter>Private</Filter>
     </ClCompile>
-    <ClCompile Include="Points.cpp">
-      <Filter>Source Code</Filter>
+    <ClCompile Include="Private\Store.cpp">
+      <Filter>Private</Filter>
     </ClCompile>
-    <ClCompile Include="TimedRewards.cpp">
-      <Filter>Source Code</Filter>
+    <ClCompile Include="Private\TimedRewards.cpp">
+      <Filter>Private</Filter>
     </ClCompile>
-    <ClCompile Include="sqlite3.c">
-      <Filter>Source Code</Filter>
+    <ClCompile Include="Private\Kits.cpp">
+      <Filter>Private</Filter>
     </ClCompile>
-    <ClCompile Include="ShopAPI.cpp">
-      <Filter>Source Code</Filter>
-    </ClCompile>
-    <ClCompile Include="Kits.cpp">
-      <Filter>Source Code</Filter>
-    </ClCompile>
-    <ClCompile Include="Store.cpp">
-      <Filter>Source Code</Filter>
-    </ClCompile>
-    <ClCompile Include="Market.cpp">
-      <Filter>Source Code</Filter>
+    <ClCompile Include="Private\sqlite3.c">
+      <Filter>Private</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
