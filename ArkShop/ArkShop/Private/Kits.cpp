@@ -144,8 +144,6 @@ namespace ArkShop::Kits
 	 */
 	int GetKitAmount(uint64 steam_id, const FString& kit_name)
 	{
-		auto kits_list = config["Kits"];
-
 		std::string kit_name_str = kit_name.ToString();
 
 		auto player_kit_json = GetPlayerKitsConfig(steam_id);
@@ -157,6 +155,14 @@ namespace ArkShop::Kits
 
 			return kit_json_entry.value("Amount", 0);
 		}
+
+		// Return default amount if player didn't use this kit yet
+
+		auto kits_list = config["Kits"];
+
+		const auto kit_entry_iter = kits_list.find(kit_name_str);
+		if (kit_entry_iter != kits_list.end())
+			return kit_entry_iter.value().value("DefaultAmount", 0);
 
 		return 0;
 	}
