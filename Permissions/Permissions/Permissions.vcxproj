@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Private\json.hpp" />
     <ClInclude Include="Private\Main.h" />
     <ClInclude Include="Public\DBHelper.h" />
     <ClInclude Include="Public\Permissions.h" />
