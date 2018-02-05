@@ -1,9 +1,12 @@
 {
   "RequiredLevel":10,
   "AmountOfPoints":100,
+  "AutoDetectEngrams":true,
+  "UnlockTEK":true,
   "Messages":{
-    "Sender":"Server",
+    "Sender":"AllEngrams",
     "NoPermissions":"<RichColor Color=\"1, 0, 0, 1\">You don't have permissions to use this command</>",
-    "LowLevel":"<RichColor Color=\"1, 0, 0, 1\">You should be at least level {} or higher to use this command</>"
+    "LowLevel":"<RichColor Color=\"1, 0, 0, 1\">You should be at least level {} or higher to use this command</>",
+    "Unlocked":"<RichColor Color=\"0, 1, 0, 1\">Unlocked engrams</>"
   }
 }

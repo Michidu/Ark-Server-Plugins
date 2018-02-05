@@ -1,6 +1,7 @@
 #include <fstream>
 
 #include <API/ARK/Ark.h>
+#include <API/UE/Math/ColorList.h>
 #include <Logger/Logger.h>
 #include <Permissions.h>
 
@@ -15,7 +16,7 @@ TArray<FString> all_engrams;
 
 FString GetText(const std::string& str)
 {
-	return FString(config["Messages"].value(str, "No message").c_str());
+	return FString(ArkApi::Tools::Utf8Decode(config["Messages"].value(str, "No message")).c_str());
 }
 
 // Helper function for dumping all learnt engrams
@@ -56,17 +57,42 @@ void GiveEngrams(AShooterPlayerController* player_controller, FString*, EChatSen
 	const int level = char_component->BaseCharacterLevelField()() + char_component->ExtraCharacterLevelField()();
 	if (level >= required_lvl)
 	{
-		UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField()());
-
-		for (FString& engram : all_engrams)
-		{
-			cheat_manager->UnlockEngram(&engram);
-		}
-
 		AShooterPlayerState* player_state = static_cast<AShooterPlayerState*>(player_controller->PlayerStateField()());
 
-		const int points_amount = config.value("AmountOfPoints", 0);
-		player_state->FreeEngramPointsField() = points_amount;
+		const bool auto_detect_engrams = config.value("AutoDetectEngrams", true);
+		if (auto_detect_engrams)
+		{
+			const bool unlock_tek = config.value("UnlockTEK", true);
+
+			TArray<UPrimalEngramEntry*> all_engrams_entries = Globals::GEngine()()
+			                                                  ->GameSingletonField()()->PrimalGameDataOverrideField()()->
+			                                                  EngramBlueprintEntriesField()();
+
+			for (UPrimalEngramEntry* engram_entry : all_engrams_entries)
+			{
+				if (!unlock_tek && engram_entry->EngramGroupField()() == EEngramGroup::ARK_TEK)
+					continue;
+
+				player_state->ServerUnlockEngram(engram_entry->BluePrintEntryField()(), false, true);
+			}
+		}
+		else
+		{
+			UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField()());
+
+			for (FString& engram : all_engrams)
+			{
+				cheat_manager->UnlockEngram(&engram);
+			}
+		}
+
+		if (player_state->FreeEngramPointsField()() < 0)
+		{
+			const int points_amount = config.value("AmountOfPoints", 0);
+			player_state->FreeEngramPointsField() = points_amount;
+		}
+
+		ArkApi::GetApiUtils().SendChatMessage(player_controller, *GetText("Sender"), *GetText("Unlocked"));
 	}
 	else
 	{
@@ -79,6 +105,8 @@ bool ReadEngrams()
 	std::ifstream file(ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/AllEngrams/Engrams.txt");
 	if (!file.good())
 		return false;
+
+	all_engrams.Empty();
 
 	std::string str;
 	while (getline(file, str))
@@ -103,6 +131,30 @@ void ReadConfig()
 	file.close();
 }
 
+void ReloadCmd(APlayerController* player_controller, FString*, bool)
+{
+	AShooterPlayerController* shooter_player = static_cast<AShooterPlayerController*>(player_controller);
+
+	if (!ReadEngrams())
+	{
+		ArkApi::GetApiUtils().SendServerMessage(shooter_player, FColorList::Red, "Failed to read engrams");
+		return;
+	}
+
+	try
+	{
+		ReadConfig();
+	}
+	catch (const std::exception& error)
+	{
+		ArkApi::GetApiUtils().SendServerMessage(shooter_player, FColorList::Red, error.what());
+		Log::GetLog()->error(error.what());
+		return;
+	}
+
+	ArkApi::GetApiUtils().SendServerMessage(shooter_player, FColorList::Green, "Reloaded config");
+}
+
 void Load()
 {
 	Log::Get().Init("AllEngrams");
@@ -124,13 +176,16 @@ void Load()
 	}
 
 	ArkApi::GetCommands().AddChatCommand("/GiveEngrams", &GiveEngrams);
+
 	ArkApi::GetCommands().AddConsoleCommand("DumpEngrams", &DumpEngrams);
+	ArkApi::GetCommands().AddConsoleCommand("AllEngrams.Reload", &ReloadCmd);
 }
 
 void Unload()
 {
 	ArkApi::GetCommands().RemoveChatCommand("/GiveEngrams");
 	ArkApi::GetCommands().RemoveConsoleCommand("DumpEngrams");
+	ArkApi::GetCommands().RemoveConsoleCommand("AllEngrams.Reload");
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)

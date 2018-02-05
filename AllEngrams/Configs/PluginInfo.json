@@ -1,8 +1,8 @@
 {
   "FullName":"All Engrams",
   "Description":"The easy way to learn all engrams",
-  "Version":1.1,
-  "MinApiVersion":2.0,
+  "Version":1.2,
+  "MinApiVersion":2.3,
   "Dependencies":[
     "Permissions"
   ]
