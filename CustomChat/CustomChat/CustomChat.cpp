@@ -25,7 +25,7 @@ void BindCommands()
 			               {
 				               auto item = config["ChatCommands"][i];
 
-				               std::string reply = item["Reply"];
+				               std::wstring reply = ArkApi::Tools::Utf8Decode(item["Reply"]);
 				               std::string type = item["Type"];
 
 				               if (type == "ServerChat")
@@ -37,7 +37,7 @@ void BindCommands()
 				               }
 				               else if (type == "ClientChat")
 				               {
-					               ArkApi::GetApiUtils().SendChatMessage(player_controller, "Server", reply.c_str());
+					               ArkApi::GetApiUtils().SendChatMessage(player_controller, L"Server", reply.c_str());
 				               }
 				               else if (type == "Notification")
 				               {
