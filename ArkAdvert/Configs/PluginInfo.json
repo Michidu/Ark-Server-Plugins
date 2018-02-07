@@ -1,6 +1,7 @@
 {
   "FullName":"Advert Messages",
   "Description":"Timed chat messages",
-  "Version":1.1,
-  "MinApiVersion":2.0
+  "Version":1.2,
+  "MinApiVersion":2.3,
+  "ResourceId":7
 }

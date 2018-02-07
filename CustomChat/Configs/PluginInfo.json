@@ -1,6 +1,7 @@
 {
   "FullName":"Custom Chat Commands",
   "Description":"Adds new chat commands",
-  "Version":1.2,
-  "MinApiVersion":2.0
+  "Version":1.3,
+  "MinApiVersion":2.3,
+  "ResourceId":9
 }
