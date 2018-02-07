@@ -18,7 +18,7 @@ std::chrono::time_point<std::chrono::system_clock> next_adv_time;
 
 void WelcomeMsg(AShooterPlayerController* player)
 {
-	std::string msg = config["AdvertMessages"]["WelcomeMsg"];
+	std::wstring msg = ArkApi::Tools::Utf8Decode(config["AdvertMessages"]["WelcomeMsg"]);
 	auto config_color = config["AdvertMessages"]["WelcomeMsgColor"];
 	const FLinearColor color{config_color[0], config_color[1], config_color[2], config_color[3]};
 
@@ -57,7 +57,7 @@ void AdvertTimer()
 
 		auto message_entry = messages_map[rnd];
 
-		std::string message = message_entry["Message"];
+		std::wstring message = ArkApi::Tools::Utf8Decode(message_entry["Message"]);
 
 		const std::string type = message_entry["Type"];
 		if (type == "ServerChat")
@@ -69,7 +69,7 @@ void AdvertTimer()
 		}
 		else if (type == "ClientChat")
 		{
-			ArkApi::GetApiUtils().SendChatMessageToAll("Server", message.c_str());
+			ArkApi::GetApiUtils().SendChatMessageToAll(L"Server", message.c_str());
 		}
 		else if (type == "Notification")
 		{
