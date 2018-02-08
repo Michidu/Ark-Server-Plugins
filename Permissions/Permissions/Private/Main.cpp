@@ -429,12 +429,12 @@ void Load()
 	db << "create table if not exists Players ("
 		"Id integer primary key autoincrement not null,"
 		"SteamId integer default 0,"
-		"Groups text default 'Default,'"
+		"Groups text default 'Default,' COLLATE NOCASE"
 		");";
 	db << "create table if not exists Groups ("
 		"Id integer primary key autoincrement not null,"
-		"GroupName text not null,"
-		"Permissions text default ''"
+		"GroupName text not null COLLATE NOCASE,"
+		"Permissions text default '' COLLATE NOCASE"
 		");";
 
 	// Add default groups
