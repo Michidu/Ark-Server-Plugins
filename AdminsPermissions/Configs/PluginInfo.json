@@ -1,0 +1,6 @@
+{
+  "FullName":"Admins permissions",
+  "Description":"Configure admins permissions",
+  "Version":1.1,
+  "MinApiVersion":2.3
+}

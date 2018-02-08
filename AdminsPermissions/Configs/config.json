@@ -1,0 +1,8 @@
+{
+  "PrintToChat":true,
+  "Messages":{
+    "Sender":"AdminsPermissions",
+    "LogMsg":"Admin '{0}' Command: {1}",
+    "NoPermissions":"You don't have permissions to use this command"
+  }
+}
