@@ -27,10 +27,13 @@ FString GetText(const std::string& str)
 
 void TribeMotd(AShooterPlayerController* player)
 {
-	const FTribeData tribe = static_cast<AShooterPlayerState*>(player->PlayerStateField()())->
+	FTribeData* tribe = static_cast<AShooterPlayerState*>(player->PlayerStateField()())->
 		MyTribeDataField()();
 
-	const int tribe_id = tribe.TribeID;
+	if (!tribe)
+		return;
+
+	const int tribe_id = tribe->TribeIDField()();
 	if (tribe_id == 0 || !DBHelper::IsEntryExists(tribe_id))
 		return;
 
@@ -47,6 +50,8 @@ void TribeMotd(AShooterPlayerController* player)
 		return;
 	}
 
+	const FString tribe_name = tribe->TribeNameField()();
+
 	std::wstring wmsg = ArkApi::Tools::Utf8Decode(message);
 
 	const std::string type = config["MessageType"];
@@ -56,7 +61,7 @@ void TribeMotd(AShooterPlayerController* player)
 		auto config_color = config["Color"];
 		const FLinearColor color{config_color[0], config_color[1], config_color[2], config_color[3]};
 
-		ArkApi::GetApiUtils().SendServerMessage(player, color, L"{}", wmsg.c_str());
+		ArkApi::GetApiUtils().SendServerMessage(player, color, L"{}: {}", *tribe_name, wmsg.c_str());
 	}
 	else if (type == "Notification")
 	{
@@ -67,7 +72,7 @@ void TribeMotd(AShooterPlayerController* player)
 		const FLinearColor color{config_color[0], config_color[1], config_color[2], config_color[3]};
 
 		ArkApi::GetApiUtils().SendNotification(player, color, display_scale, display_time,
-		                                       nullptr, L"{}", wmsg.c_str());
+		                                       nullptr, L"{}: {}", *tribe_name, wmsg.c_str());
 	}
 }
 
@@ -90,13 +95,16 @@ void SetMotd(AShooterPlayerController* player_controller, FString* message, ECha
 			if (!message->RemoveFromStart("/SetMotd "))
 				return;
 
-			const FTribeData tribe = static_cast<AShooterPlayerState*>(player_controller->PlayerStateField()())->
+			FTribeData* tribe = static_cast<AShooterPlayerState*>(player_controller->PlayerStateField()())->
 				MyTribeDataField()();
+
+			if (!tribe)
+				return;
 
 			try
 			{
 				auto& db = GetDB();
-				db << "REPLACE INTO TribeMotd (TribeId, Message) VALUES (?, ?);" << tribe.TribeID << ArkApi::Tools::
+				db << "REPLACE INTO TribeMotd (TribeId, Message) VALUES (?, ?);" << tribe->TribeIDField()() << ArkApi::Tools::
 					Utf8Encode(**message);
 			}
 			catch (const sqlite::sqlite_exception& exception)
