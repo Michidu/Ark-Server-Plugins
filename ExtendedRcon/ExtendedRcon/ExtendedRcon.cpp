@@ -445,7 +445,8 @@ void ListPlayerDinos(RCONClientConnection* rcon_connection, RCONPacket* rcon_pac
 				dino->GetDescriptiveName(&dino_name);
 				dino->DinoNameTagField()().ToString(&class_name);
 
-				reply += FString::Format(TEXT("{}({}), ID1={}, ID2={}\n"), *dino_name, *class_name, dino->DinoID1Field()(), dino->DinoID2Field()());
+				reply += FString::Format(TEXT("{}({}), ID1={}, ID2={}\n"), *dino_name, *class_name, dino->DinoID1Field()(),
+				                         dino->DinoID2Field()());
 			}
 
 			Sleep(0);
@@ -567,8 +568,10 @@ void GetTribeLog(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet,
 			return;
 		}
 
-		FTribeData tribe_data;
-		if (!ArkApi::GetApiUtils().GetShooterGameMode()->GetOrLoadTribeData(tribe_id, &tribe_data))
+		FTribeData* tribe_data = static_cast<FTribeData*>(FMemory::Malloc(0x128 + 0x28));
+		RtlSecureZeroMemory(tribe_data, 0x128 + 0x28);
+
+		if (!ArkApi::GetApiUtils().GetShooterGameMode()->GetOrLoadTribeData(tribe_id, tribe_data))
 		{
 			SendRconReply(rcon_connection, rcon_packet->Id, "Failed to load tribe data");
 			return;
@@ -576,11 +579,13 @@ void GetTribeLog(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet,
 
 		FString reply = "";
 
-		TArray<FString> logs = tribe_data.TribeLog;
+		TArray<FString> logs = tribe_data->TribeLogField()();
 		for (const FString& log : logs)
 		{
 			reply += log + "\n";
 		}
+
+		FMemory::Free(tribe_data);
 
 		SendRconReply(rcon_connection, rcon_packet->Id, reply);
 	}

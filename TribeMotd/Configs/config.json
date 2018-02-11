@@ -1,0 +1,16 @@
+{
+  "MessageType":"ServerChat",
+  "Color":[
+    0,
+    1.0,
+    0,
+    1.0
+  ],
+  "DisplayScale":1.3,
+  "DisplayTime":10.0,
+  "Messages":{
+    "Sender":"TribeMotd",
+    "ChangedMotd":"Successfully set new MOTD",
+    "NotAdmin":"<RichColor Color=\"1, 0, 0, 1\">You are not a tribe admin</>"
+  }
+}
