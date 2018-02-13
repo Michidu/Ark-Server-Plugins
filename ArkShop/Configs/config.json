@@ -135,23 +135,32 @@
       "Amount":1000.0
     }
   },
+  "SellItems":{
+    "metal":{
+      "Type":"item",
+      "Description":"100x metal",
+      "Price":10,
+      "Amount":100,
+      "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Metal.PrimalItemResource_Metal'"
+    }
+  },
   "Messages":{
-    "Sender":"Server",
+    "Sender":"ArkShop",
     "BoughtItem":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought item</>",
     "BoughtDino":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought dino</>",
     "BoughtBeacon":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought beacon</>",
     "BoughtExp":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought experience</>",
     "ReceivedPoints":"<RichColor Color=\"1, 1, 0, 1\">You have received {0} points! (total: {1})</>",
-    "HavePoints":"You have {} points",
+    "HavePoints":"You have {0} points",
     "NoPoints":"<RichColor Color=\"1, 0, 0, 1\">You don't have enough points</>",
     "WrongId":"<RichColor Color=\"1, 0, 0, 1\">Wrong id</>",
     "NoPermissionsKit":"<RichColor Color=\"1, 0, 0, 1\">You don't have permission to use this kit</>",
     "CantBuyKit":"<RichColor Color=\"1, 0, 0, 1\">You can't buy this kit</>",
-    "BoughtKit":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought {} kit</>",
+    "BoughtKit":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought {0} kit</>",
     "AvailableKits":"Available kits for you:",
     "NoKits":"No available kits",
     "KitsLeft":"You have {0} {1} kits left",
-    "NoKitsLeft":"You don't have {} kits left",
+    "NoKitsLeft":"You don't have {0} kits left",
     "CantGivePoints":"<RichColor Color=\"1, 0, 0, 1\">You can't give points to yourself</>",
     "RidingDino":"<RichColor Color=\"1, 0, 0, 1\">You can't buy this item while riding a dino</>",
     "SentPoints":"<RichColor Color=\"0, 1, 0, 1\">You have successfully sent {0} points to {1}</>",
@@ -168,6 +177,11 @@
     "BuyCmd":"/buy",
     "ShopCmd":"/shop",
     "KitCmd":"/kit",
-    "BuyKitCmd":"/buykit"
+    "BuyKitCmd":"/buykit",
+    "SellCmd":"/sell",
+    "ShopSellCmd":"/shopsell",
+    "SellUsage":"Usage: /sell id amount",
+    "NotEnoughItems":"<RichColor Color=\"1, 0, 0, 1\">You don't have enough items ({0}/{1})</>",
+    "SoldItems":"<RichColor Color=\"0, 1, 0, 1\">You have successfully sold items</>"
   }
 }

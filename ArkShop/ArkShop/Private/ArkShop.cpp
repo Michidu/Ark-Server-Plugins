@@ -8,6 +8,7 @@
 #include <DBHelper.h>
 
 #include "TimedRewards.h"
+#include "StoreSell.h"
 
 #pragma comment(lib, "ArkApi.lib")
 #pragma comment(lib, "Permissions.lib")
@@ -77,7 +78,7 @@ sqlite::database& ArkShop::GetDB()
 
 FString ArkShop::GetText(const std::string& str)
 {
-	return FString(config["Messages"].value(str, "No message").c_str());
+	return FString(ArkApi::Tools::Utf8Decode(config["Messages"].value(str, "No message")).c_str());
 }
 
 void ReadConfig()
@@ -137,6 +138,7 @@ void Load()
 	ArkShop::Points::Init();
 	ArkShop::Store::Init();
 	ArkShop::Kits::Init();
+	ArkShop::StoreSell::Init();
 
 	ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation", &Hook_AShooterGameMode_HandleNewPlayer,
 	                           &AShooterGameMode_HandleNewPlayer_original);

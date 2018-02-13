@@ -90,6 +90,7 @@
     <ClInclude Include="Private\json.hpp" />
     <ClInclude Include="Private\ShopLog.h" />
     <ClInclude Include="Private\sqlite3.h" />
+    <ClInclude Include="Private\StoreSell.h" />
     <ClInclude Include="Private\TimedRewards.h" />
     <ClInclude Include="Private\Tools.h" />
     <ClInclude Include="Public\Base.h" />
@@ -105,6 +106,7 @@
     <ClCompile Include="Private\Points.cpp" />
     <ClCompile Include="Private\sqlite3.c" />
     <ClCompile Include="Private\Store.cpp" />
+    <ClCompile Include="Private\StoreSell.cpp" />
     <ClCompile Include="Private\TimedRewards.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

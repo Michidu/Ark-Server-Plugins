@@ -205,7 +205,7 @@ namespace ArkShop::Store
 				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id, *item_id,
 				                                     amount);
 
-				ShopLog::GetLog()->info(ArkApi::Tools::ConvertToAnsiStr(log));
+				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
 			}
 		}
 
@@ -245,7 +245,7 @@ namespace ArkShop::Store
 		}
 	}
 
-	void ShowItems(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type mode)
+	void ShowItems(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type)
 	{
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);

@@ -242,7 +242,7 @@ namespace ArkShop::Kits
 				const std::wstring log = fmt::format(TEXT("{}({}) used kit \"{}\""),
 				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id, *kit_name);
 
-				ShopLog::GetLog()->info(ArkApi::Tools::ConvertToAnsiStr(log));
+				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
 			}
 			else
 			{
@@ -380,7 +380,7 @@ namespace ArkShop::Kits
 					                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id, *kit_name,
 					                                     amount);
 
-					ShopLog::GetLog()->info(ArkApi::Tools::ConvertToAnsiStr(log));
+					ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
 				}
 				else
 				{

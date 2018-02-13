@@ -27,9 +27,7 @@ namespace ArkShop::Points
 		AShooterPlayerController* player = ArkApi::GetApiUtils().FindPlayerFromSteamId(steam_id);
 		if (player)
 		{
-			ArkApi::GetApiUtils().SendChatMessage(player, GetText("Sender"),
-			                                      *GetText("ReceivedPoints"),
-			                                      amount,
+			ArkApi::GetApiUtils().SendChatMessage(player, GetText("Sender"), *GetText("ReceivedPoints"), amount,
 			                                      GetPoints(steam_id));
 		}
 
@@ -190,12 +188,12 @@ namespace ArkShop::Points
 		}
 	}
 
-	// Console callbacks
+	// Callbacks
 
-	void AddPointsCmd(APlayerController*, FString* cmd, bool)
+	bool AddPointsCbk(const FString& cmd)
 	{
 		TArray<FString> parsed;
-		cmd->ParseIntoArray(parsed, L" ", true);
+		cmd.ParseIntoArray(parsed, L" ", true);
 
 		if (parsed.IsValidIndex(2))
 		{
@@ -210,20 +208,19 @@ namespace ArkShop::Points
 			catch (const std::exception& exception)
 			{
 				Log::GetLog()->error("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
-				return;
+				return false;
 			}
 
-			if (DBHelper::IsPlayerExists(steam_id))
-			{
-				AddPoints(amount, steam_id);
-			}
+			return DBHelper::IsPlayerExists(steam_id) && AddPoints(amount, steam_id);
 		}
+
+		return false;
 	}
 
-	void SetPointsCmd(APlayerController*, FString* cmd, bool)
+	bool SetPointsCbk(const FString& cmd)
 	{
 		TArray<FString> parsed;
-		cmd->ParseIntoArray(parsed, L" ", true);
+		cmd.ParseIntoArray(parsed, L" ", true);
 
 		if (parsed.IsValidIndex(2))
 		{
@@ -238,14 +235,106 @@ namespace ArkShop::Points
 			catch (const std::exception& exception)
 			{
 				Log::GetLog()->error("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
-				return;
+				return false;
+			}
+
+			return DBHelper::IsPlayerExists(steam_id) && SetPoints(steam_id, amount);
+		}
+
+		return false;
+	}
+
+	bool ChangePointsAmountCbk(const FString& cmd)
+	{
+		TArray<FString> parsed;
+		cmd.ParseIntoArray(parsed, L" ", true);
+
+		if (parsed.IsValidIndex(2))
+		{
+			uint64 steam_id;
+			int amount;
+
+			try
+			{
+				steam_id = std::stoull(*parsed[1]);
+				amount = std::stoi(*parsed[2]);
+			}
+			catch (const std::exception& exception)
+			{
+				Log::GetLog()->error("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
+				return false;
 			}
 
 			if (DBHelper::IsPlayerExists(steam_id))
 			{
-				SetPoints(steam_id, amount);
+				return amount >= 0
+					       ? AddPoints(amount, steam_id)
+					       : SpendPoints(std::abs(amount), steam_id);
 			}
 		}
+
+		return false;
+	}
+
+	int GetPlayerPointsCbk(const FString& cmd)
+	{
+		TArray<FString> parsed;
+		cmd.ParseIntoArray(parsed, L" ", true);
+
+		if (parsed.IsValidIndex(1))
+		{
+			uint64 steam_id;
+
+			try
+			{
+				steam_id = std::stoull(*parsed[1]);
+			}
+			catch (const std::exception& exception)
+			{
+				Log::GetLog()->error("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
+				return -1;
+			}
+
+			if (DBHelper::IsPlayerExists(steam_id))
+				return GetPoints(steam_id);
+		}
+
+		return -1;
+	}
+
+	// Console commands
+
+	void AddPointsCmd(APlayerController* player_controller, FString* cmd, bool)
+	{
+		AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
+
+		const bool result = AddPointsCbk(*cmd);
+		if (result)
+			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Successfully added points");
+		else
+			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, "Couldn't add points");
+	}
+
+	void SetPointsCmd(APlayerController* player_controller, FString* cmd, bool)
+	{
+		AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
+
+		const bool result = SetPointsCbk(*cmd);
+		if (result)
+			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Successfully set points");
+		else
+			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, "Couldn't set points");
+	}
+
+	void ChangePointsAmountCmd(APlayerController* player_controller, FString* cmd, bool)
+	{
+		AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
+
+		const bool result = ChangePointsAmountCbk(*cmd);
+		if (result)
+			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Successfully set points");
+		else
+			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, "Couldn't set points");
 	}
 
 	/**
@@ -278,131 +367,67 @@ namespace ArkShop::Points
 
 	void GetPlayerPointsCmd(APlayerController* player_controller, FString* cmd, bool)
 	{
-		TArray<FString> parsed;
-		cmd->ParseIntoArray(parsed, L" ", true);
+		AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
 
-		if (parsed.IsValidIndex(1))
-		{
-			uint64 steam_id;
-
-			try
-			{
-				steam_id = std::stoull(*parsed[1]);
-			}
-			catch (const std::exception& exception)
-			{
-				Log::GetLog()->error("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
-				return;
-			}
-
-			if (DBHelper::IsPlayerExists(steam_id))
-			{
-				int points = GetPoints(steam_id);
-
-				AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
-
-				ArkApi::GetApiUtils().SendChatMessage(shooter_controller, GetText("Sender"), "Player has {} points", points);
-			}
-		}
+		const int points = GetPlayerPointsCbk(*cmd);
+		if (points != -1)
+			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Player has {} points", points);
+		else
+			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, "Couldn't get points amount");
 	}
 
 	// Rcon callbacks
 
 	void AddPointsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
 	{
-		FString msg = rcon_packet->Body;
+		FString reply;
 
-		TArray<FString> parsed;
-		msg.ParseIntoArray(parsed, L" ", true);
+		const bool result = AddPointsCbk(rcon_packet->Body);
+		if (result)
+			reply = "Successfully added points\n";
+		else
+			reply = "Couldn't add points\n";
 
-		if (parsed.IsValidIndex(2))
-		{
-			uint64 steam_id;
-			int amount;
-
-			try
-			{
-				steam_id = std::stoull(*parsed[1]);
-				amount = std::stoi(*parsed[2]);
-			}
-			catch (const std::exception& exception)
-			{
-				Log::GetLog()->error("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
-				return;
-			}
-
-			if (DBHelper::IsPlayerExists(steam_id))
-			{
-				AddPoints(amount, steam_id);
-
-				FString reply("Successfully added points\n");
-				rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
-			}
-		}
+		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
 	}
 
 	void SetPointsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
 	{
-		FString msg = rcon_packet->Body;
+		FString reply;
 
-		TArray<FString> parsed;
-		msg.ParseIntoArray(parsed, L" ", true);
+		const bool result = SetPointsCbk(rcon_packet->Body);
+		if (result)
+			reply = "Successfully set points\n";
+		else
+			reply = "Couldn't set points\n";
 
-		if (parsed.IsValidIndex(2))
-		{
-			uint64 steam_id;
-			int amount;
+		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
+	}
 
-			try
-			{
-				steam_id = std::stoull(*parsed[1]);
-				amount = std::stoi(*parsed[2]);
-			}
-			catch (const std::exception& exception)
-			{
-				Log::GetLog()->error("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
-				return;
-			}
+	void ChangePointsAmountRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+	{
+		FString reply;
 
-			if (DBHelper::IsPlayerExists(steam_id))
-			{
-				SetPoints(steam_id, amount);
+		const bool result = ChangePointsAmountCbk(rcon_packet->Body);
+		if (result)
+			reply = "Successfully set points\n";
+		else
+			reply = "Couldn't set points\n";
 
-				FString reply("Successfully set points\n");
-				rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
-			}
-		}
+		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
 	}
 
 	void GetPlayerPointsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
 	{
-		FString msg = rcon_packet->Body;
+		FString reply;
 
-		TArray<FString> parsed;
-		msg.ParseIntoArray(parsed, L" ", true);
+		const int points = GetPlayerPointsCbk(rcon_packet->Body);
+		if (points != -1)
+			reply = FString::Format("Player has {} points\n", points);
+		else
+			reply = "Couldn't get points amount\n";
 
-		if (parsed.IsValidIndex(1))
-		{
-			uint64 steam_id;
-
-			try
-			{
-				steam_id = std::stoull(*parsed[1]);
-			}
-			catch (const std::exception& exception)
-			{
-				Log::GetLog()->error("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
-				return;
-			}
-
-			if (DBHelper::IsPlayerExists(steam_id))
-			{
-				const int points = GetPoints(steam_id);
-
-				FString reply = FString::Format("Player has {} points\n", points);
-				rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
-			}
-		}
+		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
 	}
 
 	void Init()
@@ -414,11 +439,13 @@ namespace ArkShop::Points
 
 		commands.AddConsoleCommand("AddPoints", &AddPointsCmd);
 		commands.AddConsoleCommand("SetPoints", &SetPointsCmd);
+		commands.AddConsoleCommand("ChangePoints", &ChangePointsAmountCmd);
 		commands.AddConsoleCommand("GetPlayerPoints", &GetPlayerPointsCmd);
 		commands.AddConsoleCommand("ResetPoints", &ResetPointsCmd);
 
 		commands.AddRconCommand("AddPoints", &AddPointsRcon);
 		commands.AddRconCommand("SetPoints", &SetPointsRcon);
+		commands.AddRconCommand("ChangePoints", &ChangePointsAmountRcon);
 		commands.AddRconCommand("GetPlayerPoints", &GetPlayerPointsRcon);
 	}
 }

@@ -42,6 +42,9 @@
     <ClInclude Include="Private\ShopLog.h">
       <Filter>Private</Filter>
     </ClInclude>
+    <ClInclude Include="Private\StoreSell.h">
+      <Filter>Private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Private\ArkShop.cpp">
@@ -63,6 +66,9 @@
       <Filter>Private</Filter>
     </ClCompile>
     <ClCompile Include="Private\sqlite3.c">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\StoreSell.cpp">
       <Filter>Private</Filter>
     </ClCompile>
   </ItemGroup>
