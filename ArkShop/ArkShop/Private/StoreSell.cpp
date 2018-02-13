@@ -162,11 +162,6 @@ namespace ArkShop::StoreSell
 				return;
 			}
 		}
-		else
-		{
-			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				*GetText("ShopUsage"));
-		}
 
 		if (page < 0)
 			return;
