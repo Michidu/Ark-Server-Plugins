@@ -428,9 +428,6 @@ void ListPlayerDinos(RCONClientConnection* rcon_connection, RCONPacket* rcon_pac
 		UGameplayStatics::GetAllActorsOfClass(reinterpret_cast<UObject*>(ArkApi::GetApiUtils().GetWorld()),
 		                                      APrimalDinoCharacter::GetPrivateStaticClass(), &found_actors);
 
-		FString dino_name;
-		FString class_name;
-
 		const int player_team = shooter_pc->TargetingTeamField()();
 
 		FString reply = "";
@@ -438,18 +435,17 @@ void ListPlayerDinos(RCONClientConnection* rcon_connection, RCONPacket* rcon_pac
 		for (AActor* actor : found_actors)
 		{
 			APrimalDinoCharacter* dino = static_cast<APrimalDinoCharacter*>(actor);
+			if (!dino)
+				continue;
 
 			const int dino_team = dino->TargetingTeamField()();
 			if (dino_team == player_team)
 			{
-				dino->GetDescriptiveName(&dino_name);
-				dino->DinoNameTagField()().ToString(&class_name);
+				FString dino_name;
+				dino->GetDinoDescriptiveName(&dino_name);
 
-				reply += FString::Format(TEXT("{}({}), ID1={}, ID2={}\n"), *dino_name, *class_name, dino->DinoID1Field()(),
-				                         dino->DinoID2Field()());
+				reply += FString::Format(TEXT("{}, ID1={}, ID2={}\n"), *dino_name, dino->DinoID1Field()(), dino->DinoID2Field()());
 			}
-
-			Sleep(0);
 		}
 
 
