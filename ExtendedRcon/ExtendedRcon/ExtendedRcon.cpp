@@ -827,6 +827,47 @@ void UnlockEngram(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet
 	}
 }
 
+void ScriptCommand(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+{
+	FString msg = rcon_packet->Body;
+
+	TArray<FString> parsed;
+	msg.ParseIntoArray(parsed, L" ", true);
+
+	if (parsed.IsValidIndex(2))
+	{
+		uint64 steam_id;
+		FString command;
+
+		try
+		{
+			steam_id = std::stoull(*parsed[1]);
+			command = msg.Replace(*FString::Format(L"scriptcommand {} ", steam_id), L"");
+		}
+		catch (const std::exception&)
+		{
+			SendRconReply(rcon_connection, rcon_packet->Id, "Request has failed");
+			return;
+		}
+
+		AShooterPlayerController* shooter_pc = ArkApi::GetApiUtils().FindPlayerFromSteamId(steam_id);
+		if (!shooter_pc)
+		{
+			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find player from the given steam id");
+			return;
+		}
+
+		UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(shooter_pc->CheatManagerField()());
+		cheat_manager->ScriptCommand(&command);
+
+		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully executed");
+	}
+	else
+	{
+		SendRconReply(rcon_connection, rcon_packet->Id, "Not enough arguments");
+	}
+}
+
 void Load()
 {
 	auto& commands = ArkApi::GetCommands();
@@ -850,6 +891,7 @@ void Load()
 	commands.AddRconCommand("KillDino", &KillDino);
 	commands.AddRconCommand("ClientChat", &ClientChat);
 	commands.AddRconCommand("UnlockEngram", &UnlockEngram);
+	commands.AddRconCommand("ScriptCommand", &ScriptCommand);
 }
 
 void Unload()
@@ -875,6 +917,7 @@ void Unload()
 	commands.RemoveRconCommand("KillDino");
 	commands.RemoveRconCommand("ClientChat");
 	commands.RemoveRconCommand("UnlockEngram");
+	commands.RemoveRconCommand("ScriptCommand");
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
