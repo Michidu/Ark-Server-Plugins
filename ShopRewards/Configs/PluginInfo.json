@@ -1,0 +1,9 @@
+{
+  "FullName":"Shop Rewards",
+  "Description":"Rewards for killing dinos and players & stats",
+  "Version":1.0,
+  "MinApiVersion":2.3,
+  "Dependencies":[
+    "ArkShop"
+  ]
+}

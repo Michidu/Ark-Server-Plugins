@@ -1,0 +1,63 @@
+{
+  "DinoRewards":{
+    "Enabled":true,
+    "Dinos":[
+      {
+        "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Dodo/Dodo_Character_BP.Dodo_Character_BP'",
+        "Award":[
+          {
+            "MinLevel":1,
+            "MaxLevel":20,
+            "Points":1
+          },
+          {
+            "MinLevel":21,
+            "MaxLevel":50,
+            "Points":5
+          }
+        ]
+      },
+      {
+        "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Rex/Rex_Character_BP.Rex_Character_BP'",
+        "Award":[
+          {
+            "MinLevel":1,
+            "MaxLevel":50,
+            "Points":10
+          },
+          {
+            "MinLevel":51,
+            "MaxLevel":80,
+            "Points":20
+          },
+          {
+            "MinLevel":81,
+            "MaxLevel":120,
+            "Points":30
+          }
+        ]
+      }
+    ]
+  },
+  "PlayerRewards":{
+    "Enabled":true,
+    "ReceivePoints":20,
+    "AdditionalPointsPercent":3,
+    "LosePointsPercent":80
+  },
+  "Stats":{
+    "DisplayTime":15.0,
+    "TextSize":1.3
+  },
+  "Messages":{
+    "Sender":"ShopRewards",
+    "LostPoints":"You have lost {} points",
+    "MyStats":"Player kills count: {0}\nDeaths count: {1}\nWild dino kills count: {2}\nTamed dino kills count: {3}",
+    "StatsFormat":"{0}) {1} {2} {3}\n",
+    "StatsFormatPlayer":"Format: Name Player kills Deaths count\n{0}",
+    "StatsFormatDino":"Format: Name Tamed dino kills Wild dino kills\n{0}",
+    "StatsUsage":"Usage: /stats dino or /stats player",
+    "MyStatsCmd":"/mystats",
+    "ShowLeaderboardCmd":"/stats"
+  }
+}
