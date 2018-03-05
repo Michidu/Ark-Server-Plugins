@@ -285,7 +285,7 @@ namespace ArkShop::Store
 		auto start = items_list.begin();
 		advance(start, start_index);
 
-		std::stringstream ss;
+		std::wstringstream ss;
 
 		for (auto iter = start; iter != items_list.end(); ++iter)
 		{
@@ -297,7 +297,7 @@ namespace ArkShop::Store
 
 			const int price = item["Price"];
 			const std::string type = item["Type"];
-			const std::string description = item.value("Description", "No description");
+			const std::wstring description = ArkApi::Tools::Utf8Decode(item.value("Description", "No description"));
 
 			ss << i + 1 << ") " << description;
 
@@ -308,7 +308,7 @@ namespace ArkShop::Store
 				ss << ". Level: " << level;
 			}
 
-			ss << ". Id: " << iter.key() << ". Price: " << price << "\n";
+			ss << ". Id: " << ArkApi::Tools::Utf8Decode(iter.key()) << ". Price: " << price << "\n";
 		}
 
 		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::White, text_size, display_time, nullptr,

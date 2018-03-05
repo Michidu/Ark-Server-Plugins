@@ -25,12 +25,24 @@ public:
 private:
 	ShopLog()
 	{
-		auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-			ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/ShopLog.log", 1024 * 1024, 5);
-		logger_ = std::make_shared<spdlog::logger>("ArkShop", sink);
+		try
+		{
+			FString map_name;
+			ArkApi::GetApiUtils().GetShooterGameMode()->GetMapName(&map_name);
 
-		logger_->set_pattern("%D %R [%l] %v");
-		logger_->flush_on(spdlog::level::info);
+			auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+				ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/ShopLog_" + ArkApi::Tools::Utf8Encode(*map_name) + ".log",
+				1024 * 1024, 5);
+
+			logger_ = std::make_shared<spdlog::logger>("ArkShop", sink);
+
+			logger_->set_pattern("%D %R [%l] %v");
+			logger_->flush_on(spdlog::level::info);
+		}
+		catch (const std::exception&)
+		{
+			std::cout << "Failed to create log file\n";
+		}
 	}
 
 	~ShopLog() = default;

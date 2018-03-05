@@ -277,11 +277,11 @@ namespace ArkShop::Kits
 			if (const int amount = GetKitAmount(steam_id, kit_name);
 				(amount > 0 || price != -1) && CanUseKit(steam_id, kit_name))
 			{
-				const std::string description = iter_value.value("Description", "No description");
+				const std::wstring description = ArkApi::Tools::Utf8Decode(iter_value.value("Description", "No description"));
 
-				std::string price_str = price != -1 ? fmt::format("Price: {}", price) : "";
+				std::wstring price_str = price != -1 ? fmt::format(L"Price: {}", price) : L"";
 
-				kits_str += FString::Format("\"{}\" - {}. {} left. {}\n", kit_name_str, description, amount, price_str);
+				kits_str += FString::Format(L"\"{}\" - {}. {} left. {}\n", *kit_name, description, amount, price_str);
 			}
 		}
 
