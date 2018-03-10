@@ -36,7 +36,7 @@ void OnChatMessage(AShooterPlayerController* player_controller, FString* message
 		player_controller->ConsoleCommand(&result, message, true);
 
 		FString log = FString::Format(*GetText("LogMsg"), *ArkApi::IApiUtils::GetCharacterName(player_controller),
-		                              *parsed[1]);
+		                              **message);
 
 		const bool print_to_chat = config["PrintToChat"];
 		if (print_to_chat)
