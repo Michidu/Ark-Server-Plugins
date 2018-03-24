@@ -1,8 +1,7 @@
 {
-  "RequiredLevel":10,
-  "AmountOfPoints":100,
+  "RequiredLevel":1,
+  "AutoUnlockEngrams":true,
   "AutoDetectEngrams":true,
-  "UnlockTEK":true,
   "Messages":{
     "Sender":"AllEngrams",
     "NoPermissions":"<RichColor Color=\"1, 0, 0, 1\">You don't have permissions to use this command</>",
