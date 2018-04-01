@@ -8,16 +8,19 @@
 
 namespace ArkShop::StoreSell
 {
-	bool SellItem(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id)
+	bool SellItem(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id,
+	              int amount)
 	{
 		bool success = false;
 
-		const int price = item_entry["Price"];
+		const int price = item_entry.value("Price", 1) * amount;
 		if (price <= 0)
 			return false;
 
 		const FString blueprint = FString(item_entry.value("Blueprint", "").c_str());
-		const int needed_amount = item_entry["Amount"];
+		const int needed_amount = item_entry.value("Amount", 1) * amount;
+		if (needed_amount <= 0)
+			return false;
 
 		UPrimalInventoryComponent* inventory = player_controller->GetPlayerCharacter()->MyInventoryComponentField()();
 		if (!inventory)
@@ -86,10 +89,13 @@ namespace ArkShop::StoreSell
 		return success;
 	}
 
-	bool Sell(AShooterPlayerController* player_controller, const FString& item_id)
+	bool Sell(AShooterPlayerController* player_controller, const FString& item_id, int amount)
 	{
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
 			return false;
+
+		if (amount <= 0)
+			amount = 1;
 
 		bool success = false;
 
@@ -112,12 +118,13 @@ namespace ArkShop::StoreSell
 			const std::string type = item_entry["Type"];
 
 			if (type == "item")
-				success = SellItem(player_controller, item_entry, steam_id);
+				success = SellItem(player_controller, item_entry, steam_id, amount);
 
 			if (success)
 			{
-				const std::wstring log = fmt::format(TEXT("{}({}) sold item \"{}\""),
-				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id, *item_id);
+				const std::wstring log = fmt::format(TEXT("{}({}) sold item \"{}\". Amount - {}"),
+				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id, *item_id,
+				                                     amount);
 
 				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
 			}
@@ -135,7 +142,22 @@ namespace ArkShop::StoreSell
 
 		if (parsed.IsValidIndex(1))
 		{
-			Sell(player_controller, parsed[1]);
+			int amount = 0;
+
+			if (parsed.IsValidIndex(2))
+			{
+				try
+				{
+					amount = std::stoi(*parsed[2]);
+				}
+				catch (const std::exception& exception)
+				{
+					Log::GetLog()->warn("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
+					return;
+				}
+			}
+
+			Sell(player_controller, parsed[1], amount);
 		}
 		else
 		{
@@ -199,7 +221,7 @@ namespace ArkShop::StoreSell
 		}
 
 		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::White, text_size, display_time, nullptr,
-			ss.str().c_str());
+		                                       ss.str().c_str());
 	}
 
 	void Init()

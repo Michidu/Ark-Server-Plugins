@@ -112,6 +112,27 @@ void ReloadConfig(APlayerController* player_controller, FString*, bool)
 	ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Reloaded config");
 }
 
+void ReloadConfigRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+{
+	FString reply;
+
+	try
+	{
+		ReadConfig();
+	}
+	catch (const std::exception& error)
+	{
+		Log::GetLog()->error(error.what());
+
+		reply = error.what();
+		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
+		return;
+	}
+
+	reply = "Reloaded config";
+	rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
+}
+
 void Load()
 {
 	Log::Get().Init("ArkShop");
@@ -146,6 +167,7 @@ void Load()
 	                           &AShooterGameMode_Logout_original);
 
 	ArkApi::GetCommands().AddConsoleCommand("ArkShop.Reload", &ReloadConfig);
+	ArkApi::GetCommands().AddRconCommand("ArkShop.Reload", &ReloadConfigRcon);
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)

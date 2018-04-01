@@ -396,12 +396,10 @@ namespace ArkShop::Kits
 		}
 	}
 
-	// Console callbacks
-
-	void ChangeKitAmountCmd(APlayerController* controller, FString* cmd, bool)
+	bool ChangeKitAmountCbk(const FString& cmd)
 	{
 		TArray<FString> parsed;
-		cmd->ParseIntoArray(parsed, L" ", true);
+		cmd.ParseIntoArray(parsed, L" ", true);
 
 		if (parsed.IsValidIndex(3))
 		{
@@ -418,20 +416,27 @@ namespace ArkShop::Kits
 			catch (const std::exception& exception)
 			{
 				Log::GetLog()->warn("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
-				return;
+				return false;
 			}
 
 			if (DBHelper::IsPlayerExists(steam_id))
-			{
-				const auto shooter_controller = static_cast<AShooterPlayerController*>(controller);
-
-				const bool result = ChangeKitAmount(kit_name, amount, steam_id);
-				if (result)
-					ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Successfully changed kit amount");
-				else
-					ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, "Couldn't change kit amount");
-			}
+				return ChangeKitAmount(kit_name, amount, steam_id);
 		}
+
+		return false;
+	}
+
+	// Console callbacks
+
+	void ChangeKitAmountCmd(APlayerController* controller, FString* cmd, bool)
+	{
+		const auto shooter_controller = static_cast<AShooterPlayerController*>(controller);
+
+		const bool result = ChangeKitAmountCbk(*cmd);
+		if (result)
+			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Successfully changed kit amount");
+		else
+			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, "Couldn't change kit amount");
 	}
 
 	void ResetKitsCmd(APlayerController* player_controller, FString* cmd, bool)
@@ -459,6 +464,21 @@ namespace ArkShop::Kits
 		}
 	}
 
+	// Rcon
+
+	void ChangeKitAmountRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+	{
+		FString reply;
+
+		const bool result = ChangeKitAmountCbk(rcon_packet->Body);
+		if (result)
+			reply = "Successfully changed kit amount";
+		else
+			reply = "Couldn't change kit amount";
+
+		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
+	}
+
 	void Init()
 	{
 		auto& commands = ArkApi::GetCommands();
@@ -468,5 +488,7 @@ namespace ArkShop::Kits
 
 		commands.AddConsoleCommand("ChangeKitAmount", &ChangeKitAmountCmd);
 		commands.AddConsoleCommand("ResetKits", &ResetKitsCmd);
+
+		commands.AddRconCommand("ChangeKitAmount", &ChangeKitAmountRcon);
 	}
 }

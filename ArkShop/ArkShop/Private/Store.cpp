@@ -5,6 +5,7 @@
 #include "DBHelper.h"
 #include "ShopLog.h"
 
+// TODO: Spawn with kit, neutered dino, RequiredLevel
 namespace ArkShop::Store
 {
 	/**
