@@ -201,7 +201,7 @@ namespace ArkShop::StoreSell
 		auto start = items_list.begin();
 		advance(start, start_index);
 
-		std::stringstream ss;
+		FString store_str = "";
 
 		for (auto iter = start; iter != items_list.end(); ++iter)
 		{
@@ -215,13 +215,12 @@ namespace ArkShop::StoreSell
 			const std::string type = item["Type"];
 			const std::string description = item.value("Description", "No description");
 
-			ss << i + 1 << ") " << description;
-
-			ss << ". Id: " << iter.key() << ". Price: " << price << "\n";
+			store_str += FString::Format(*GetText("StoreListItem"), i + 1, description, ArkApi::Tools::Utf8Decode(iter.key()),
+			                             price);
 		}
 
 		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::White, text_size, display_time, nullptr,
-		                                       ss.str().c_str());
+		                                       *store_str);
 	}
 
 	void Init()

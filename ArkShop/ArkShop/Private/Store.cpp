@@ -5,7 +5,6 @@
 #include "DBHelper.h"
 #include "ShopLog.h"
 
-// TODO: Spawn with kit, neutered dino, RequiredLevel
 namespace ArkShop::Store
 {
 	/**
@@ -67,6 +66,7 @@ namespace ArkShop::Store
 
 		const int price = item_entry["Price"];
 		const int level = item_entry["Level"];
+		const bool neutered = item_entry.value("Neutered", false);
 		std::string blueprint = item_entry["Blueprint"];
 
 		const int points = Points::GetPoints(steam_id);
@@ -75,7 +75,7 @@ namespace ArkShop::Store
 		{
 			const FString fblueprint(blueprint.c_str());
 
-			ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true);
+			ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
 
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
 			                                      *GetText("BoughtDino"));
@@ -191,6 +191,20 @@ namespace ArkShop::Store
 
 			const std::string type = item_entry["Type"];
 
+			const int min_level = item_entry.value("MinLevel", 1);
+			const int max_level = item_entry.value("MaxLevel", 999);
+
+			APrimalCharacter* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField()());
+			UPrimalCharacterStatusComponent* char_component = primal_character->MyCharacterStatusComponentField()();
+
+			const int level = char_component->BaseCharacterLevelField()() + char_component->ExtraCharacterLevelField()();
+			if (level < min_level || level > max_level)
+			{
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+				                                      *GetText("BadLevel"), min_level, max_level);
+				return false;
+			}
+
 			if (type == "item")
 				success = BuyItem(player_controller, item_entry, steam_id, amount);
 			else if (type == "dino")
@@ -286,7 +300,7 @@ namespace ArkShop::Store
 		auto start = items_list.begin();
 		advance(start, start_index);
 
-		std::wstringstream ss;
+		FString store_str = "";
 
 		for (auto iter = start; iter != items_list.end(); ++iter)
 		{
@@ -300,20 +314,24 @@ namespace ArkShop::Store
 			const std::string type = item["Type"];
 			const std::wstring description = ArkApi::Tools::Utf8Decode(item.value("Description", "No description"));
 
-			ss << i + 1 << ") " << description;
-
 			if (type == "dino")
 			{
 				const int level = item["Level"];
 
-				ss << ". Level: " << level;
+				store_str += FString::Format(*GetText("StoreListDino"), i + 1, description, level,
+				                             ArkApi::Tools::Utf8Decode(iter.key()), price);
 			}
-
-			ss << ". Id: " << ArkApi::Tools::Utf8Decode(iter.key()) << ". Price: " << price << "\n";
+			else
+			{
+				store_str += FString::Format(*GetText("StoreListItem"), i + 1, description, ArkApi::Tools::Utf8Decode(iter.key()),
+				                             price);
+			}
 		}
 
+		store_str = FString::Format(*GetText("StoreListFormat"), *store_str);
+
 		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::White, text_size, display_time, nullptr,
-		                                       ss.str().c_str());
+		                                       *store_str);
 	}
 
 	void Init()

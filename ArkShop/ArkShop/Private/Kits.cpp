@@ -9,6 +9,8 @@
 
 namespace ArkShop::Kits
 {
+	DECLARE_HOOK(AShooterCharacter_AuthPostSpawnInit, void, AShooterCharacter*);
+
 	/**
 	 * \brief Returns kits info of specific player
 	 */
@@ -111,7 +113,7 @@ namespace ArkShop::Kits
 	/**
 	* \brief Checks if player has permissions to use this kit
 	*/
-	bool CanUseKit(uint64 steam_id, const FString& kit_name)
+	bool CanUseKit(AShooterPlayerController* player_controller, uint64 steam_id, const FString& kit_name)
 	{
 		auto kits_list = config["Kits"];
 
@@ -121,7 +123,19 @@ namespace ArkShop::Kits
 		if (kit_entry_iter == kits_list.end())
 			return false;
 
-		const std::string permissions = kit_entry_iter.value().value("Permissions", "");
+		auto kit_entry = kit_entry_iter.value();
+
+		const int min_level = kit_entry.value("MinLevel", 1);
+		const int max_level = kit_entry.value("MaxLevel", 999);
+
+		APrimalCharacter* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField()());
+		UPrimalCharacterStatusComponent* char_component = primal_character->MyCharacterStatusComponentField()();
+
+		const int level = char_component->BaseCharacterLevelField()() + char_component->ExtraCharacterLevelField()();
+		if (level < min_level || level > max_level)
+			return false;
+
+		const std::string permissions = kit_entry.value("Permissions", "");
 		if (permissions.empty())
 			return true;
 
@@ -191,18 +205,20 @@ namespace ArkShop::Kits
 		for (const auto& dino : dinos_map)
 		{
 			const int level = dino["Level"];
+			const bool neutered = dino.value("Neutered", false);
 			std::string blueprint = dino["Blueprint"];
 
 			const FString fblueprint(blueprint.c_str());
 
-			ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true);
+			ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
 		}
 	}
 
 	/**
 	 * \brief Redeem the kit for the specific player
 	 */
-	void RedeemKit(AShooterPlayerController* player_controller, const FString& kit_name)
+	void RedeemKit(AShooterPlayerController* player_controller, const FString& kit_name, bool should_log = true,
+	               bool from_spawn = false)
 	{
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
 			return;
@@ -211,7 +227,7 @@ namespace ArkShop::Kits
 
 		if (DBHelper::IsPlayerExists(steam_id))
 		{
-			if (!CanUseKit(steam_id, kit_name))
+			if (!CanUseKit(player_controller, steam_id, kit_name))
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
 				                                      *GetText("NoPermissionsKit"));
@@ -230,21 +246,33 @@ namespace ArkShop::Kits
 				return;
 			}
 
+			const auto kit_entry = kit_entry_iter.value();
+
+			if (!from_spawn && kit_entry.value("OnlyFromSpawn", false))
+			{
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+				                                      *GetText("OnlyOnSpawnKit"));
+				return;
+			}
+
 			if (const int kit_amount = GetKitAmount(steam_id, kit_name);
 				kit_amount > 0 && ChangeKitAmount(kit_name, -1, steam_id))
 			{
-				GiveKitFromJson(player_controller, kit_entry_iter.value());
+				GiveKitFromJson(player_controller, kit_entry);
 
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
 				                                      *GetText("KitsLeft"), kit_amount - 1, *kit_name);
 
 				// Log
-				const std::wstring log = fmt::format(TEXT("{}({}) used kit \"{}\""),
-				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id, *kit_name);
+				if (should_log)
+				{
+					const std::wstring log = fmt::format(TEXT("{}({}) used kit \"{}\""),
+					                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id, *kit_name);
 
-				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
+					ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
+				}
 			}
-			else
+			else if (should_log)
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
 				                                      *GetText("NoKitsLeft"), *kit_name);
@@ -275,13 +303,13 @@ namespace ArkShop::Kits
 			const int price = iter_value.value("Price", -1);
 
 			if (const int amount = GetKitAmount(steam_id, kit_name);
-				(amount > 0 || price != -1) && CanUseKit(steam_id, kit_name))
+				(amount > 0 || price != -1) && CanUseKit(player_controller, steam_id, kit_name))
 			{
 				const std::wstring description = ArkApi::Tools::Utf8Decode(iter_value.value("Description", "No description"));
 
-				std::wstring price_str = price != -1 ? fmt::format(L"Price: {}", price) : L"";
+				std::wstring price_str = price != -1 ? fmt::format(*GetText("KitsListPrice"), price) : L"";
 
-				kits_str += FString::Format(L"\"{}\" - {}. {} left. {}\n", *kit_name, description, amount, price_str);
+				kits_str += FString::Format(*GetText("KitsListFormat"), *kit_name, description, amount, price_str);
 			}
 		}
 
@@ -479,6 +507,39 @@ namespace ArkShop::Kits
 		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
 	}
 
+	// Hook
+
+	void Hook_AShooterCharacter_AuthPostSpawnInit(AShooterCharacter* _this)
+	{
+		AShooterCharacter_AuthPostSpawnInit_original(_this);
+
+		const std::string default_kit = config["General"].value("DefaultKit", "");
+		if (!default_kit.empty())
+		{
+			AShooterPlayerController* player = ArkApi::GetApiUtils().FindControllerFromCharacter(
+				static_cast<AShooterCharacter*>(_this));
+			if (player)
+			{
+				const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player);
+
+				const FString fdefault_kit(default_kit);
+
+				TArray<FString> kits;
+				fdefault_kit.ParseIntoArray(kits, L",", true);
+
+				for (const auto& kit : kits)
+				{
+					if (const int kit_amount = GetKitAmount(steam_id, kit);
+						kit_amount > 0 && CanUseKit(player, steam_id, kit))
+					{
+						RedeemKit(player, kit, false, true);
+						break;
+					}
+				}
+			}
+		}
+	}
+
 	void Init()
 	{
 		auto& commands = ArkApi::GetCommands();
@@ -490,5 +551,8 @@ namespace ArkShop::Kits
 		commands.AddConsoleCommand("ResetKits", &ResetKitsCmd);
 
 		commands.AddRconCommand("ChangeKitAmount", &ChangeKitAmountRcon);
+
+		ArkApi::GetHooks().SetHook("AShooterCharacter.AuthPostSpawnInit", &Hook_AShooterCharacter_AuthPostSpawnInit,
+		                           &AShooterCharacter_AuthPostSpawnInit_original);
 	}
 }

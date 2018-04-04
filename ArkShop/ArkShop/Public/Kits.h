@@ -14,7 +14,7 @@ namespace ArkShop::Kits
 	/**
 	 * \brief Checks if player has permissions to use this kit
 	 */
-	SHOP_API bool CanUseKit(uint64 steam_id, const FString& kit_name);
+	SHOP_API bool CanUseKit(AShooterPlayerController* player_controller, uint64 steam_id, const FString& kit_name);
 
 	/**
 	* \brief Checks if kit exists in server config
