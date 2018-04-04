@@ -15,13 +15,15 @@
     "ItemsPerPage":15,
     "ShopDisplayTime":15.0,
     "ShopTextSize":1.3,
-    "DbPathOverride":""
+    "DbPathOverride":"",
+    "DefaultKit":"vip,starter"
   },
   "Kits":{
     "starter":{
       "DefaultAmount":2,
       "Price":90,
       "Description":"Starter kit (carno with saddle)",
+      "OnlyFromSpawn":true,
       "Items":[
         {
           "Amount":1,
@@ -44,6 +46,7 @@
       "Dinos":[
         {
           "Level":20,
+          "Neutered":true,
           "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'"
         }
       ]
@@ -51,6 +54,8 @@
     "tools":{
       "DefaultAmount":3,
       "Price":50,
+      "MinLevel":1,
+      "MaxLevel":20,
       "Description":"Tools kit (pike and club)",
       "Items":[
         {
@@ -106,6 +111,8 @@
       "Description":"Parasaurolophus",
       "Level":10,
       "Price":20,
+      "MinLevel":10,
+      "MaxLevel":15,
       "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Para/Para_Character_BP.Para_Character_BP'"
     },
     "carno":{
@@ -113,6 +120,7 @@
       "Description":"Carnotaurus",
       "Level":15,
       "Price":50,
+      "Neutered":true,
       "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
     },
     "crate25":{
@@ -182,6 +190,13 @@
     "ShopSellCmd":"/shopsell",
     "SellUsage":"Usage: /sell id amount",
     "NotEnoughItems":"<RichColor Color=\"1, 0, 0, 1\">You don't have enough items ({0}/{1})</>",
-    "SoldItems":"<RichColor Color=\"0, 1, 0, 1\">You have successfully sold items</>"
+    "SoldItems":"<RichColor Color=\"0, 1, 0, 1\">You have successfully sold items</>",
+    "BadLevel":"<RichColor Color=\"1, 0, 0, 1\">Required level: {0} - {1}</>",
+    "KitsListPrice":"Price: {0}",
+    "KitsListFormat":"\"{0}\" - {1}. {2} left. {3}\n",
+    "StoreListDino":"{0}) {1}. Level: {2}. Id: {3}. Price: {4}\n",
+    "StoreListItem":"{0}) {1}. Id: {2}. Price: {3}\n",
+    "StoreListFormat":"{0}",
+    "OnlyOnSpawnKit":"This kit can be used only on spawn"
   }
 }
