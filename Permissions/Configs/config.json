@@ -1,3 +1,9 @@
 {
-  "DbPathOverride":""
+  "SqlLiteDBOverride":"",
+  "Database":"sqllite",
+  "MysqlHost":"127.0.0.1",
+  "MysqlUser":"root",
+  "MysqlPass":"",
+  "MysqlDB":"test",
+  "MysqlPort":3306
 }
