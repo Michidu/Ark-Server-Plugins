@@ -1,6 +1,6 @@
 {
   "FullName":"Permissions",
   "Description":"Manage permissions groups",
-  "Version":1.2,
+  "Version":1.3,
   "MinApiVersion":2.3
 }

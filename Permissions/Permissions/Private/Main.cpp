@@ -2,15 +2,22 @@
 
 #include <fstream>
 
-#include <API/ARK/Ark.h>
 #include <API/UE/Math/ColorList.h>
 
 #include "../Public/Permissions.h"
 #include "../Public/DBHelper.h"
 
 #include "json.hpp"
-
 #pragma comment(lib, "ArkApi.lib")
+
+IDatabase* Database;
+
+IDatabase* GetDB() { return Database; }
+
+//std::map<size_t, TArray<size_t>> GroupCache;
+//std::map<uint64, TArray<size_t>> PlayerCache;
+//std::map<uint64, TArray<size_t>>& GetPlayerCache() { return PlayerCache; }
+//std::map<size_t, TArray<size_t>>& GetGroupCache() { return GroupCache; }
 
 DECLARE_HOOK(AShooterGameMode_HandleNewPlayer, bool, AShooterGameMode*, AShooterPlayerController*, UPrimalPlayerData*,
 	AShooterCharacter*, bool);
@@ -24,19 +31,9 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 {
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(new_player);
 
-	if (!Permissions::DB::IsPlayerExists(steam_id))
+	if (!GetDB()->IsPlayerExists(steam_id))
 	{
-		try
-		{
-			auto& db = GetDB();
-
-			db << "INSERT INTO Players (SteamId) VALUES (?);"
-				<< steam_id;
-		}
-		catch (const sqlite::sqlite_exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-		}
+		GetDB()->AddPlayer(steam_id);
 	}
 
 	return AShooterGameMode_HandleNewPlayer_original(_this, new_player, player_data, player_character, is_from_login);
@@ -45,9 +42,12 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 void Hook_AShooterPlayerController_ClientNotifyAdmin(AShooterPlayerController* player_controller)
 {
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
-
-	if (!Permissions::IsPlayerInGroup(steam_id, "Admins"))
-		Permissions::AddPlayerToGroup(steam_id, "Admins");
+	Log::GetLog()->warn("adding Admin {}", steam_id);
+	if (!GetDB()->IsPlayerInGroup(steam_id, "Admins"))
+	{
+		Log::GetLog()->warn("added Admin {}", steam_id);
+		GetDB()->AddPlayerToGroup(steam_id, "Admins");
+	}
 
 	AShooterPlayerController_ClientNotifyAdmin_original(player_controller);
 }
@@ -125,7 +125,7 @@ std::optional<std::string> RemovePlayerFromGroup(const FString& cmd)
 		return "Parsing error";
 	}
 
-	return Permissions::RemovePlayerFromGroup(steam_id, group);
+	return GetDB()->RemovePlayerFromGroup(steam_id, group);
 }
 
 void RemovePlayerFromGroupCmd(APlayerController* player_controller, FString* cmd, bool)
@@ -158,7 +158,7 @@ std::optional<std::string> AddGroup(const FString& cmd)
 
 	const FString group = *parsed[1];
 
-	return Permissions::AddGroup(group);
+	return GetDB()->AddGroup(group);
 }
 
 void AddGroupCmd(APlayerController* player_controller, FString* cmd, bool)
@@ -191,7 +191,7 @@ std::optional<std::string> RemoveGroup(const FString& cmd)
 
 	const FString group = *parsed[1];
 
-	return Permissions::RemoveGroup(group);
+	return GetDB()->RemoveGroup(group);
 }
 
 void RemoveGroupCmd(APlayerController* player_controller, FString* cmd, bool)
@@ -225,7 +225,7 @@ std::optional<std::string> GroupGrantPermission(const FString& cmd)
 	const FString group = *parsed[1];
 	const FString permission = *parsed[2];
 
-	return Permissions::GroupGrantPermission(group, permission);
+	return GetDB()->GroupGrantPermission(group, permission);
 }
 
 void GroupGrantPermissionCmd(APlayerController* player_controller, FString* cmd, bool)
@@ -259,7 +259,7 @@ std::optional<std::string> GroupRevokePermission(const FString& cmd)
 	const FString group = *parsed[1];
 	const FString permission = *parsed[2];
 
-	return Permissions::GroupRevokePermission(group, permission);
+	return GetDB()->GroupRevokePermission(group, permission);
 }
 
 void GroupRevokePermissionCmd(APlayerController* player_controller, FString* cmd, bool)
@@ -302,7 +302,7 @@ FString PlayerGroups(const FString& cmd)
 		return "";
 	}
 
-	TArray<FString> groups = Permissions::GetPlayerGroups(steam_id);
+	TArray<FString> groups = GetDB()->GetPlayerGroups(steam_id);
 
 	FString groups_str;
 
@@ -341,7 +341,7 @@ FString GroupPermissions(const FString& cmd)
 
 	const FString group = *parsed[1];
 
-	TArray<FString> permissions = Permissions::GetGroupPermissions(group);
+	TArray<FString> permissions = GetDB()->GetGroupPermissions(group);
 
 	FString permissions_str;
 
@@ -374,7 +374,7 @@ void ShowMyGroupsChat(AShooterPlayerController* player_controller, FString*, ECh
 {
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
 
-	TArray<FString> groups = Permissions::GetPlayerGroups(steam_id);
+	TArray<FString> groups = GetDB()->GetPlayerGroups(steam_id);
 
 	FString groups_str;
 
@@ -387,15 +387,6 @@ void ShowMyGroupsChat(AShooterPlayerController* player_controller, FString*, ECh
 		groups_str.RemoveAt(groups_str.Len() - 2, 2);
 
 	ArkApi::GetApiUtils().SendChatMessage(player_controller, L"Permissions", *groups_str);
-}
-
-sqlite::database& GetDB()
-{
-	static sqlite::database db(config.value("DbPathOverride", "").empty()
-		                           ? ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/Permissions/ArkDB.db"
-		                           : config.value("DbPathOverride", ""));
-
-	return db;
 }
 
 void ReadConfig()
@@ -424,27 +415,22 @@ void Load()
 		throw;
 	}
 
-	auto& db = GetDB();
-
-	db << "create table if not exists Players ("
-		"Id integer primary key autoincrement not null,"
-		"SteamId integer default 0,"
-		"Groups text default 'Default,' COLLATE NOCASE"
-		");";
-	db << "create table if not exists Groups ("
-		"Id integer primary key autoincrement not null,"
-		"GroupName text not null COLLATE NOCASE,"
-		"Permissions text default '' COLLATE NOCASE"
-		");";
-
-	// Add default groups
-
-	db << "INSERT INTO Groups(GroupName, Permissions)"
-		"SELECT 'Admins', '*,'"
-		"WHERE NOT EXISTS(SELECT 1 FROM Groups WHERE GroupName = 'Admins');";
-	db << "INSERT INTO Groups(GroupName)"
-		"SELECT 'Default'"
-		"WHERE NOT EXISTS(SELECT 1 FROM Groups WHERE GroupName = 'Default');";
+	if (config.value("Database", "sqllite") == "mysql")
+	{
+		Database = new Mysql();
+		int Port = 3306;
+		try
+		{
+			Port = std::stoi(config.value("MysqlPort", "").c_str());
+		}
+		catch (...) {}
+		Database->InitDB(config.value("MysqlHost", ""), config.value("MysqlUser", ""), config.value("MysqlPass", ""), config.value("MysqlDB", ""), Port);
+	}
+	else
+	{
+		Database = new SqlLite();
+		Database->InitDB("", "", "", config.value("DbPathOverride", ""), 0);
+	}
 
 	ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation", &Hook_AShooterGameMode_HandleNewPlayer,
 	                           &AShooterGameMode_HandleNewPlayer_original);

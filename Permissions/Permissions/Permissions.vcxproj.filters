@@ -7,6 +7,9 @@
     <Filter Include="Public">
       <UniqueIdentifier>{8000b11c-6c16-4ef9-9c3e-1d539386f913}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Private\Database">
+      <UniqueIdentifier>{a3b6ee0c-8d1c-4772-9cec-e6bb163ca9d6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Public\Permissions.h">
@@ -20,6 +23,18 @@
     </ClInclude>
     <ClInclude Include="Private\json.hpp">
       <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\SqlLiteDB.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\IDatabase.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\MysqlDB.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\MysqlDBObj.h">
+      <Filter>Private\Database</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
