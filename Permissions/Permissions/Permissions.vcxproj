@@ -11,6 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Private\Database\IDatabase.h" />
+    <ClInclude Include="Private\Database\MysqlDB.h" />
+    <ClInclude Include="Private\Database\MysqlDBObj.h" />
+    <ClInclude Include="Private\Database\SqlLiteDB.h" />
     <ClInclude Include="Private\json.hpp" />
     <ClInclude Include="Private\Main.h" />
     <ClInclude Include="Public\DBHelper.h" />
@@ -88,12 +92,14 @@
       <PreprocessorDefinitions>NDEBUG;PERMISSIONS_EXPORTS;_WINDOWS;_USRDLL;ARK_EXPORTS;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\Includes;E:\ArkServerModding\ArkServerAPIREP\version\Core\Public\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\Libs;E:\ArkServerModding\ArkServerAPIREP\x64\Release\;</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
