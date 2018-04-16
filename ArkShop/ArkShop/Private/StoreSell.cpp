@@ -22,7 +22,7 @@ namespace ArkShop::StoreSell
 		if (needed_amount <= 0)
 			return false;
 
-		UPrimalInventoryComponent* inventory = player_controller->GetPlayerCharacter()->MyInventoryComponentField()();
+		UPrimalInventoryComponent* inventory = player_controller->GetPlayerCharacter()->MyInventoryComponentField();
 		if (!inventory)
 			return false;
 
@@ -32,10 +32,10 @@ namespace ArkShop::StoreSell
 
 		TArray<UPrimalItem*> items_for_removal;
 
-		TArray<UPrimalItem*> items = inventory->InventoryItemsField()();
+		TArray<UPrimalItem*> items = inventory->InventoryItemsField();
 		for (UPrimalItem* item : items)
 		{
-			if (item->ClassField()())
+			if (item->ClassField())
 			{
 				const FString item_bp = ArkApi::IApiUtils::GetItemBlueprint(item);
 
@@ -66,7 +66,7 @@ namespace ArkShop::StoreSell
 				}
 				else
 				{
-					inventory->RemoveItem(&item->ItemIDField()(), false, false, true, true);
+					inventory->RemoveItem(&item->ItemIDField(), false, false, true, true);
 				}
 			}
 

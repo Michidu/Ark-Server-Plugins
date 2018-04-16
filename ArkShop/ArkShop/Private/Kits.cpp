@@ -115,6 +115,9 @@ namespace ArkShop::Kits
 	*/
 	bool CanUseKit(AShooterPlayerController* player_controller, uint64 steam_id, const FString& kit_name)
 	{
+		if (!player_controller || ArkApi::IApiUtils::IsPlayerDead(player_controller))
+			return false;
+
 		auto kits_list = config["Kits"];
 
 		std::string kit_name_str = kit_name.ToString();
@@ -128,10 +131,12 @@ namespace ArkShop::Kits
 		const int min_level = kit_entry.value("MinLevel", 1);
 		const int max_level = kit_entry.value("MaxLevel", 999);
 
-		APrimalCharacter* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField()());
-		UPrimalCharacterStatusComponent* char_component = primal_character->MyCharacterStatusComponentField()();
+		APrimalCharacter* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField());
+		UPrimalCharacterStatusComponent* char_component = primal_character->MyCharacterStatusComponentField();
+		if (!char_component)
+			return false;
 
-		const int level = char_component->BaseCharacterLevelField()() + char_component->ExtraCharacterLevelField()();
+		const int level = char_component->BaseCharacterLevelField() + char_component->ExtraCharacterLevelField();
 		if (level < min_level || level > max_level)
 			return false;
 
