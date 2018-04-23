@@ -10,6 +10,9 @@
     <Filter Include="Private\Database">
       <UniqueIdentifier>{a3b6ee0c-8d1c-4772-9cec-e6bb163ca9d6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Private\Sqlite">
+      <UniqueIdentifier>{b090c175-c079-441f-bf0c-01d206683d33}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Public\Permissions.h">
@@ -44,11 +47,29 @@
     <ClCompile Include="Private\Main.cpp">
       <Filter>Private</Filter>
     </ClCompile>
-    <ClCompile Include="Private\sqlite3.c">
-      <Filter>Private</Filter>
-    </ClCompile>
     <ClCompile Include="Private\DBHelper.cpp">
       <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\SQLiteCpp\Backup.cpp">
+      <Filter>Private\Sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\SQLiteCpp\Column.cpp">
+      <Filter>Private\Sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\SQLiteCpp\Database.cpp">
+      <Filter>Private\Sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\SQLiteCpp\Exception.cpp">
+      <Filter>Private\Sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\SQLiteCpp\Statement.cpp">
+      <Filter>Private\Sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\SQLiteCpp\Transaction.cpp">
+      <Filter>Private\Sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Includes\sqlite3\sqlite3.c">
+      <Filter>Private\Sqlite</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

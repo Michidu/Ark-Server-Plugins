@@ -1,28 +1,23 @@
+#define _CRT_SECURE_NO_WARNINGS
+
+#include "Database/SqlLiteDB.h"
+#include "Database/MysqlDB.h"
+
 #include "Main.h"
 
+#include <API/UE/Math/ColorList.h>
 #include <fstream>
 
-#include <API/UE/Math/ColorList.h>
-
 #include "../Public/Permissions.h"
-#include "../Public/DBHelper.h"
-
 #include "json.hpp"
+
 #pragma comment(lib, "ArkApi.lib")
-
-IDatabase* Database;
-
-IDatabase* GetDB() { return Database; }
-
-//std::map<size_t, TArray<size_t>> GroupCache;
-//std::map<uint64, TArray<size_t>> PlayerCache;
-//std::map<uint64, TArray<size_t>>& GetPlayerCache() { return PlayerCache; }
-//std::map<size_t, TArray<size_t>>& GetGroupCache() { return GroupCache; }
 
 DECLARE_HOOK(AShooterGameMode_HandleNewPlayer, bool, AShooterGameMode*, AShooterPlayerController*, UPrimalPlayerData*,
 	AShooterCharacter*, bool);
 DECLARE_HOOK(AShooterPlayerController_ClientNotifyAdmin, void, AShooterPlayerController*);
 
+IDatabase* database;
 nlohmann::json config;
 
 bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlayerController* new_player,
@@ -31,9 +26,9 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 {
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(new_player);
 
-	if (!GetDB()->IsPlayerExists(steam_id))
+	if (!database->IsPlayerExists(steam_id))
 	{
-		GetDB()->AddPlayer(steam_id);
+		database->AddPlayer(steam_id);
 	}
 
 	return AShooterGameMode_HandleNewPlayer_original(_this, new_player, player_data, player_character, is_from_login);
@@ -42,12 +37,9 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 void Hook_AShooterPlayerController_ClientNotifyAdmin(AShooterPlayerController* player_controller)
 {
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
-	Log::GetLog()->warn("adding Admin {}", steam_id);
-	if (!GetDB()->IsPlayerInGroup(steam_id, "Admins"))
-	{
-		Log::GetLog()->warn("added Admin {}", steam_id);
-		GetDB()->AddPlayerToGroup(steam_id, "Admins");
-	}
+
+	if (!database->IsPlayerInGroup(steam_id, "Admins"))
+		database->AddPlayerToGroup(steam_id, "Admins");
 
 	AShooterPlayerController_ClientNotifyAdmin_original(player_controller);
 }
@@ -125,7 +117,7 @@ std::optional<std::string> RemovePlayerFromGroup(const FString& cmd)
 		return "Parsing error";
 	}
 
-	return GetDB()->RemovePlayerFromGroup(steam_id, group);
+	return database->RemovePlayerFromGroup(steam_id, group);
 }
 
 void RemovePlayerFromGroupCmd(APlayerController* player_controller, FString* cmd, bool)
@@ -158,7 +150,7 @@ std::optional<std::string> AddGroup(const FString& cmd)
 
 	const FString group = *parsed[1];
 
-	return GetDB()->AddGroup(group);
+	return database->AddGroup(group);
 }
 
 void AddGroupCmd(APlayerController* player_controller, FString* cmd, bool)
@@ -191,7 +183,7 @@ std::optional<std::string> RemoveGroup(const FString& cmd)
 
 	const FString group = *parsed[1];
 
-	return GetDB()->RemoveGroup(group);
+	return database->RemoveGroup(group);
 }
 
 void RemoveGroupCmd(APlayerController* player_controller, FString* cmd, bool)
@@ -225,7 +217,7 @@ std::optional<std::string> GroupGrantPermission(const FString& cmd)
 	const FString group = *parsed[1];
 	const FString permission = *parsed[2];
 
-	return GetDB()->GroupGrantPermission(group, permission);
+	return database->GroupGrantPermission(group, permission);
 }
 
 void GroupGrantPermissionCmd(APlayerController* player_controller, FString* cmd, bool)
@@ -259,7 +251,7 @@ std::optional<std::string> GroupRevokePermission(const FString& cmd)
 	const FString group = *parsed[1];
 	const FString permission = *parsed[2];
 
-	return GetDB()->GroupRevokePermission(group, permission);
+	return database->GroupRevokePermission(group, permission);
 }
 
 void GroupRevokePermissionCmd(APlayerController* player_controller, FString* cmd, bool)
@@ -302,7 +294,7 @@ FString PlayerGroups(const FString& cmd)
 		return "";
 	}
 
-	TArray<FString> groups = GetDB()->GetPlayerGroups(steam_id);
+	TArray<FString> groups = database->GetPlayerGroups(steam_id);
 
 	FString groups_str;
 
@@ -341,7 +333,7 @@ FString GroupPermissions(const FString& cmd)
 
 	const FString group = *parsed[1];
 
-	TArray<FString> permissions = GetDB()->GetGroupPermissions(group);
+	TArray<FString> permissions = database->GetGroupPermissions(group);
 
 	FString permissions_str;
 
@@ -374,7 +366,7 @@ void ShowMyGroupsChat(AShooterPlayerController* player_controller, FString*, ECh
 {
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
 
-	TArray<FString> groups = GetDB()->GetPlayerGroups(steam_id);
+	TArray<FString> groups = database->GetPlayerGroups(steam_id);
 
 	FString groups_str;
 
@@ -417,24 +409,36 @@ void Load()
 
 	if (config.value("Database", "sqllite") == "mysql")
 	{
-		Database = new Mysql();
-		int Port = 3306;
+		int port = 3306;
+
 		try
 		{
-			Port = std::stoi(config.value("MysqlPort", "").c_str());
+			port = std::stoi(config.value("MysqlPort", ""));
 		}
-		catch (...) {}
-		Database->InitDB(config.value("MysqlHost", ""), config.value("MysqlUser", ""), config.value("MysqlPass", ""), config.value("MysqlDB", ""), Port);
+		catch (...)
+		{
+		}
+
+		auto connection_config = std::make_shared<mysql::connection_config>();
+		connection_config->host = config.value("MysqlHost", "");
+		connection_config->user = config.value("MysqlUser", "");
+		connection_config->password = config.value("MysqlPass", "");
+		connection_config->database = config.value("MysqlDB", "");
+		connection_config->port = port;
+		connection_config->debug = false;
+		connection_config->auto_reconnect = true;
+
+		database = new MySql(connection_config);
 	}
 	else
 	{
-		Database = new SqlLite();
-		Database->InitDB("", "", "", config.value("DbPathOverride", ""), 0);
+		database = new SqlLite(config.value("DbPathOverride", ""));
 	}
 
 	ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation", &Hook_AShooterGameMode_HandleNewPlayer,
 	                           &AShooterGameMode_HandleNewPlayer_original);
-	ArkApi::GetHooks().SetHook("AShooterPlayerController.ClientNotifyAdmin", &Hook_AShooterPlayerController_ClientNotifyAdmin,
+	ArkApi::GetHooks().SetHook("AShooterPlayerController.ClientNotifyAdmin",
+	                           &Hook_AShooterPlayerController_ClientNotifyAdmin,
 	                           &AShooterPlayerController_ClientNotifyAdmin_original);
 
 	ArkApi::GetCommands().AddConsoleCommand("Permissions.Add", &AddPlayerToGroupCmd);

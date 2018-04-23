@@ -8551,13 +8551,13 @@ class serializer
                             {
                                 if (codepoint <= 0xFFFF)
                                 {
-                                    std::snprintf(string_buffer.data() + bytes, 7, "\\u%04x",
+                                    snprintf(string_buffer.data() + bytes, 7, "\\u%04x",
                                                   static_cast<uint16_t>(codepoint));
                                     bytes += 6;
                                 }
                                 else
                                 {
-                                    std::snprintf(string_buffer.data() + bytes, 13, "\\u%04x\\u%04x",
+                                    snprintf(string_buffer.data() + bytes, 13, "\\u%04x\\u%04x",
                                                   static_cast<uint16_t>(0xD7C0 + (codepoint >> 10)),
                                                   static_cast<uint16_t>(0xDC00 + (codepoint & 0x3FF)));
                                     bytes += 12;

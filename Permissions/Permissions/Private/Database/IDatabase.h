@@ -1,10 +1,14 @@
 #pragma once
+
+#include <API/ARK/Ark.h>
+
 class IDatabase
 {
 public:
-	virtual void InitDB(const std::string& Host, const std::string& User, const std::string& Pass, const std::string& DB, int Port) = 0;
+	virtual ~IDatabase() = default;
+
 	virtual void AddPlayer(uint64 steam_id) = 0;
-	virtual	bool IsPlayerExists(uint64 steam_id) = 0;
+	virtual bool IsPlayerExists(uint64 steam_id) = 0;
 	virtual bool IsGroupExists(const FString& group) = 0;
 	virtual bool IsPlayerInGroup(uint64 steam_id, const FString& group) = 0;
 	virtual TArray<FString> GetPlayerGroups(uint64 steam_id) = 0;

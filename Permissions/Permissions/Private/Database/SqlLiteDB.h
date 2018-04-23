@@ -1,135 +1,104 @@
-#pragma 
-#include "hdr/sqlite_modern_cpp.h"
+#pragma once
+
+#include <SQLiteCpp/Database.h>
+
+#include "IDatabase.h"
 
 class SqlLite : public IDatabase
 {
-private:
-	std::string DBConnection;
 public:
-	sqlite::database& LiteDB()
+	explicit SqlLite(const std::string& path)
+		: db_(path.empty()
+			      ? ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/Permissions/ArkDB.db"
+			      : path, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE)
 	{
-		static sqlite::database db(DBConnection.empty()
-			? ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/Permissions/ArkDB.db"
-			: DBConnection);
-
-		return db;
-	}
-
-	virtual void InitDB(const std::string& Host, const std::string& User, const std::string& Pass, const std::string& DBConnection, int Port)
-	{
-		this->DBConnection = DBConnection;
 		try
 		{
-			auto& db = LiteDB();
+			db_.exec("PRAGMA journal_mode=WAL;");
 
-			db << "create table if not exists Players ("
+			db_.exec("create table if not exists Players ("
 				"Id integer primary key autoincrement not null,"
 				"SteamId integer default 0,"
 				"Groups text default 'Default,' COLLATE NOCASE"
-				");";
-			db << "create table if not exists Groups ("
+				");");
+			db_.exec("create table if not exists Groups ("
 				"Id integer primary key autoincrement not null,"
 				"GroupName text not null COLLATE NOCASE,"
 				"Permissions text default '' COLLATE NOCASE"
-				");";
+				");");
 
 			// Add default groups
 
-			db << "INSERT INTO Groups(GroupName, Permissions)"
+			db_.exec("INSERT INTO Groups(GroupName, Permissions)"
 				"SELECT 'Admins', '*,'"
-				"WHERE NOT EXISTS(SELECT 1 FROM Groups WHERE GroupName = 'Admins');";
-			db << "INSERT INTO Groups(GroupName)"
+				"WHERE NOT EXISTS(SELECT 1 FROM Groups WHERE GroupName = 'Admins');");
+			db_.exec("INSERT INTO Groups(GroupName)"
 				"SELECT 'Default'"
-				"WHERE NOT EXISTS(SELECT 1 FROM Groups WHERE GroupName = 'Default');";
-
-			// Load Cached Data
-		/*	std::hash<std::string> HashString;
-			TArray<FString> FStringArray;
-
-			db << "SELECT GroupName, Permissions FROM Groups;"
-				>> [&](const std::string& GroupName, const std::string& Permissions)
-			{
-
-				FString Permissions_fstr(Permissions.c_str());
-				Permissions_fstr.ParseIntoArray(FStringArray, L",", true);
-				TArray<size_t> PermArray;
-				for (const auto& Perm : FStringArray)
-				{
-					PermArray.Add(HashString(Perm.ToString()));
-				}
-				GroupCache.insert(std::map<size_t, TArray<size_t>>::value_type(HashString(GroupName), PermArray));
-			};
-
-			db << "SELECT SteamId, Groups FROM Players;"
-				>> [&](const uint64& SteamId, const std::string& Groups)
-			{
-
-				FString Groups_fstr(Groups.c_str());
-				Groups_fstr.ParseIntoArray(FStringArray, L",", true);
-				TArray<size_t> GroupArray;
-				for (const auto& Group : FStringArray)
-				{
-					GroupArray.Add(HashString(Group.ToString()));
-				}
-				PlayerCache.insert(std::map<uint64, TArray<size_t>>::value_type(SteamId, GroupArray));
-			};*/
+				"WHERE NOT EXISTS(SELECT 1 FROM Groups WHERE GroupName = 'Default');");
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 		}
 	}
 
-	virtual void AddPlayer(uint64 steam_id)
+	void AddPlayer(uint64 steam_id) override
 	{
 		try
 		{
-			auto& db = LiteDB();
-			db << "INSERT INTO Players (SteamId) VALUES (?);" << steam_id;
+			SQLite::Statement query(db_, "INSERT INTO Players (SteamId) VALUES (?);");
+			query.bind(1, static_cast<int64>(steam_id));
+			query.exec();
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 		}
 	}
 
-	virtual bool IsPlayerExists(uint64 steam_id)
+	bool IsPlayerExists(uint64 steam_id) override
 	{
-		auto& db = LiteDB();
-
-		int count = 0;
+		int count;
 
 		try
 		{
-			db << "SELECT count(1) FROM Players WHERE SteamId = ?;" << steam_id >> count;
+			SQLite::Statement query(db_, "SELECT count(1) FROM Players WHERE SteamId = ?;");
+			query.bind(1, static_cast<int64>(steam_id));
+			query.executeStep();
+
+			count = query.getColumn(0);
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
 		return count != 0;
 	}
 
-	virtual bool IsGroupExists(const FString& group)
+	bool IsGroupExists(const FString& group) override
 	{
-		auto& db = LiteDB();
-
-		int count = 0;
+		int count;
 
 		try
 		{
-			db << "SELECT count(1) FROM Groups WHERE GroupName = ?;" << group.ToString() >> count;
+			SQLite::Statement query(db_, "SELECT count(1) FROM Groups WHERE GroupName = ?;");
+			query.bind(1, group.ToString());
+			query.executeStep();
+
+			count = query.getColumn(0);
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
 		return count != 0;
 	}
 
-	virtual bool IsPlayerInGroup(uint64 steam_id, const FString& group)
+	bool IsPlayerInGroup(uint64 steam_id, const FString& group) override
 	{
 		TArray<FString> groups = GetPlayerGroups(steam_id);
 
@@ -138,32 +107,35 @@ public:
 			if (current_group == group)
 				return true;
 		}
+
 		return false;
 	}
 
-	virtual TArray<FString> GetPlayerGroups(uint64 steam_id)
+	TArray<FString> GetPlayerGroups(uint64 steam_id) override
 	{
 		TArray<FString> groups;
 
 		try
 		{
-			auto& db = LiteDB();
+			SQLite::Statement query(db_, "SELECT Groups FROM Players WHERE SteamId = ?;");
+			query.bind(1, static_cast<int64>(steam_id));
+			query.executeStep();
 
-			std::string groups_str;
-			db << "SELECT Groups FROM Players WHERE SteamId = ?;" << steam_id >> groups_str;
+			std::string groups_str = query.getColumn(0);
 
 			FString groups_fstr(groups_str.c_str());
 
 			groups_fstr.ParseIntoArray(groups, L",", true);
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 		}
+
 		return groups;
 	}
 
-	virtual TArray<FString> GetGroupPermissions(const FString& group)
+	TArray<FString> GetGroupPermissions(const FString& group) override
 	{
 		if (group.IsEmpty())
 			return {};
@@ -172,44 +144,47 @@ public:
 
 		try
 		{
-			auto& db = LiteDB();
+			SQLite::Statement query(db_, "SELECT Permissions FROM Groups WHERE GroupName = ?;");
+			query.bind(1, group.ToString());
+			query.executeStep();
 
-			std::string permissions_str;
-			db << "SELECT Permissions FROM Groups WHERE GroupName = ?;" << group.ToString() >> permissions_str;
+			std::string permissions_str = query.getColumn(0);
 
 			FString permissions_fstr(permissions_str.c_str());
 
 			permissions_fstr.ParseIntoArray(permissions, L",", true);
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 		}
+
 		return permissions;
 	}
 
-	virtual TArray<uint64> GetGroupMembers(const FString& group)
+	TArray<uint64> GetGroupMembers(const FString& group) override
 	{
 		TArray<uint64> members;
 
 		try
 		{
-			auto& db = LiteDB();
-			db << "SELECT SteamId FROM Players;"
-				>> [&](const uint64& SteamId)
+			SQLite::Statement query(db_, "SELECT SteamId FROM Players;");
+			while (query.executeStep())
 			{
-				if (IsPlayerInGroup(SteamId, group))
-					members.Add(SteamId);
-			};
+				uint64 steam_id = static_cast<uint64>(query.getColumn(0).getInt64());
+				if (IsPlayerInGroup(steam_id, group))
+					members.Add(steam_id);
+			}
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 		}
+
 		return members;
 	}
 
-	virtual std::optional<std::string> AddPlayerToGroup(uint64 steam_id, const FString& group)
+	std::optional<std::string> AddPlayerToGroup(uint64 steam_id, const FString& group) override
 	{
 		if (!IsPlayerExists(steam_id) || !IsGroupExists(group))
 			return "Player or group does not exist";
@@ -219,18 +194,21 @@ public:
 
 		try
 		{
-			auto& db = LiteDB();
-			db << "UPDATE Players SET Groups = Groups || ? || ',' WHERE SteamId = ?;" << group.ToString() << steam_id;
+			SQLite::Statement query(db_, "UPDATE Players SET Groups = Groups || ? || ',' WHERE SteamId = ?;");
+			query.bind(1, group.ToString());
+			query.bind(2, static_cast<int64>(steam_id));
+			query.exec();
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return "Unexpected DB error";
 		}
+
 		return {};
 	}
 
-	virtual std::optional<std::string> RemovePlayerFromGroup(uint64 steam_id, const FString& group)
+	std::optional<std::string> RemovePlayerFromGroup(uint64 steam_id, const FString& group) override
 	{
 		if (!IsPlayerExists(steam_id) || !IsGroupExists(group))
 			return "Player or group does not exist";
@@ -250,37 +228,41 @@ public:
 
 		try
 		{
-			auto& db = LiteDB();
-			db << "UPDATE Players SET Groups = ? WHERE SteamId = ?;" << new_groups.ToString() << steam_id;
+			SQLite::Statement query(db_, "UPDATE Players SET Groups = ? WHERE SteamId = ?;");
+			query.bind(1, new_groups.ToString());
+			query.bind(2, static_cast<int64>(steam_id));
+			query.exec();
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return "Unexpected DB error";
 		}
+
 		return {};
 	}
 
-	virtual std::optional<std::string> AddGroup(const FString& group)
+	std::optional<std::string> AddGroup(const FString& group) override
 	{
 		if (IsGroupExists(group))
 			return "Group already exists";
 
 		try
 		{
-			auto& db = LiteDB();
-			db << "INSERT INTO Groups (GroupName) VALUES (?);"
-				<< group.ToString();
+			SQLite::Statement query(db_, "INSERT INTO Groups (GroupName) VALUES (?);");
+			query.bind(1, group.ToString());
+			query.exec();
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return "Unexpected DB error";
 		}
+
 		return {};
 	}
 
-	virtual std::optional<std::string> RemoveGroup(const FString& group)
+	std::optional<std::string> RemoveGroup(const FString& group) override
 	{
 		if (!IsGroupExists(group))
 			return "Group does not exist";
@@ -297,19 +279,20 @@ public:
 
 		try
 		{
-			auto& db = LiteDB();
-
-			db << "DELETE FROM Groups WHERE GroupName = ?;" << group.ToString();
+			SQLite::Statement query(db_, "DELETE FROM Groups WHERE GroupName = ?;");
+			query.bind(1, group.ToString());
+			query.exec();
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return "Unexpected DB error";
 		}
+
 		return {};
 	}
 
-	virtual bool IsGroupHasPermission(const FString& group, const FString& permission)
+	bool IsGroupHasPermission(const FString& group, const FString& permission) override
 	{
 		if (!IsGroupExists(group))
 			return false;
@@ -321,10 +304,11 @@ public:
 			if (current_perm == permission)
 				return true;
 		}
+
 		return false;
 	}
 
-	virtual bool IsPlayerHasPermission(uint64 steam_id, const FString& permission)
+	bool IsPlayerHasPermission(uint64 steam_id, const FString& permission) override
 	{
 		TArray<FString> groups = GetPlayerGroups(steam_id);
 
@@ -333,10 +317,11 @@ public:
 			if (IsGroupHasPermission(current_group, permission) || IsGroupHasPermission(current_group, "*"))
 				return true;
 		}
+
 		return false;
 	}
 
-	virtual std::optional<std::string> GroupGrantPermission(const FString& group, const FString& permission)
+	std::optional<std::string> GroupGrantPermission(const FString& group, const FString& permission) override
 	{
 		if (!IsGroupExists(group))
 			return "Group does not exist";
@@ -346,19 +331,21 @@ public:
 
 		try
 		{
-			auto& db = LiteDB();
-			db << "UPDATE Groups SET Permissions = Permissions || ? || ',' WHERE GroupName = ?;" << permission.ToString() <<
-				group.ToString();
+			SQLite::Statement query(db_, "UPDATE Groups SET Permissions = Permissions || ? || ',' WHERE GroupName = ?;");
+			query.bind(1, permission.ToString());
+			query.bind(2, group.ToString());
+			query.exec();
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return "Unexpected DB error";
 		}
+
 		return {};
 	}
 
-	virtual std::optional<std::string> GroupRevokePermission(const FString& group, const FString& permission)
+	std::optional<std::string> GroupRevokePermission(const FString& group, const FString& permission) override
 	{
 		if (!IsGroupExists(group))
 			return "Group does not exist";
@@ -378,14 +365,20 @@ public:
 
 		try
 		{
-			auto& db = LiteDB();
-			db << "UPDATE Groups SET Permissions = ? WHERE GroupName = ?;" << new_permissions.ToString() << group.ToString();
+			SQLite::Statement query(db_, "UPDATE Groups SET Permissions = ? WHERE GroupName = ?;");
+			query.bind(1, new_permissions.ToString());
+			query.bind(2, group.ToString());
+			query.exec();
 		}
-		catch (const sqlite::sqlite_exception& exception)
+		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return "Unexpected DB error";
 		}
+
 		return {};
 	}
+
+private:
+	SQLite::Database db_;
 };
