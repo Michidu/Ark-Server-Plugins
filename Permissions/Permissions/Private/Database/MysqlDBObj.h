@@ -64,7 +64,7 @@ namespace _Players
 	{
 		struct _alias_t
 		{
-			static constexpr const char _literal[] = "Groups";
+			static constexpr const char _literal[] = "PermissionGroups";
 			using _name_t = sqlpp::make_char_sequence<sizeof _literal, _literal>;
 
 			template <typename T>
@@ -205,7 +205,7 @@ struct Groups : sqlpp::table_t<Groups, _Groups::Id, _Groups::GroupName, _Groups:
 
 	struct _alias_t
 	{
-		static constexpr const char _literal[] = "Groups";
+		static constexpr const char _literal[] = "PermissionGroups";
 		using _name_t = sqlpp::make_char_sequence<sizeof _literal, _literal>;
 
 		template <typename T>
