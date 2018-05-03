@@ -155,9 +155,11 @@ public:
 		const auto& groups = Groups{};
 		try
 		{
-			//for (const auto& row : db_(sqlpp::select(groups.groupname).from(groups)))
+			for (const auto& row : db_(
+				     sqlpp::select().columns(groups.groupname).from(groups).where(groups.id > -1)))
+				// Bug within library: doesn't compile without 'where'
 			{
-				//all_groups.Add(row.groupname.text);
+				all_groups.Add(row.groupname.text);
 			}
 		}
 		catch (const std::exception& exception)

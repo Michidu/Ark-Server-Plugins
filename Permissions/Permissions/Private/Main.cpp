@@ -362,26 +362,40 @@ void GroupPermissionsRcon(RCONClientConnection* rcon_connection, RCONPacket* rco
 	SendRconReply(rcon_connection, rcon_packet->Id, *result);
 }
 
-FString ListGroups(const FString& cmd)
+FString ListGroups()
 {
-	FString all_groups;
+	FString groups;
 
+	int i = 1;
 
+	TArray<FString> all_groups = database->GetAllGroups();
+	for (const auto& group : all_groups)
+	{
+		FString permissions;
 
-	return all_groups;
+		TArray<FString> group_permissions = database->GetGroupPermissions(group);
+		for (const auto& permission : group_permissions)
+		{
+			permissions += permission + L"; ";
+		}
+
+		groups += FString::Format(L"{0}) {1} - {2}\n", i++, group.ToString(), permissions.ToString());
+	}
+
+	return groups;
 }
 
 void ListGroupsCmd(APlayerController* player_controller, FString* cmd, bool)
 {
 	const auto shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
 
-	const FString result = ListGroups(*cmd);
+	const FString result = ListGroups();
 	ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::White, *result);
 }
 
 void ListGroupsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
 {
-	const FString result = ListGroups(rcon_packet->Body);
+	const FString result = ListGroups();
 	SendRconReply(rcon_connection, rcon_packet->Id, *result);
 }
 
@@ -430,7 +444,7 @@ void Load()
 		throw;
 	}
 
-	if (config.value("Database", "sqllite") == "mysql")
+	if (config.value("Database", "sqlite") == "mysql")
 	{
 		int port = 3306;
 
