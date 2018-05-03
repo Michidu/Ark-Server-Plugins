@@ -149,6 +149,25 @@ public:
 		return permissions;
 	}
 
+	TArray<FString> GetAllGroups() override
+	{
+		TArray<FString> all_groups;
+		const auto& groups = Groups{};
+		try
+		{
+			//for (const auto& row : db_(sqlpp::select(groups.groupname).from(groups)))
+			{
+				//all_groups.Add(row.groupname.text);
+			}
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+		}
+
+		return all_groups;
+	}
+
 	TArray<uint64> GetGroupMembers(const FString& group) override
 	{
 		TArray<uint64> members;
@@ -308,8 +327,9 @@ public:
 
 		try
 		{
-			db_.execute(fmt::format("UPDATE PermissionGroups SET Permissions = concat(Permissions, '{},') WHERE GroupName = '{}';",
-			                        permission.ToString(), group.ToString()));
+			db_.execute(fmt::format(
+				"UPDATE PermissionGroups SET Permissions = concat(Permissions, '{},') WHERE GroupName = '{}';",
+				permission.ToString(), group.ToString()));
 		}
 		catch (const std::exception& exception)
 		{
@@ -340,7 +360,8 @@ public:
 
 		try
 		{
-			db_.execute(fmt::format("UPDATE PermissionGroups SET Permissions = '?' WHERE GroupName = '?';", new_permissions.ToString(),
+			db_.execute(fmt::format("UPDATE PermissionGroups SET Permissions = '?' WHERE GroupName = '?';",
+			                        new_permissions.ToString(),
 			                        group.ToString()));
 		}
 		catch (const std::exception& exception)
