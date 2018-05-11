@@ -162,6 +162,26 @@ public:
 		return permissions;
 	}
 
+	TArray<FString> GetAllGroups() override
+	{
+		TArray<FString> all_groups;
+
+		try
+		{
+			SQLite::Statement query(db_, "SELECT GroupName FROM Groups;");
+			while (query.executeStep())
+			{
+				all_groups.Add(query.getColumn(0).getText());
+			}
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+		}
+
+		return all_groups;
+	}
+
 	TArray<uint64> GetGroupMembers(const FString& group) override
 	{
 		TArray<uint64> members;

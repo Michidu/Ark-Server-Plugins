@@ -362,6 +362,43 @@ void GroupPermissionsRcon(RCONClientConnection* rcon_connection, RCONPacket* rco
 	SendRconReply(rcon_connection, rcon_packet->Id, *result);
 }
 
+FString ListGroups()
+{
+	FString groups;
+
+	int i = 1;
+
+	TArray<FString> all_groups = database->GetAllGroups();
+	for (const auto& group : all_groups)
+	{
+		FString permissions;
+
+		TArray<FString> group_permissions = database->GetGroupPermissions(group);
+		for (const auto& permission : group_permissions)
+		{
+			permissions += permission + L"; ";
+		}
+
+		groups += FString::Format(L"{0}) {1} - {2}\n", i++, group.ToString(), permissions.ToString());
+	}
+
+	return groups;
+}
+
+void ListGroupsCmd(APlayerController* player_controller, FString* cmd, bool)
+{
+	const auto shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
+
+	const FString result = ListGroups();
+	ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::White, *result);
+}
+
+void ListGroupsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+{
+	const FString result = ListGroups();
+	SendRconReply(rcon_connection, rcon_packet->Id, *result);
+}
+
 void ShowMyGroupsChat(AShooterPlayerController* player_controller, FString*, EChatSendMode::Type)
 {
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
@@ -407,7 +444,7 @@ void Load()
 		throw;
 	}
 
-	if (config.value("Database", "sqllite") == "mysql")
+	if (config.value("Database", "sqlite") == "mysql")
 	{
 		int port = 3306;
 
@@ -449,6 +486,7 @@ void Load()
 	ArkApi::GetCommands().AddConsoleCommand("Permissions.Revoke", &GroupRevokePermissionCmd);
 	ArkApi::GetCommands().AddConsoleCommand("Permissions.PlayerGroups", &PlayerGroupsCmd);
 	ArkApi::GetCommands().AddConsoleCommand("Permissions.GroupPermissions", &GroupPermissionsCmd);
+	ArkApi::GetCommands().AddConsoleCommand("Permissions.ListGroups", &ListGroupsCmd);
 
 	ArkApi::GetCommands().AddRconCommand("Permissions.Add", &AddPlayerToGroupRcon);
 	ArkApi::GetCommands().AddRconCommand("Permissions.Remove", &RemovePlayerFromGroupRcon);
@@ -458,6 +496,7 @@ void Load()
 	ArkApi::GetCommands().AddRconCommand("Permissions.Revoke", &GroupRevokePermissionRcon);
 	ArkApi::GetCommands().AddRconCommand("Permissions.PlayerGroups", &PlayerGroupsRcon);
 	ArkApi::GetCommands().AddRconCommand("Permissions.GroupPermissions", &GroupPermissionsRcon);
+	ArkApi::GetCommands().AddRconCommand("Permissions.ListGroups", &ListGroupsRcon);
 
 	ArkApi::GetCommands().AddChatCommand("/groups", &ShowMyGroupsChat);
 }

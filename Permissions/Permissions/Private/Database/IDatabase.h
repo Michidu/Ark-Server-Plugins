@@ -13,6 +13,7 @@ public:
 	virtual bool IsPlayerInGroup(uint64 steam_id, const FString& group) = 0;
 	virtual TArray<FString> GetPlayerGroups(uint64 steam_id) = 0;
 	virtual TArray<FString> GetGroupPermissions(const FString& group) = 0;
+	virtual TArray<FString> GetAllGroups() = 0;
 	virtual TArray<uint64> GetGroupMembers(const FString& group) = 0;
 	virtual std::optional<std::string> AddPlayerToGroup(uint64 steam_id, const FString& group) = 0;
 	virtual std::optional<std::string> RemovePlayerFromGroup(uint64 steam_id, const FString& group) = 0;

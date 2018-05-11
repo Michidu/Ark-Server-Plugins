@@ -15,6 +15,11 @@ namespace Permissions
 			return {};
 		return database->GetGroupPermissions(group);
 	}
+	
+	TArray<FString> GetAllGroups()
+	{
+		return database->GetAllGroups();
+	}
 
 	TArray<uint64> GetGroupMembers(const FString& group)
 	{

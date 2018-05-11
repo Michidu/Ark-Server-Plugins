@@ -18,27 +18,27 @@ public:
 	{
 		try
 		{
-			db_.execute("CREATE TABLE IF NOT EXISTS `Players` ("
-				"`Id` INT NOT NULL AUTO_INCREMENT,"
-				"`SteamId` BIGINT(11) NOT NULL,"
-				"`Groups` VARCHAR(256) NOT NULL DEFAULT '',"
-				"PRIMARY KEY(`Id`),"
-				"UNIQUE INDEX `SteamId_UNIQUE` (`SteamId` ASC)); ");
-			db_.execute("CREATE TABLE IF NOT EXISTS `Groups` ("
-				"`Id` INT NOT NULL AUTO_INCREMENT,"
-				"`GroupName` VARCHAR(128) NOT NULL,"
-				"`Permissions` VARCHAR(256) NOT NULL DEFAULT '',"
-				"PRIMARY KEY(`Id`),"
-				"UNIQUE INDEX `GroupName_UNIQUE` (`GroupName` ASC)); ");
+			db_.execute("CREATE TABLE IF NOT EXISTS Players ("
+				"Id INT NOT NULL AUTO_INCREMENT,"
+				"SteamId BIGINT(11) NOT NULL,"
+				"PermissionGroups VARCHAR(256) NOT NULL DEFAULT '',"
+				"PRIMARY KEY(Id),"
+				"UNIQUE INDEX SteamId_UNIQUE (SteamId ASC)); ");
+			db_.execute("CREATE TABLE IF NOT EXISTS PermissionGroups ("
+				"Id INT NOT NULL AUTO_INCREMENT,"
+				"GroupName VARCHAR(128) NOT NULL,"
+				"Permissions VARCHAR(256) NOT NULL DEFAULT '',"
+				"PRIMARY KEY(Id),"
+				"UNIQUE INDEX GroupName_UNIQUE (GroupName ASC)); ");
 
 			// Add default groups
 
-			db_.execute("INSERT INTO `Groups`(`GroupName`, `Permissions`)"
+			db_.execute("INSERT INTO PermissionGroups(GroupName, Permissions)"
 				"SELECT 'Admins', '*,'"
-				"WHERE NOT EXISTS(SELECT 1 FROM `Groups` WHERE `GroupName` = 'Admins');");
-			db_.execute("INSERT INTO `Groups`(`GroupName`)"
+				"WHERE NOT EXISTS(SELECT 1 FROM PermissionGroups WHERE GroupName = 'Admins');");
+			db_.execute("INSERT INTO PermissionGroups(GroupName)"
 				"SELECT 'Default'"
-				"WHERE NOT EXISTS(SELECT 1 FROM `Groups` WHERE `GroupName` = 'Default');");
+				"WHERE NOT EXISTS(SELECT 1 FROM PermissionGroups WHERE GroupName = 'Default');");
 		}
 		catch (const std::exception& exception)
 		{
@@ -149,6 +149,27 @@ public:
 		return permissions;
 	}
 
+	TArray<FString> GetAllGroups() override
+	{
+		TArray<FString> all_groups;
+		const auto& groups = Groups{};
+		try
+		{
+			for (const auto& row : db_(
+				     sqlpp::select().columns(groups.groupname).from(groups).where(groups.id > -1)))
+				// Bug within library: doesn't compile without 'where'
+			{
+				all_groups.Add(row.groupname.text);
+			}
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+		}
+
+		return all_groups;
+	}
+
 	TArray<uint64> GetGroupMembers(const FString& group) override
 	{
 		TArray<uint64> members;
@@ -179,7 +200,7 @@ public:
 
 		try
 		{
-			db_.execute(fmt::format("UPDATE Players SET Groups = concat(Groups, '{},') WHERE SteamId = {};",
+			db_.execute(fmt::format("UPDATE Players SET PermissionGroups = concat(PermissionGroups, '{},') WHERE SteamId = {};",
 			                        group.ToString(), steam_id));
 		}
 		catch (const std::exception& exception)
@@ -211,7 +232,7 @@ public:
 
 		try
 		{
-			db_.execute(fmt::format("UPDATE Players SET Groups = '{}' WHERE SteamId = {};", new_groups.ToString(),
+			db_.execute(fmt::format("UPDATE Players SET PermissionGroups = '{}' WHERE SteamId = {};", new_groups.ToString(),
 			                        steam_id));
 		}
 		catch (const std::exception& exception)
@@ -230,7 +251,7 @@ public:
 
 		try
 		{
-			db_.execute(fmt::format("INSERT INTO Groups (GroupName) VALUES ('{}');", group.ToString()));
+			db_.execute(fmt::format("INSERT INTO PermissionGroups (GroupName) VALUES ('{}');", group.ToString()));
 		}
 		catch (const std::exception& exception)
 		{
@@ -258,7 +279,7 @@ public:
 
 		try
 		{
-			db_.execute(fmt::format("DELETE FROM Groups WHERE GroupName = '?';", group.ToString()));
+			db_.execute(fmt::format("DELETE FROM PermissionGroups WHERE GroupName = '?';", group.ToString()));
 		}
 		catch (const std::exception& exception)
 		{
@@ -308,8 +329,9 @@ public:
 
 		try
 		{
-			db_.execute(fmt::format("UPDATE Groups SET Permissions = concat(Permissions, '{},') WHERE GroupName = '{}';",
-			                        permission.ToString(), group.ToString()));
+			db_.execute(fmt::format(
+				"UPDATE PermissionGroups SET Permissions = concat(Permissions, '{},') WHERE GroupName = '{}';",
+				permission.ToString(), group.ToString()));
 		}
 		catch (const std::exception& exception)
 		{
@@ -340,7 +362,8 @@ public:
 
 		try
 		{
-			db_.execute(fmt::format("UPDATE Groups SET Permissions = '?' WHERE GroupName = '?';", new_permissions.ToString(),
+			db_.execute(fmt::format("UPDATE PermissionGroups SET Permissions = '?' WHERE GroupName = '?';",
+			                        new_permissions.ToString(),
 			                        group.ToString()));
 		}
 		catch (const std::exception& exception)

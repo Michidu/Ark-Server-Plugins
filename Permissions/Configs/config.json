@@ -1,9 +1,9 @@
 {
-  "SqlLiteDBOverride":"",
-  "Database":"sqllite",
-  "MysqlHost":"127.0.0.1",
+  "Database":"sqlite",
+  "MysqlHost":"localhost",
   "MysqlUser":"root",
-  "MysqlPass":"",
-  "MysqlDB":"test",
-  "MysqlPort":3306
+  "MysqlPass":"pass",
+  "MysqlDB":"arkdb",
+  "MysqlPort":3306,
+  "DbPathOverride":""
 }
