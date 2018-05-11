@@ -1,6 +1,6 @@
 {
   "FullName":"Tribe Motd",
-  "Description":"Allows tribe admins to set a MOTD",
-  "Version":1.1,
-  "MinApiVersion":2.3
+  "Description":"Allows tribe and server admins to set a MOTD for other players",
+  "Version":1.2,
+  "MinApiVersion":2.5
 }
