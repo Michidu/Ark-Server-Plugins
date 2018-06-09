@@ -58,6 +58,45 @@ namespace ArkShop::Store
 	}
 
 	/**
+	* \brief Buy an unlockengram from shop
+	*/
+	bool UnlockEngram(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id)
+	{
+
+		bool success = false;
+		const int price = item_entry["Price"];
+
+		const int points = Points::GetPoints(steam_id);
+
+		if (points >= price && Points::SpendPoints(price, steam_id))
+		{
+			auto items_map = item_entry["Items"];
+			for (const auto& item : items_map)
+			{
+				std::string blueprint = item["Blueprint"];
+				FString fblueprint(blueprint);
+				UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField());
+				cheatManager->UnlockEngram(&fblueprint);
+			}
+
+
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+				*GetText("BoughtItem"));
+
+			success = true;
+		}
+		else
+		{
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+				*GetText("NoPoints"));
+		}
+
+		return success;
+	}
+
+
+
+	/**
 	* \brief Buy a dino from shop
 	*/
 	bool BuyDino(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id)
@@ -213,6 +252,8 @@ namespace ArkShop::Store
 				success = BuyBeacon(player_controller, item_entry, steam_id);
 			else if (type == "experience")
 				success = BuyExperience(player_controller, item_entry, steam_id);
+			else if (type == "unlockengram")
+				success = UnlockEngram(player_controller, item_entry, steam_id);
 
 			if (success)
 			{
