@@ -93,6 +93,38 @@ namespace ArkShop::Store
 
 		return success;
 	}
+	/**
+	* \brief Buy an Command from shop
+	*/
+	bool BuyCommand(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id) {
+		bool success = false;
+		const int price = item_entry["Price"];
+
+		const int points = Points::GetPoints(steam_id);
+
+		if (points >= price && Points::SpendPoints(price, steam_id))
+		{
+			auto items_map = item_entry["Items"];
+			for (const auto& item : items_map)
+			{
+				std::string message = item["message"];
+				FString fblueprint(message);
+				FString result;
+				player_controller->ConsoleCommand(&result, &fblueprint, true);
+			}
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+				*GetText("BoughtItem"));
+
+			success = true;
+		}
+		else
+		{
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+				*GetText("NoPoints"));
+		}
+
+		return success;
+	}
 
 
 
@@ -254,6 +286,8 @@ namespace ArkShop::Store
 				success = BuyExperience(player_controller, item_entry, steam_id);
 			else if (type == "unlockengram")
 				success = UnlockEngram(player_controller, item_entry, steam_id);
+			else if (type == "command")
+				success = BuyCommand(player_controller, item_entry, steam_id);
 
 			if (success)
 			{
