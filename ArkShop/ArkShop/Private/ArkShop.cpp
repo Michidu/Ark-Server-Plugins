@@ -133,6 +133,19 @@ void ReloadConfigRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_pa
 	rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
 }
 
+void ShowHelp(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type)
+{ 
+	FString help = ArkShop::GetText("HelpMessage");
+	if (help != ArkApi::Tools::Utf8Decode("No message").c_str())
+	{
+		const int items_per_page = ArkShop::config["General"].value("ItemsPerPage", 20);
+		const float display_time = ArkShop::config["General"].value("ShopDisplayTime", 15.0f);
+		const float text_size = ArkShop::config["General"].value("ShopTextSize", 1.3f);
+		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::Green, text_size, display_time, nullptr,
+			*help);
+	}
+}
+
 void Load()
 {
 	Log::Get().Init("ArkShop");
@@ -160,7 +173,11 @@ void Load()
 	ArkShop::Store::Init();
 	ArkShop::Kits::Init();
 	ArkShop::StoreSell::Init();
-
+	FString help = ArkShop::GetText("HelpCmd");
+	if (help != ArkApi::Tools::Utf8Decode("No message").c_str())
+	{
+		ArkApi::GetCommands().AddChatCommand(help, &ShowHelp);
+	}
 	ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation", &Hook_AShooterGameMode_HandleNewPlayer,
 	                           &AShooterGameMode_HandleNewPlayer_original);
 	ArkApi::GetHooks().SetHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout,
