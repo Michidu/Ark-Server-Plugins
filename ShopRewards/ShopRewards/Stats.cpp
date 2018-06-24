@@ -37,7 +37,7 @@ namespace Stats
 
 				AShooterPlayerController* controller = ArkApi::GetApiUtils().FindPlayerFromSteamId(steam_id);
 				if (controller && controller->GetPlayerCharacter())
-					name = controller->GetPlayerCharacter()->PlayerNameField()();
+					name = controller->GetPlayerCharacter()->PlayerNameField();
 
 				db << "INSERT INTO Players (SteamId, Name, PlayerKills) VALUES (?, ?, 1);" << steam_id
 					<< ArkApi::Tools::Utf8Encode(*name);
@@ -68,7 +68,7 @@ namespace Stats
 
 				AShooterPlayerController* controller = ArkApi::GetApiUtils().FindPlayerFromSteamId(steam_id);
 				if (controller && controller->GetPlayerCharacter())
-					name = controller->GetPlayerCharacter()->PlayerNameField()();
+					name = controller->GetPlayerCharacter()->PlayerNameField();
 
 				db << "INSERT INTO Players (SteamId, Name, PlayerDeaths) VALUES (?, ?, 1);" << steam_id
 					<< ArkApi::Tools::Utf8Encode(*name);
@@ -99,7 +99,7 @@ namespace Stats
 
 				AShooterPlayerController* controller = ArkApi::GetApiUtils().FindPlayerFromSteamId(steam_id);
 				if (controller && controller->GetPlayerCharacter())
-					name = controller->GetPlayerCharacter()->PlayerNameField()();
+					name = controller->GetPlayerCharacter()->PlayerNameField();
 
 				db << "INSERT INTO Players (SteamId, Name, WildDinoKills) VALUES (?, ?, 1);" << steam_id
 					<< ArkApi::Tools::Utf8Encode(*name);
@@ -130,7 +130,7 @@ namespace Stats
 
 				AShooterPlayerController* controller = ArkApi::GetApiUtils().FindPlayerFromSteamId(steam_id);
 				if (controller && controller->GetPlayerCharacter())
-					name = controller->GetPlayerCharacter()->PlayerNameField()();
+					name = controller->GetPlayerCharacter()->PlayerNameField();
 
 				db << "INSERT INTO Players (SteamId, Name, TamedDinoKills) VALUES (?, ?, 1);" << steam_id
 					<< ArkApi::Tools::Utf8Encode(*name);

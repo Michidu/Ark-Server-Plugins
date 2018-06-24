@@ -127,7 +127,7 @@ void GiveItemToAll(RCONClientConnection* rcon_connection, RCONPacket* rcon_packe
 			return;
 		}
 
-		const auto& player_controllers = ArkApi::GetApiUtils().GetWorld()->PlayerControllerListField()();
+		const auto& player_controllers = ArkApi::GetApiUtils().GetWorld()->PlayerControllerListField();
 		for (TWeakObjectPtr<APlayerController> player_controller : player_controllers)
 		{
 			AShooterPlayerController* shooter_pc = static_cast<AShooterPlayerController*>(player_controller.Get());
@@ -259,7 +259,7 @@ void GetPlayerPos(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet
 			return;
 		}
 
-		FVector pos = shooter_pc->DefaultActorLocationField()();
+		FVector pos = shooter_pc->DefaultActorLocationField();
 
 		SendRconReply(rcon_connection, rcon_packet->Id, pos.ToString());
 	}
@@ -294,7 +294,7 @@ void TeleportAllPlayers(RCONClientConnection* rcon_connection, RCONPacket* rcon_
 			return;
 		}
 
-		const auto& player_controllers = ArkApi::GetApiUtils().GetWorld()->PlayerControllerListField()();
+		const auto& player_controllers = ArkApi::GetApiUtils().GetWorld()->PlayerControllerListField();
 		for (TWeakObjectPtr<APlayerController> player_controller : player_controllers)
 		{
 			auto shooter_pc = static_cast<AShooterPlayerController*>(player_controller.Get());
@@ -428,7 +428,7 @@ void ListPlayerDinos(RCONClientConnection* rcon_connection, RCONPacket* rcon_pac
 		UGameplayStatics::GetAllActorsOfClass(reinterpret_cast<UObject*>(ArkApi::GetApiUtils().GetWorld()),
 		                                      APrimalDinoCharacter::GetPrivateStaticClass(), &found_actors);
 
-		const int player_team = shooter_pc->TargetingTeamField()();
+		const int player_team = shooter_pc->TargetingTeamField();
 
 		FString reply = "";
 
@@ -438,13 +438,13 @@ void ListPlayerDinos(RCONClientConnection* rcon_connection, RCONPacket* rcon_pac
 			if (!dino)
 				continue;
 
-			const int dino_team = dino->TargetingTeamField()();
+			const int dino_team = dino->TargetingTeamField();
 			if (dino_team == player_team)
 			{
 				FString dino_name;
 				dino->GetDinoDescriptiveName(&dino_name);
 
-				reply += FString::Format(TEXT("{}, ID1={}, ID2={}\n"), *dino_name, dino->DinoID1Field()(), dino->DinoID2Field()());
+				reply += FString::Format(TEXT("{}, ID1={}, ID2={}\n"), *dino_name, dino->DinoID1Field(), dino->DinoID2Field());
 			}
 		}
 
@@ -575,7 +575,7 @@ void GetTribeLog(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet,
 
 		FString reply = "";
 
-		TArray<FString> logs = tribe_data->TribeLogField()();
+		TArray<FString> logs = tribe_data->TribeLogField();
 		for (const FString& log : logs)
 		{
 			reply += log + "\n";
@@ -622,7 +622,7 @@ void GetDinoPos(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, 
 			return;
 		}
 
-		FVector pos = dino->RootComponentField()()->RelativeLocationField()();
+		FVector pos = dino->RootComponentField()->RelativeLocationField();
 
 		FString reply = pos.ToString();
 		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
@@ -716,7 +716,7 @@ void AddDinoExperience(RCONClientConnection* rcon_connection, RCONPacket* rcon_p
 			return;
 		}
 
-		dino->MyCharacterStatusComponentField()()->AddExperience(how_much, false, EXPType::XP_GENERIC);
+		dino->MyCharacterStatusComponentField()->AddExperience(how_much, false, EXPType::XP_GENERIC);
 
 		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully added experience to dino");
 	}
@@ -816,7 +816,7 @@ void UnlockEngram(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet
 			return;
 		}
 
-		UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(shooter_pc->CheatManagerField()());
+		UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(shooter_pc->CheatManagerField());
 		cheat_manager->UnlockEngram(&blueprint);
 
 		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully unlocked engram");
@@ -857,7 +857,7 @@ void ScriptCommand(RCONClientConnection* rcon_connection, RCONPacket* rcon_packe
 			return;
 		}
 
-		UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(shooter_pc->CheatManagerField()());
+		UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(shooter_pc->CheatManagerField());
 		cheat_manager->ScriptCommand(&command);
 
 		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully executed");

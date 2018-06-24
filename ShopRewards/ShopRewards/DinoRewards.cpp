@@ -9,18 +9,18 @@ namespace DinoRewards
 {
 	FString GetDinoBlueprint(UObjectBase* dino)
 	{
-		if (dino && dino->ClassField()())
+		if (dino && dino->ClassField())
 		{
 			FString path_name;
-			dino->ClassField()()->GetDefaultObject(true)->GetFullName(&path_name, nullptr);
+			dino->ClassField()->GetDefaultObject(true)->GetFullName(&path_name, nullptr);
 
 			if (int find_index = 0; path_name.FindChar(' ', find_index))
 			{
 				path_name = "Blueprint'" + path_name.Mid(find_index + 1,
-					path_name.Len() - (find_index + (path_name.EndsWith(
-						"_C", ESearchCase::CaseSensitive)
-						? 3
-						: 1))) + "'";
+				                                         path_name.Len() - (find_index + (path_name.EndsWith(
+					                                                                          "_C", ESearchCase::CaseSensitive)
+					                                                                          ? 3
+					                                                                          : 1))) + "'";
 				return path_name.Replace(L"Default__", L"", ESearchCase::CaseSensitive);
 			}
 		}
@@ -45,42 +45,79 @@ namespace DinoRewards
 	                                   AController* Killer, AActor* DamageCauser)
 	{
 		if (Killer && !Killer->IsLocalController() && Killer->IsA(AShooterPlayerController::StaticClass()) &&
-			_this->TargetingTeamField()() != Killer->TargetingTeamField()())
+			_this->TargetingTeamField() != Killer->TargetingTeamField())
 		{
 			const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(Killer);
 
 			const bool dino_rewards_enabled = config["DinoRewards"]["Enabled"];
 			if (dino_rewards_enabled)
 			{
-				FString bp = GetDinoBlueprint(_this);
-
-				const auto dino_entry = GetDinoConfig(bp.ToString());
-				if (!dino_entry.empty())
+				const bool unclaim_points = config["DinoRewards"].value("GiveUnclaimPoints", false);
+				if (!unclaim_points && _this->OwningPlayerIDField() == 0 && _this->TargetingTeamField() >= 50000)
 				{
-					UPrimalCharacterStatusComponent* char_comp = _this->MyCharacterStatusComponentField()();
-					if (char_comp)
+					//
+				}
+				else
+				{
+					FString bp = GetDinoBlueprint(_this);
+
+					const auto dino_entry = GetDinoConfig(bp.ToString());
+					if (!dino_entry.empty())
 					{
-						const int dino_level = char_comp->BaseCharacterLevelField()() + char_comp->ExtraCharacterLevelField()();
-
-						auto award = dino_entry["Award"];
-						for (const auto& award_entry : award)
+						UPrimalCharacterStatusComponent* char_comp = _this->MyCharacterStatusComponentField();
+						if (char_comp)
 						{
-							const int min_level = award_entry["MinLevel"];
-							const int max_level = award_entry["MaxLevel"];
+							const int dino_level = char_comp->BaseCharacterLevelField() + char_comp->ExtraCharacterLevelField();
 
-							if (dino_level >= min_level && dino_level <= max_level)
+							auto award = dino_entry["Award"];
+							for (const auto& award_entry : award)
 							{
-								const int points = award_entry["Points"];
+								const int min_level = award_entry["MinLevel"];
+								const int max_level = award_entry["MaxLevel"];
 
-								ArkShop::Points::AddPoints(points, steam_id);
-								break;
+								if (dino_level >= min_level && dino_level <= max_level)
+								{
+									const bool negative_points = config["PlayerRewards"].value("NegativePoints", false);
+
+									const int points = award_entry["Points"];
+									if (points >= 0)
+									{
+										ArkShop::Points::AddPoints(points, steam_id);
+									}
+									else if (negative_points || ArkShop::Points::GetPoints(steam_id) - abs(points) >= 0)
+									{
+										ArkShop::Points::SpendPoints(abs(points), steam_id);
+
+										AShooterPlayerController* killer_controller = ArkApi::GetApiUtils().FindPlayerFromSteamId(steam_id);
+										if (killer_controller)
+										{
+											const std::string message_type = config["PlayerRewards"].value("MessageType", "notification");
+
+											if (message_type == "notification")
+											{
+												const float display_scale = config["PlayerRewards"].value("NotificationScale", 1.3f);
+												const float display_time = config["PlayerRewards"].value("NotificationDisplayTime", 10.0f);
+
+												ArkApi::GetApiUtils().SendNotification(killer_controller, FColorList::Red, display_scale, display_time,
+												                                       nullptr, *GetText("LostPoints"), abs(points));
+											}
+											else if (message_type == "chat")
+											{
+												ArkApi::GetApiUtils().SendChatMessage(killer_controller, GetText("Sender"), *GetText("LostPoints"),
+												                                      abs(points));
+											}
+										}
+									}
+
+									break;
+								}
 							}
 						}
 					}
 				}
 			}
 
-			if (_this->TargetingTeamField()() < 50000)
+			if (_this->TargetingTeamField() < 50000)
 				Stats::AddWildDinoKill(steam_id);
 			else
 				Stats::AddTamedDinoKill(steam_id);

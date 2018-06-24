@@ -52,7 +52,7 @@ void Hook_AShooterGameMode_Logout(AShooterGameMode* _this, AController* exiting)
 			AShooterPlayerController* player = static_cast<AShooterPlayerController*>(exiting);
 			if (player->GetPlayerCharacter())
 			{
-				const FString new_name = player->GetPlayerCharacter()->PlayerNameField()();
+				const FString new_name = player->GetPlayerCharacter()->PlayerNameField();
 				if (new_name != name)
 				{
 					try
