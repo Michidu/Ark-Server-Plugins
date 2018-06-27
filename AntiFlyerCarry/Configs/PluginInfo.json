@@ -1,7 +1,7 @@
 {
   "FullName":"Anti Flyer Carry",
   "Description":"Prevents flyers to pick up enemy players/dinos",
-  "Version":1.0,
+  "Version":1.1,
   "MinApiVersion":2.5,
   "ResourceId":31
 }
