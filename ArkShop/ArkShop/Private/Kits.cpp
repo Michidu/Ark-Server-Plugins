@@ -202,7 +202,8 @@ namespace ArkShop::Kits
 
 			FString fblueprint(blueprint.c_str());
 
-			player_controller->GiveItem(&fblueprint, amount, quality, force_blueprint);
+			TArray<UPrimalItem*> out_items;
+			player_controller->GiveItem(&out_items, &fblueprint, amount, quality, force_blueprint, false);
 		}
 
 		// Give dinos

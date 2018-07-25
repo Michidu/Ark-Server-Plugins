@@ -90,7 +90,8 @@ void GiveItem(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UW
 			return;
 		}
 
-		const bool result = shooter_pc->GiveItem(&blueprint, quantity, quality, force_bp);
+		TArray<UPrimalItem*> out_items;
+		const bool result = shooter_pc->GiveItem(&out_items, &blueprint, quantity, quality, force_bp, false);
 
 		SendRconReply(rcon_connection, rcon_packet->Id, result ? "Successfully gave items" : "Request has failed");
 	}
@@ -132,7 +133,8 @@ void GiveItemToAll(RCONClientConnection* rcon_connection, RCONPacket* rcon_packe
 		{
 			AShooterPlayerController* shooter_pc = static_cast<AShooterPlayerController*>(player_controller.Get());
 
-			shooter_pc->GiveItem(&blueprint, quantity, quality, force_bp);
+			TArray<UPrimalItem*> out_items;
+			shooter_pc->GiveItem(&out_items, &blueprint, quantity, quality, force_bp, false);
 		}
 
 		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully gave items");

@@ -1,13 +1,13 @@
-{
-  "General":{
-    "TimedPointsReward":{
+{  
+  "General":{  
+    "TimedPointsReward":{  
       "Enabled":true,
       "Interval":5,
-      "Groups":{
-        "Default":{
+      "Groups":{  
+        "Default":{  
           "Amount":5
         },
-        "Premiums":{
+        "Premiums":{  
           "Amount":15
         }
       }
@@ -18,53 +18,53 @@
     "DbPathOverride":"",
     "DefaultKit":"vip,starter"
   },
-  "Kits":{
-    "starter":{
+  "Kits":{  
+    "starter":{  
       "DefaultAmount":2,
       "Price":90,
       "Description":"Starter kit (carno with saddle)",
       "OnlyFromSpawn":true,
-      "Items":[
-        {
+      "Items":[  
+        {  
           "Amount":1,
           "Quality":0,
           "ForceBlueprint":false,
           "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_CarnoSaddle.PrimalItemArmor_CarnoSaddle'"
         }
       ],
-      "Dinos":[
-        {
+      "Dinos":[  
+        {  
           "Level":10,
           "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
         }
       ]
     },
-    "vip":{
+    "vip":{  
       "DefaultAmount":1,
       "Description":"Vip kit for premiums (ptero)",
       "Permissions":"Admins,Premiums",
-      "Dinos":[
-        {
+      "Dinos":[  
+        {  
           "Level":20,
           "Neutered":true,
           "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'"
         }
       ]
     },
-    "tools":{
+    "tools":{  
       "DefaultAmount":3,
       "Price":50,
       "MinLevel":1,
       "MaxLevel":20,
       "Description":"Tools kit (pike and club)",
-      "Items":[
-        {
+      "Items":[  
+        {  
           "Amount":1,
           "Quality":0,
           "ForceBlueprint":false,
           "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponPike.PrimalItem_WeaponPike'"
         },
-        {
+        {  
           "Amount":1,
           "Quality":0,
           "ForceBlueprint":false,
@@ -73,13 +73,13 @@
       ]
     }
   },
-  "ShopItems":{
-    "ingots100":{
+  "ShopItems":{  
+    "ingots100":{  
       "Type":"item",
       "Description":"Metal Ingot (100x)",
       "Price":15,
-      "Items":[
-        {
+      "Items":[  
+        {  
           "Quality":0,
           "ForceBlueprint":false,
           "Amount":100,
@@ -87,18 +87,18 @@
         }
       ]
     },
-    "tools":{
+    "tools":{  
       "Type":"item",
       "Description":"Tools (Metal Hatchet, Metal Pick)",
       "Price":5,
-      "Items":[
-        {
+      "Items":[  
+        {  
           "Quality":0,
           "ForceBlueprint":false,
           "Amount":1,
           "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalHatchet.PrimalItem_WeaponMetalHatchet'"
         },
-        {
+        {  
           "Quality":0,
           "ForceBlueprint":false,
           "Amount":1,
@@ -106,7 +106,7 @@
         }
       ]
     },
-    "para":{
+    "para":{  
       "Type":"dino",
       "Description":"Parasaurolophus",
       "Level":10,
@@ -115,7 +115,7 @@
       "MaxLevel":15,
       "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Para/Para_Character_BP.Para_Character_BP'"
     },
-    "carno":{
+    "carno":{  
       "Type":"dino",
       "Description":"Carnotaurus",
       "Level":15,
@@ -123,36 +123,59 @@
       "Neutered":true,
       "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
     },
-    "crate25":{
+    "crate25":{  
       "Type":"beacon",
       "Description":"SupplyCrate Lvl 25",
       "Price":100,
       "ClassName":"SupplyCrate_Level25_Double_C"
     },
-    "crate2":{
+    "crate2":{  
       "Type":"beacon",
       "Description":"Artifact Crate 2",
       "Price":100,
       "ClassName":"ArtifactCrate_2_C"
     },
-    "exp1000":{
+    "exp1000":{  
       "Type":"experience",
       "Description":"1000 points of experience",
       "GiveToDino":false,
       "Price":55,
       "Amount":1000.0
+    },
+    "tekengram":{  
+      "Type":"unlockengram",
+      "Description":"Engram TEK Boots & Gloves",
+      "Price":20,
+      "Items":[  
+        {  
+          "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/TEK/PrimalItemArmor_TekBoots.PrimalItemArmor_TekBoots'"
+        },
+        {  
+          "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/TEK/PrimalItemArmor_TekGloves.PrimalItemArmor_TekGloves'"
+        }
+      ]
+    },
+    "allengrams":{  
+      "Type":"command",
+      "Description":"All engrams",
+      "Price":1000,
+      "Items":[  
+        {  
+          "Command":"GiveEngrams"
+        }
+      ]
     }
   },
-  "SellItems":{
-    "metal":{
+  "SellItems":{  
+    "metal":{  
       "Type":"item",
       "Description":"100x metal",
       "Price":10,
       "Amount":100,
-      "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Metal.PrimalItemResource_Metal'"
+      "Blueprint":"Blueprint'/Game/Mods/Stack50/Resources/PrimalItemResource_Stone_Child.PrimalItemResource_Stone_Child'"
     }
   },
-  "Messages":{
+  "Messages":{  
     "Sender":"ArkShop",
     "BoughtItem":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought item</>",
     "BoughtDino":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought dino</>",
@@ -197,6 +220,9 @@
     "StoreListDino":"{0}) {1}. Level: {2}. Id: {3}. Price: {4}\n",
     "StoreListItem":"{0}) {1}. Id: {2}. Price: {3}\n",
     "StoreListFormat":"{0}",
-    "OnlyOnSpawnKit":"This kit can be used only on spawn"
+    "OnlyOnSpawnKit":"This kit can be used only on spawn",
+    "HelpCmd":"/shophelp",
+    "ShopMessage":"Usage: /buy id amount",
+	"HelpMessage":"This is shop help message"
   }
 }

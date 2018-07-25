@@ -1,6 +1,6 @@
 {
   "FullName":"Extended Rcon",
   "Description":"Additional RCON commands",
-  "Version":2.5,
-  "MinApiVersion":2.5
+  "Version":2.6,
+  "MinApiVersion":2.6
 }

@@ -40,7 +40,9 @@ namespace ArkShop::Store
 					return false;
 
 				FString fblueprint(blueprint.c_str());
-				player_controller->GiveItem(&fblueprint, final_amount, quality, force_blueprint);
+
+				TArray<UPrimalItem*> out_items;
+				player_controller->GiveItem(&out_items, &fblueprint, final_amount, quality, force_blueprint, false);
 			}
 
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
@@ -60,9 +62,9 @@ namespace ArkShop::Store
 	/**
 	* \brief Buy an unlockengram from shop
 	*/
-	bool UnlockEngram(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id)
+	bool UnlockEngram(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry,
+	                  uint64 steam_id)
 	{
-
 		bool success = false;
 		const int price = item_entry["Price"];
 
@@ -73,30 +75,33 @@ namespace ArkShop::Store
 			auto items_map = item_entry["Items"];
 			for (const auto& item : items_map)
 			{
-				std::string blueprint = item["Blueprint"];
+				const std::string blueprint = item["Blueprint"];
 				FString fblueprint(blueprint);
-				UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField());
-				cheatManager->UnlockEngram(&fblueprint);
+
+				UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField());
+				cheat_manager->UnlockEngram(&fblueprint);
 			}
 
 
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				*GetText("BoughtItem"));
+			                                      *GetText("BoughtItem"));
 
 			success = true;
 		}
 		else
 		{
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				*GetText("NoPoints"));
+			                                      *GetText("NoPoints"));
 		}
 
 		return success;
 	}
+
 	/**
 	* \brief Buy an Command from shop
 	*/
-	bool BuyCommand(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id) {
+	bool BuyCommand(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id)
+	{
 		bool success = false;
 		const int price = item_entry["Price"];
 
@@ -107,25 +112,26 @@ namespace ArkShop::Store
 			auto items_map = item_entry["Items"];
 			for (const auto& item : items_map)
 			{
-				std::string message = item["message"];
-				FString fblueprint(message);
+				const std::string command = item["Command"];
+
+				FString fcommand(command);
 				FString result;
-				player_controller->ConsoleCommand(&result, &fblueprint, true);
+				player_controller->ConsoleCommand(&result, &fcommand, true);
 			}
+
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				*GetText("BoughtItem"));
+			                                      *GetText("BoughtItem"));
 
 			success = true;
 		}
 		else
 		{
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				*GetText("NoPoints"));
+			                                      *GetText("NoPoints"));
 		}
 
 		return success;
 	}
-
 
 
 	/**
@@ -402,18 +408,21 @@ namespace ArkShop::Store
 				                             price);
 			}
 		}
-		
+
 		store_str = FString::Format(*GetText("StoreListFormat"), *store_str);
 
 		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::Green, text_size, display_time, nullptr,
 		                                       *store_str);
-	
+
 		FString shopmessage = GetText("ShopMessage");
 		if (shopmessage != ArkApi::Tools::Utf8Decode("No message").c_str())
 		{
-			shopmessage = FString::Format(*shopmessage, page+1, items_list.size()% items_per_page==0? items_list.size()/items_per_page: items_list.size() /items_per_page+1);
+			shopmessage = FString::Format(*shopmessage, page + 1,
+			                              items_list.size() % items_per_page == 0
+				                              ? items_list.size() / items_per_page
+				                              : items_list.size() / items_per_page + 1);
 			ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::Green, text_size, display_time, nullptr,
-				*shopmessage);
+			                                       *shopmessage);
 		}
 	}
 
