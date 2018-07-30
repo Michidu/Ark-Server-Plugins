@@ -1,0 +1,6 @@
+{
+  "FullName":"No Collision",
+  "Description":"Allows admins to place structures without collision",
+  "Version":1.0,
+  "MinApiVersion":2.6
+}
