@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Includes">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Includes\hdr">
+      <UniqueIdentifier>{16e39d49-cac5-4cac-9f3d-b57508eb6f40}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="NoCollision.cpp" />
+    <ClCompile Include="sqlite3.c">
+      <Filter>Includes</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="NoCollisionSqlLite.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="hdr\sqlite_modern_cpp\lists\error_codes.h">
+      <Filter>Includes\hdr</Filter>
+    </ClInclude>
+    <ClInclude Include="hdr\sqlite_modern_cpp\errors.h">
+      <Filter>Includes\hdr</Filter>
+    </ClInclude>
+    <ClInclude Include="hdr\sqlite_modern_cpp\utility\function_traits.h">
+      <Filter>Includes\hdr</Filter>
+    </ClInclude>
+    <ClInclude Include="hdr\sqlite_modern_cpp\log.h">
+      <Filter>Includes\hdr</Filter>
+    </ClInclude>
+    <ClInclude Include="hdr\sqlite_modern_cpp\sqlcipher.h">
+      <Filter>Includes\hdr</Filter>
+    </ClInclude>
+    <ClInclude Include="hdr\sqlite_modern_cpp.h">
+      <Filter>Includes\hdr</Filter>
+    </ClInclude>
+    <ClInclude Include="hdr\sqlite_modern_cpp\utility\uncaught_exceptions.h">
+      <Filter>Includes\hdr</Filter>
+    </ClInclude>
+    <ClInclude Include="hdr\sqlite_modern_cpp\utility\variant.h">
+      <Filter>Includes\hdr</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
