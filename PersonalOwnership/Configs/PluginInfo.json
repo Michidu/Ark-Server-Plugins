@@ -1,0 +1,7 @@
+{
+  "FullName":"Remove Personal Ownership",
+  "Description":"Removes your personal ownership of structures",
+  "Version":1.0,
+  "MinApiVersion":2.6,
+  "ResourceId":38
+}
