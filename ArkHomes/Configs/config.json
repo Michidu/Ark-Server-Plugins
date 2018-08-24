@@ -1,0 +1,53 @@
+{  
+  "General":{  
+    "HomeTpDelay":20,
+    "TeleportDelay":15,
+    "TpHomeCooldown":1,
+    "TeleportCooldown":1,
+    "AddHomeCooldown":1,
+    "MaxHomes":2,
+    "MinStructures":3,
+    "Radius":5000,
+    "CanTpWithDino":true,
+    "EnemyStructureMinDistance":10000
+  },
+  "Teleport":{  
+    "Test1":[  
+      176004,
+      -260825,
+      -13117
+    ],
+    "Test2":[  
+      534,
+      754,
+      123
+    ]
+  },
+  "Messages":{  
+    "Sender":"ArkHomes",
+    "AddHomeCmd":"/addhome",
+    "RemoveHomeCmd":"/removehome",
+    "HomeCmd":"/home",
+    "TpCmd":"/tp",
+    "ListHomesCmd":"/listhomes",
+    "AddedHome":"Successfully added new home",
+    "FailedAddHome":"Failed to add home",
+    "AddHomeUsage":"Usage: /addhome HomeName",
+    "RemoveHomeUsage":"Usage: /removehome HomeName",
+    "HomeNameExists":"Home name already exists",
+    "HomeNameNotExists":"Home name does not exist",
+    "TpNameNotExists":"Teleport name does not exist",
+    "HomeTeleported":"Successfully teleported",
+    "HomeUsage":"Usage: /home HomeName",
+    "TpUsage":"Usage: /tp Name",
+    "HomeTeleportStart":"You will be teleported in {} seconds",
+    "NoMoreHomes":"Only {} homes allowed",
+    "NotEnoughStructures":"You don't have enough friendly structures near you ({0}/{1})",
+    "HomeCooldown":"Cooldown {} seconds",
+    "RemovedHome":"Successfully removed home",
+    "FailedRemoveHome":"Failed to remove home",
+    "CantRideDino":"You can't teleport while riding a dino",
+    "HomeInterrupt":"Teleport was interrupted",
+    "CantTpNearEnemy":"You are too close to enemy buildings"
+  }
+}

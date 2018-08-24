@@ -1,0 +1,7 @@
+{
+  "FullName":"Ark Homes",
+  "Description":"Home & teleport system for Ark",
+  "Version":1.0,
+  "MinApiVersion":2.7,
+  "ResourceId":39
+}
