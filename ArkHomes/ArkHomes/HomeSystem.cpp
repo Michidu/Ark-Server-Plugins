@@ -196,6 +196,30 @@ namespace HomeSystem
 		return false;
 	}
 
+	bool IsEnemyStructureNear(const FVector& pos, int team_id, int radius)
+	{
+		UWorld* world = ArkApi::GetApiUtils().GetWorld();
+
+		TArray<AActor*> new_actors;
+
+		TArray<AActor*> actors_ignore;
+		TArray<TEnumAsByte<enum EObjectTypeQuery>> types;
+
+		UKismetSystemLibrary::SphereOverlapActors_NEW(world, pos, static_cast<float>(radius), &types,
+		                                              APrimalStructure::GetPrivateStaticClass(), &actors_ignore,
+		                                              &new_actors);
+
+		for (const auto& actor : new_actors)
+		{
+			APrimalStructure* structure = static_cast<APrimalStructure*>(actor);
+
+			if (structure->TargetingTeamField() != team_id)
+				return true;
+		}
+
+		return false;
+	}
+
 	void AddHome(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type)
 	{
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
@@ -257,7 +281,20 @@ namespace HomeSystem
 
 			player_home_json[name] = {pos.X, pos.Y, pos.Z};
 
-			if (SaveConfig(player_home_json.dump(), steam_id))
+			std::string dump;
+
+			try
+			{
+				dump = player_home_json.dump();
+			}
+			catch (const std::exception& exception)
+			{
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"), "Unexpected error");
+				Log::GetLog()->error("({} {}) Unexpected error {}", __FILE__, __FUNCTION__, exception.what());
+				return;
+			}
+
+			if (SaveConfig(dump, steam_id))
 			{
 				const int add_cooldown = ArkHome::config["General"]["AddHomeCooldown"];
 				const auto new_cooldown = std::chrono::system_clock::to_time_t(
@@ -435,10 +472,18 @@ namespace HomeSystem
 			}
 
 			auto pos = player_home_json[name];
+			FVector pos_vec = FVector(pos[0], pos[1], pos[2]);
+
+			if (IsEnemyStructureNear(pos_vec, player_controller->TargetingTeamField(), enemy_min_distance))
+			{
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
+				                                      *ArkHome::GetText("CantTpNearEnemy"));
+				return;
+			}
 
 			const int delay = ArkHome::config["General"]["HomeTpDelay"];
 
-			Helper::Timer(delay * 1000, true, steam_id, &DoTp, player_controller, FVector(pos[0], pos[1], pos[2]));
+			Helper::Timer(delay * 1000, true, steam_id, &DoTp, player_controller, pos_vec);
 
 			teleporting_players.push_back(steam_id);
 
