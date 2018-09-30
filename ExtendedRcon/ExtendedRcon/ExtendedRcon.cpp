@@ -870,8 +870,111 @@ void ScriptCommand(RCONClientConnection* rcon_connection, RCONPacket* rcon_packe
 	}
 }
 
+void FeedDinos(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+{
+	FString msg = rcon_packet->Body;
+
+	TArray<FString> parsed;
+	msg.ParseIntoArray(parsed, L" ", true);
+
+	if (parsed.IsValidIndex(1))
+	{
+		int team_id;
+
+		try
+		{
+			team_id = std::stoi(*parsed[1]);
+		}
+		catch (const std::exception&)
+		{
+			SendRconReply(rcon_connection, rcon_packet->Id, "Request has failed");
+			return;
+		}
+
+		TArray<AActor*> found_actors;
+		UGameplayStatics::GetAllActorsOfClass(reinterpret_cast<UObject*>(ArkApi::GetApiUtils().GetWorld()),
+		                                      APrimalDinoCharacter::GetPrivateStaticClass(), &found_actors);
+
+		for (AActor* actor : found_actors)
+		{
+			APrimalDinoCharacter* dino = static_cast<APrimalDinoCharacter*>(actor);
+			if (!dino)
+				continue;
+
+			const int dino_team = dino->TargetingTeamField();
+			if (dino_team == team_id)
+			{
+				UPrimalCharacterStatusComponent* char_status = dino->MyCharacterStatusComponentField();
+
+				const float max_food = char_status->MaxStatusValuesField()()[4];
+				float* food = char_status->CurrentStatusValuesField()() + 4;
+
+				*food = max_food;
+			}
+		}
+
+		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully executed");
+	}
+	else
+	{
+		SendRconReply(rcon_connection, rcon_packet->Id, "Not enough arguments");
+	}
+}
+
+void DinoColor(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+{
+	FString msg = rcon_packet->Body;
+
+	TArray<FString> parsed;
+	msg.ParseIntoArray(parsed, L" ", true);
+
+	if (parsed.IsValidIndex(4))
+	{
+		int dino_id1;
+		int dino_id2;
+		int region;
+		int color;
+
+		try
+		{
+			dino_id1 = std::stoi(*parsed[1]);
+			dino_id2 = std::stoi(*parsed[2]);
+			region = std::stoi(*parsed[3]);
+			color = std::stoi(*parsed[4]);
+		}
+		catch (const std::exception&)
+		{
+			SendRconReply(rcon_connection, rcon_packet->Id, "Request has failed");
+			return;
+		}
+
+		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(ArkApi::GetApiUtils().GetWorld(), dino_id1,
+		                                                                  dino_id2);
+		if (!dino || dino->IsDead())
+		{
+			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find dino");
+			return;
+		}
+
+		UFunction* func = dino->FindFunctionChecked(FName(L"ForceUpdateColorSets", EFindName::FNAME_Find, false));
+		int args[] = {region, color};
+		if (func)
+		{
+			dino->ProcessEvent(func, args);
+
+			SendRconReply(rcon_connection, rcon_packet->Id, "Successfully executed");
+		}
+	}
+	else
+	{
+		SendRconReply(rcon_connection, rcon_packet->Id, "Not enough arguments");
+	}
+}
+
 void Load()
 {
+	Log::Get().Init("ExtendedRcon");
+
 	auto& commands = ArkApi::GetCommands();
 
 	commands.AddRconCommand("GiveItemNum", &GiveItemNum);
@@ -894,6 +997,8 @@ void Load()
 	commands.AddRconCommand("ClientChat", &ClientChat);
 	commands.AddRconCommand("UnlockEngram", &UnlockEngram);
 	commands.AddRconCommand("ScriptCommand", &ScriptCommand);
+	commands.AddRconCommand("FeedDinos", &FeedDinos);
+	commands.AddRconCommand("DinoColor", &DinoColor);
 }
 
 void Unload()
@@ -920,6 +1025,8 @@ void Unload()
 	commands.RemoveRconCommand("ClientChat");
 	commands.RemoveRconCommand("UnlockEngram");
 	commands.RemoveRconCommand("ScriptCommand");
+	commands.RemoveRconCommand("FeedDinos");
+	commands.RemoveRconCommand("DinoColor");
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
