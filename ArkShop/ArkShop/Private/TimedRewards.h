@@ -2,8 +2,8 @@
 
 #include <chrono>
 
-#include "Base.h"
 #include "ArkShop.h"
+#include "Base.h"
 
 namespace ArkShop
 {
@@ -47,4 +47,4 @@ namespace ArkShop
 		int points_interval_;
 		std::vector<std::shared_ptr<OnlinePlayersData>> online_players_;
 	};
-}
+} // namespace ArkShop

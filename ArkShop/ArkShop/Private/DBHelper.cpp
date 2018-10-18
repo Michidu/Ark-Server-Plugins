@@ -22,4 +22,4 @@ namespace ArkShop::DBHelper
 
 		return count != 0;
 	}
-}
+} // namespace DBHelper // namespace ArkShop

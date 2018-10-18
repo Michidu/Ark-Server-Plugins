@@ -25,7 +25,9 @@ namespace ArkShop
 			[steam_id](const std::shared_ptr<OnlinePlayersData>& data) -> bool { return data->steam_id == steam_id; });
 
 		if (iter != online_players_.end())
+		{
 			return;
+		}
 
 		const int interval = points_interval_;
 
@@ -40,7 +42,9 @@ namespace ArkShop
 		{
 			const FString group_name(group_iter.key().c_str());
 			if (group_name == L"Default")
+			{
 				continue;
+			}
 
 			if (Permissions::IsPlayerInGroup(steam_id, group_name))
 			{
@@ -50,7 +54,9 @@ namespace ArkShop
 		}
 
 		if (points_amount == 0)
+		{
 			return;
+		}
 
 		online_players_.push_back(std::make_shared<OnlinePlayersData>(steam_id, points_amount, next_time));
 	}
@@ -63,7 +69,8 @@ namespace ArkShop
 
 		if (iter != online_players_.end())
 		{
-			online_players_.erase(std::remove(online_players_.begin(), online_players_.end(), *iter), online_players_.end());
+			online_players_.erase(std::remove(online_players_.begin(), online_players_.end(), *iter),
+			                      online_players_.end());
 		}
 	}
 
@@ -84,4 +91,4 @@ namespace ArkShop
 			}
 		}
 	}
-}
+} // namespace ArkShop

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Tools.h>
 #include "Logger/spdlog/spdlog.h"
+#include <Tools.h>
 
 class ShopLog
 {
@@ -31,7 +31,8 @@ private:
 			ArkApi::GetApiUtils().GetShooterGameMode()->GetMapName(&map_name);
 
 			auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-				ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/ShopLog_" + ArkApi::Tools::Utf8Encode(*map_name) + ".log",
+				ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/ShopLog_" + ArkApi::Tools::
+				Utf8Encode(*map_name) + ".log",
 				1024 * 1024, 5);
 
 			logger_ = std::make_shared<spdlog::logger>("ArkShop", sink);

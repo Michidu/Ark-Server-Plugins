@@ -10,4 +10,4 @@ namespace ArkShop::DBHelper
 	 * \return True if exists, false otherwise
 	 */
 	SHOP_API bool IsPlayerExists(uint64 steam_id);
-}
+} // namespace DBHelper // namespace ArkShop

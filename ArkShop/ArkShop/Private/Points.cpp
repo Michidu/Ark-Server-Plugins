@@ -1,4 +1,5 @@
 #include <Points.h>
+
 #include <DBHelper.h>
 
 #include "ArkShop.h"
@@ -10,7 +11,9 @@ namespace ArkShop::Points
 	bool AddPoints(int amount, uint64 steam_id)
 	{
 		if (amount <= 0)
+		{
 			return false;
+		}
 
 		auto& db = GetDB();
 
@@ -25,7 +28,7 @@ namespace ArkShop::Points
 		}
 
 		AShooterPlayerController* player = ArkApi::GetApiUtils().FindPlayerFromSteamId(steam_id);
-		if (player)
+		if (player != nullptr)
 		{
 			ArkApi::GetApiUtils().SendChatMessage(player, GetText("Sender"), *GetText("ReceivedPoints"), amount,
 			                                      GetPoints(steam_id));
@@ -37,7 +40,9 @@ namespace ArkShop::Points
 	bool SpendPoints(int amount, uint64 steam_id)
 	{
 		if (amount <= 0)
+		{
 			return false;
+		}
 
 		auto& db = GetDB();
 
@@ -94,7 +99,7 @@ namespace ArkShop::Points
 	/**
 	 * \brief Send points to the other player (using character name)
 	 */
-	void Trade(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type)
+	void Trade(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		const uint64 sender_steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
 
@@ -120,7 +125,9 @@ namespace ArkShop::Points
 				}
 
 				if (amount <= 0)
+				{
 					return;
+				}
 
 				if (GetPoints(sender_steam_id) < amount)
 				{
@@ -176,7 +183,7 @@ namespace ArkShop::Points
 		}
 	}
 
-	void PrintPoints(AShooterPlayerController* player_controller, FString*, EChatSendMode::Type)
+	void PrintPoints(AShooterPlayerController* player_controller, FString* /*unused*/, EChatSendMode::Type /*unused*/)
 	{
 		const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
 
@@ -296,7 +303,9 @@ namespace ArkShop::Points
 			}
 
 			if (DBHelper::IsPlayerExists(steam_id))
+			{
 				return GetPoints(steam_id);
+			}
 		}
 
 		return -1;
@@ -304,48 +313,60 @@ namespace ArkShop::Points
 
 	// Console commands
 
-	void AddPointsCmd(APlayerController* player_controller, FString* cmd, bool)
+	void AddPointsCmd(APlayerController* player_controller, FString* cmd, bool /*unused*/)
 	{
-		AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
+		auto* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
 
 		const bool result = AddPointsCbk(*cmd);
 		if (result)
+		{
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Successfully added points");
+		}
 		else
+		{
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, "Couldn't add points");
+		}
 	}
 
-	void SetPointsCmd(APlayerController* player_controller, FString* cmd, bool)
+	void SetPointsCmd(APlayerController* player_controller, FString* cmd, bool /*unused*/)
 	{
-		AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
+		auto* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
 
 		const bool result = SetPointsCbk(*cmd);
 		if (result)
+		{
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Successfully set points");
+		}
 		else
+		{
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, "Couldn't set points");
+		}
 	}
 
-	void ChangePointsAmountCmd(APlayerController* player_controller, FString* cmd, bool)
+	void ChangePointsAmountCmd(APlayerController* player_controller, FString* cmd, bool /*unused*/)
 	{
-		AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
+		auto* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
 
 		const bool result = ChangePointsAmountCbk(*cmd);
 		if (result)
+		{
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Successfully set points");
+		}
 		else
+		{
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, "Couldn't set points");
+		}
 	}
 
 	/**
 	 * \brief Reset points for all players
 	 */
-	void ResetPointsCmd(APlayerController* player_controller, FString* cmd, bool)
+	void ResetPointsCmd(APlayerController* player_controller, FString* cmd, bool /*unused*/)
 	{
 		TArray<FString> parsed;
 		cmd->ParseIntoArray(parsed, L" ", true);
 
-		AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
+		auto* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
 
 		if (parsed.IsValidIndex(1))
 		{
@@ -355,7 +376,8 @@ namespace ArkShop::Points
 
 				db << "UPDATE Players SET Points = 0;";
 
-				ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Successfully reset points");
+				ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
+				                                        "Successfully reset points");
 			}
 		}
 		else
@@ -365,67 +387,88 @@ namespace ArkShop::Points
 		}
 	}
 
-	void GetPlayerPointsCmd(APlayerController* player_controller, FString* cmd, bool)
+	void GetPlayerPointsCmd(APlayerController* player_controller, FString* cmd, bool /*unused*/)
 	{
-		AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
+		auto* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
 
 		const int points = GetPlayerPointsCbk(*cmd);
 		if (points != -1)
-			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Player has {} points", points);
+		{
+			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Player has {} points",
+			                                        points);
+		}
 		else
+		{
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, "Couldn't get points amount");
+		}
 	}
 
 	// Rcon callbacks
 
-	void AddPointsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+	void AddPointsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld* /*unused*/)
 	{
 		FString reply;
 
 		const bool result = AddPointsCbk(rcon_packet->Body);
 		if (result)
+		{
 			reply = "Successfully added points\n";
+		}
 		else
+		{
 			reply = "Couldn't add points\n";
+		}
 
 		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
 	}
 
-	void SetPointsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+	void SetPointsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld* /*unused*/)
 	{
 		FString reply;
 
 		const bool result = SetPointsCbk(rcon_packet->Body);
 		if (result)
+		{
 			reply = "Successfully set points\n";
+		}
 		else
+		{
 			reply = "Couldn't set points\n";
+		}
 
 		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
 	}
 
-	void ChangePointsAmountRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+	void ChangePointsAmountRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld* /*unused*/)
 	{
 		FString reply;
 
 		const bool result = ChangePointsAmountCbk(rcon_packet->Body);
 		if (result)
+		{
 			reply = "Successfully set points\n";
+		}
 		else
+		{
 			reply = "Couldn't set points\n";
+		}
 
 		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
 	}
 
-	void GetPlayerPointsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+	void GetPlayerPointsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld* /*unused*/)
 	{
 		FString reply;
 
 		const int points = GetPlayerPointsCbk(rcon_packet->Body);
 		if (points != -1)
+		{
 			reply = FString::Format("Player has {} points\n", points);
+		}
 		else
+		{
 			reply = "Couldn't get points amount\n";
+		}
 
 		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
 	}
@@ -448,4 +491,4 @@ namespace ArkShop::Points
 		commands.AddRconCommand("ChangePoints", &ChangePointsAmountRcon);
 		commands.AddRconCommand("GetPlayerPoints", &GetPlayerPointsRcon);
 	}
-}
+} // namespace Points // namespace ArkShop

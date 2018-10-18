@@ -2,13 +2,15 @@
 
 #include <fstream>
 
-#include <Points.h>
-#include <Kits.h>
-#include <Store.h>
 #include <DBHelper.h>
+#include <Kits.h>
+#include <Points.h>
+#include <Store.h>
+
+#include "StoreSell.h"
 
 #include "TimedRewards.h"
-#include "StoreSell.h"
+
 
 #pragma comment(lib, "ArkApi.lib")
 #pragma comment(lib, "Permissions.lib")
@@ -37,7 +39,8 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 		catch (const sqlite::sqlite_exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-			return AShooterGameMode_HandleNewPlayer_original(_this, new_player, player_data, player_character, is_from_login);
+			return AShooterGameMode_HandleNewPlayer_original(_this, new_player, player_data, player_character,
+			                                                 is_from_login);
 		}
 	}
 
@@ -86,16 +89,18 @@ void ReadConfig()
 	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/config.json";
 	std::ifstream file{config_path};
 	if (!file.is_open())
+	{
 		throw std::runtime_error("Can't open config.json");
+	}
 
 	file >> ArkShop::config;
 
 	file.close();
 }
 
-void ReloadConfig(APlayerController* player_controller, FString*, bool)
+void ReloadConfig(APlayerController* player_controller, FString* /*unused*/, bool /*unused*/)
 {
-	AShooterPlayerController* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
+	auto* shooter_controller = static_cast<AShooterPlayerController*>(player_controller);
 
 	try
 	{
@@ -112,7 +117,7 @@ void ReloadConfig(APlayerController* player_controller, FString*, bool)
 	ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Reloaded config");
 }
 
-void ReloadConfigRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+void ReloadConfigRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld* /*unused*/)
 {
 	FString reply;
 
@@ -133,7 +138,7 @@ void ReloadConfigRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_pa
 	rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
 }
 
-void ShowHelp(AShooterPlayerController* player_controller, FString*, EChatSendMode::Type)
+void ShowHelp(AShooterPlayerController* player_controller, FString* /*unused*/, EChatSendMode::Type /*unused*/)
 {
 	const FString help = ArkShop::GetText("HelpMessage");
 	if (help != ArkApi::Tools::Utf8Decode("No message").c_str())
@@ -179,7 +184,8 @@ void Load()
 		ArkApi::GetCommands().AddChatCommand(help, &ShowHelp);
 	}
 
-	ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation", &Hook_AShooterGameMode_HandleNewPlayer,
+	ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation",
+	                           &Hook_AShooterGameMode_HandleNewPlayer,
 	                           &AShooterGameMode_HandleNewPlayer_original);
 	ArkApi::GetHooks().SetHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout,
 	                           &AShooterGameMode_Logout_original);
@@ -188,7 +194,7 @@ void Load()
 	ArkApi::GetCommands().AddRconCommand("ArkShop.Reload", &ReloadConfigRcon);
 }
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+BOOL APIENTRY DllMain(HMODULE /*hModule*/, DWORD ul_reason_for_call, LPVOID /*lpReserved*/)
 {
 	switch (ul_reason_for_call)
 	{

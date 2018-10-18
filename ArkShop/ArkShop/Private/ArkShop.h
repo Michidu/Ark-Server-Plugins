@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Logger/Logger.h>
 #include <API/UE/Containers/FString.h>
+#include <Logger/Logger.h>
 
 #include "hdr/sqlite_modern_cpp.h"
 #include "json.hpp"
@@ -12,4 +12,4 @@ namespace ArkShop
 
 	sqlite::database& GetDB();
 	FString GetText(const std::string& str);
-}
+} // namespace ArkShop

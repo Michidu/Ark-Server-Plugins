@@ -36,4 +36,4 @@ namespace ArkShop::Points
 	* \return True if success, false otherwise
 	*/
 	SHOP_API bool SetPoints(uint64 steam_id, int new_amount);
-}
+} // namespace Points // namespace ArkShop

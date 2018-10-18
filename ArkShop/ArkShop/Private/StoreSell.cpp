@@ -8,23 +8,30 @@
 
 namespace ArkShop::StoreSell
 {
-	bool SellItem(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id,
+	bool SellItem(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry,
+	              uint64 steam_id,
 	              int amount)
 	{
 		bool success = false;
 
 		const int price = item_entry.value("Price", 1) * amount;
 		if (price <= 0)
+		{
 			return false;
+		}
 
 		const FString blueprint = FString(item_entry.value("Blueprint", "").c_str());
 		const int needed_amount = item_entry.value("Amount", 1) * amount;
 		if (needed_amount <= 0)
+		{
 			return false;
+		}
 
 		UPrimalInventoryComponent* inventory = player_controller->GetPlayerCharacter()->MyInventoryComponentField();
-		if (!inventory)
+		if (inventory == nullptr)
+		{
 			return false;
+		}
 
 		int item_count = 0;
 
@@ -35,7 +42,7 @@ namespace ArkShop::StoreSell
 		TArray<UPrimalItem*> items = inventory->InventoryItemsField();
 		for (UPrimalItem* item : items)
 		{
-			if (item->ClassField())
+			if (item->ClassField() != nullptr)
 			{
 				const FString item_bp = ArkApi::IApiUtils::GetItemBlueprint(item);
 
@@ -45,7 +52,9 @@ namespace ArkShop::StoreSell
 
 					item_count += item->GetItemQuantity();
 					if (item_count >= needed_amount)
+					{
 						break;
+					}
 				}
 			}
 		}
@@ -62,7 +71,8 @@ namespace ArkShop::StoreSell
 				if (item_count > needed_amount)
 				{
 					item->SetQuantity(item_count - needed_amount, true);
-					inventory->NotifyClientsItemStatus(item, false, false, true, false, false, nullptr, nullptr, false, false, true);
+					inventory->NotifyClientsItemStatus(item, false, false, true, false, false, nullptr, nullptr, false,
+					                                   false, true);
 				}
 				else
 				{
@@ -82,7 +92,8 @@ namespace ArkShop::StoreSell
 		}
 		else
 		{
-			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"), *GetText("NotEnoughItems"), item_count,
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"), *GetText("NotEnoughItems"),
+			                                      item_count,
 			                                      needed_amount);
 		}
 
@@ -92,10 +103,14 @@ namespace ArkShop::StoreSell
 	bool Sell(AShooterPlayerController* player_controller, const FString& item_id, int amount)
 	{
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+		{
 			return false;
+		}
 
 		if (amount <= 0)
+		{
 			amount = 1;
+		}
 
 		bool success = false;
 
@@ -118,12 +133,15 @@ namespace ArkShop::StoreSell
 			const std::string type = item_entry["Type"];
 
 			if (type == "item")
+			{
 				success = SellItem(player_controller, item_entry, steam_id, amount);
+			}
 
 			if (success)
 			{
 				const std::wstring log = fmt::format(TEXT("{}({}) sold item \"{}\". Amount - {}"),
-				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id, *item_id,
+				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
+				                                     *item_id,
 				                                     amount);
 
 				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
@@ -135,7 +153,7 @@ namespace ArkShop::StoreSell
 
 	// Chat callbacks
 
-	void ChatSell(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type)
+	void ChatSell(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);
@@ -166,7 +184,7 @@ namespace ArkShop::StoreSell
 		}
 	}
 
-	void ShowItems(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type)
+	void ShowItems(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);
@@ -186,7 +204,9 @@ namespace ArkShop::StoreSell
 		}
 
 		if (page < 0)
+		{
 			return;
+		}
 
 		auto items_list = config.value("SellItems", nlohmann::json::object());
 
@@ -196,7 +216,9 @@ namespace ArkShop::StoreSell
 
 		const unsigned start_index = page * items_per_page;
 		if (start_index >= items_list.size())
+		{
 			return;
+		}
 
 		auto start = items_list.begin();
 		advance(start, start_index);
@@ -207,7 +229,9 @@ namespace ArkShop::StoreSell
 		{
 			const size_t i = distance(items_list.begin(), iter);
 			if (i == start_index + items_per_page)
+			{
 				break;
+			}
 
 			auto item = iter.value();
 
@@ -215,7 +239,8 @@ namespace ArkShop::StoreSell
 			const std::string type = item["Type"];
 			const std::string description = item.value("Description", "No description");
 
-			store_str += FString::Format(*GetText("StoreListItem"), i + 1, description, ArkApi::Tools::Utf8Decode(iter.key()),
+			store_str += FString::Format(*GetText("StoreListItem"), i + 1, description,
+			                             ArkApi::Tools::Utf8Decode(iter.key()),
 			                             price);
 		}
 
@@ -228,4 +253,4 @@ namespace ArkShop::StoreSell
 		ArkApi::GetCommands().AddChatCommand(GetText("SellCmd"), &ChatSell);
 		ArkApi::GetCommands().AddChatCommand(GetText("ShopSellCmd"), &ShowItems);
 	}
-}
+} // namespace StoreSell // namespace ArkShop

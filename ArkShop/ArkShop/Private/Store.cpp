@@ -1,4 +1,5 @@
 #include <Store.h>
+
 #include <Points.h>
 
 #include "ArkShop.h"
@@ -16,12 +17,16 @@ namespace ArkShop::Store
 		bool success = false;
 
 		if (amount <= 0)
+		{
 			amount = 1;
+		}
 
 		const unsigned price = item_entry["Price"];
 		const int final_price = price * amount;
 		if (final_price <= 0)
+		{
 			return false;
+		}
 
 		const int points = Points::GetPoints(steam_id);
 
@@ -35,14 +40,14 @@ namespace ArkShop::Store
 				const int default_amount = item["Amount"];
 				std::string blueprint = item["Blueprint"];
 
-				const int final_amount = default_amount * amount;
-				if (final_amount <= 0)
-					return false;
-
 				FString fblueprint(blueprint.c_str());
 
-				TArray<UPrimalItem*> out_items;
-				player_controller->GiveItem(&out_items, &fblueprint, final_amount, quality, force_blueprint, false);
+				for (int i = 0; i < amount; ++i)
+				{
+					TArray<UPrimalItem*> out_items;
+					player_controller->GiveItem(&out_items, &fblueprint, default_amount, quality, force_blueprint,
+					                            false);
+				}
 			}
 
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
@@ -78,7 +83,7 @@ namespace ArkShop::Store
 				const std::string blueprint = item["Blueprint"];
 				FString fblueprint(blueprint);
 
-				UShooterCheatManager* cheat_manager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField());
+				auto* cheat_manager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField());
 				cheat_manager->UnlockEngram(&fblueprint);
 			}
 
@@ -100,7 +105,8 @@ namespace ArkShop::Store
 	/**
 	* \brief Buy an Command from shop
 	*/
-	bool BuyCommand(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id)
+	bool BuyCommand(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry,
+	                uint64 steam_id)
 	{
 		bool success = false;
 		const int price = item_entry["Price"];
@@ -171,7 +177,8 @@ namespace ArkShop::Store
 	/**
 	* \brief Buy a beacon from shop
 	*/
-	bool BuyBeacon(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id)
+	bool BuyBeacon(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry,
+	               uint64 steam_id)
 	{
 		bool success = false;
 
@@ -184,7 +191,7 @@ namespace ArkShop::Store
 		{
 			FString fclass_name(class_name.c_str());
 
-			UShooterCheatManager* cheatManager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField());
+			auto* cheatManager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField());
 			cheatManager->Summon(&fclass_name);
 
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
@@ -243,10 +250,14 @@ namespace ArkShop::Store
 	bool Buy(AShooterPlayerController* player_controller, const FString& item_id, int amount)
 	{
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+		{
 			return false;
+		}
 
 		if (amount <= 0)
+		{
 			amount = 1;
+		}
 
 		bool success = false;
 
@@ -271,7 +282,7 @@ namespace ArkShop::Store
 			const int min_level = item_entry.value("MinLevel", 1);
 			const int max_level = item_entry.value("MaxLevel", 999);
 
-			APrimalCharacter* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField());
+			auto* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField());
 			UPrimalCharacterStatusComponent* char_component = primal_character->MyCharacterStatusComponentField();
 
 			const int level = char_component->BaseCharacterLevelField() + char_component->ExtraCharacterLevelField();
@@ -283,23 +294,35 @@ namespace ArkShop::Store
 			}
 
 			if (type == "item")
+			{
 				success = BuyItem(player_controller, item_entry, steam_id, amount);
+			}
 			else if (type == "dino")
+			{
 				success = BuyDino(player_controller, item_entry, steam_id);
+			}
 			else if (type == "beacon")
+			{
 				success = BuyBeacon(player_controller, item_entry, steam_id);
+			}
 			else if (type == "experience")
+			{
 				success = BuyExperience(player_controller, item_entry, steam_id);
+			}
 			else if (type == "unlockengram")
+			{
 				success = UnlockEngram(player_controller, item_entry, steam_id);
+			}
 			else if (type == "command")
+			{
 				success = BuyCommand(player_controller, item_entry, steam_id);
+			}
 
 			if (success)
 			{
 				const std::wstring log = fmt::format(TEXT("{}({}) bought item \"{}\". Amount - {}"),
-				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id, *item_id,
-				                                     amount);
+				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
+				                                     *item_id, amount);
 
 				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
 			}
@@ -310,7 +333,7 @@ namespace ArkShop::Store
 
 	// Chat callbacks
 
-	void ChatBuy(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type)
+	void ChatBuy(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);
@@ -341,7 +364,7 @@ namespace ArkShop::Store
 		}
 	}
 
-	void ShowItems(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type)
+	void ShowItems(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);
@@ -366,7 +389,9 @@ namespace ArkShop::Store
 		}
 
 		if (page < 0)
+		{
 			return;
+		}
 
 		auto items_list = config["ShopItems"];
 
@@ -376,7 +401,9 @@ namespace ArkShop::Store
 
 		const unsigned start_index = page * items_per_page;
 		if (start_index >= items_list.size())
+		{
 			return;
+		}
 
 		auto start = items_list.begin();
 		advance(start, start_index);
@@ -387,7 +414,9 @@ namespace ArkShop::Store
 		{
 			const size_t i = distance(items_list.begin(), iter);
 			if (i == start_index + items_per_page)
+			{
 				break;
+			}
 
 			auto item = iter.value();
 
@@ -404,7 +433,8 @@ namespace ArkShop::Store
 			}
 			else
 			{
-				store_str += FString::Format(*GetText("StoreListItem"), i + 1, description, ArkApi::Tools::Utf8Decode(iter.key()),
+				store_str += FString::Format(*GetText("StoreListItem"), i + 1, description,
+				                             ArkApi::Tools::Utf8Decode(iter.key()),
 				                             price);
 			}
 		}
@@ -421,7 +451,8 @@ namespace ArkShop::Store
 			                              items_list.size() % items_per_page == 0
 				                              ? items_list.size() / items_per_page
 				                              : items_list.size() / items_per_page + 1);
-			ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::Green, text_size, display_time, nullptr,
+			ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::Green, text_size, display_time,
+			                                       nullptr,
 			                                       *shopmessage);
 		}
 	}
@@ -433,4 +464,4 @@ namespace ArkShop::Store
 		commands.AddChatCommand(GetText("BuyCmd"), &ChatBuy);
 		commands.AddChatCommand(GetText("ShopCmd"), &ShowItems);
 	}
-}
+} // namespace Store // namespace ArkShop

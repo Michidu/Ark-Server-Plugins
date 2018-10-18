@@ -18,4 +18,4 @@ namespace ArkShop::Tools
 
 		return min + x % n;
 	}
-}
+} // namespace Tools // namespace ArkShop
