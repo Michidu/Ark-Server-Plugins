@@ -7,6 +7,9 @@
     <Filter Include="Public">
       <UniqueIdentifier>{f8043985-4572-4ac5-9526-d41f4c2bacf2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Private\Database">
+      <UniqueIdentifier>{000d9792-63b8-4997-b1e2-7c23f45c0810}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Public\Points.h">
@@ -36,14 +39,17 @@
     <ClInclude Include="Public\Kits.h">
       <Filter>Public</Filter>
     </ClInclude>
-    <ClInclude Include="Private\sqlite3.h">
-      <Filter>Private</Filter>
-    </ClInclude>
     <ClInclude Include="Private\ShopLog.h">
       <Filter>Private</Filter>
     </ClInclude>
     <ClInclude Include="Private\StoreSell.h">
       <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\sqlite3.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\DatabaseRepository.h">
+      <Filter>Private\Database</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -51,9 +57,6 @@
       <Filter>Private</Filter>
     </ClCompile>
     <ClCompile Include="Private\Points.cpp">
-      <Filter>Private</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\DBHelper.cpp">
       <Filter>Private</Filter>
     </ClCompile>
     <ClCompile Include="Private\Store.cpp">
@@ -65,11 +68,17 @@
     <ClCompile Include="Private\Kits.cpp">
       <Filter>Private</Filter>
     </ClCompile>
-    <ClCompile Include="Private\sqlite3.c">
-      <Filter>Private</Filter>
-    </ClCompile>
     <ClCompile Include="Private\StoreSell.cpp">
       <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Database\sqlite3.c">
+      <Filter>Private\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Database\DatabaseRepository.cpp">
+      <Filter>Private\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\DBHelper.cpp">
+      <Filter>Private\Database</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
