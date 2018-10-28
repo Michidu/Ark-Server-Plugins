@@ -6,6 +6,7 @@
 
 #include "ArkShop.h"
 #include "ShopLog.h"
+#include "Database/DatabaseRepository.h"
 
 namespace ArkShop::Kits
 {
@@ -16,18 +17,7 @@ namespace ArkShop::Kits
 	 */
 	nlohmann::basic_json<> GetPlayerKitsConfig(uint64 steam_id)
 	{
-		auto& db = GetDB();
-
-		std::string kits_config = "{}";
-
-		try
-		{
-			db << "SELECT Kits FROM Players WHERE SteamId = ?;" << steam_id >> kits_config;
-		}
-		catch (const sqlite::sqlite_exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-		}
+		std::string kits_config = DatabaseRepository::GetPlayerKits(steam_id);
 
 		return nlohmann::json::parse(kits_config);
 	}
@@ -37,19 +27,7 @@ namespace ArkShop::Kits
 	 */
 	bool SaveConfig(const std::string& dump, uint64 steam_id)
 	{
-		auto& db = GetDB();
-
-		try
-		{
-			db << "UPDATE Players SET Kits = ? WHERE SteamId = ?;" << dump << steam_id;
-		}
-		catch (const sqlite::sqlite_exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-			return false;
-		}
-
-		return true;
+		return DatabaseRepository::UpdatePlayerKits(steam_id, dump);
 	}
 
 	/**
@@ -523,9 +501,7 @@ namespace ArkShop::Kits
 		{
 			if (parsed[1].ToString() == "confirm")
 			{
-				auto& db = GetDB();
-
-				db << "UPDATE Players SET Kits = \"{}\";";
+				DatabaseRepository::DeleteAllKits();
 
 				ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
 				                                        "Successfully reset kits");

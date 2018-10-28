@@ -10,6 +10,7 @@
 #include "StoreSell.h"
 
 #include "TimedRewards.h"
+#include "Database/DatabaseRepository.h"
 
 
 #pragma comment(lib, "ArkApi.lib")
@@ -29,18 +30,11 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 
 	if (!ArkShop::DBHelper::IsPlayerExists(steam_id))
 	{
-		auto& db = ArkShop::GetDB();
-
-		try
+		const bool is_added = ArkShop::DatabaseRepository::TryAddNewPlayer(steam_id);
+		if (!is_added)
 		{
-			db << "INSERT INTO Players (SteamId) VALUES (?);"
-				<< steam_id;
-		}
-		catch (const sqlite::sqlite_exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return AShooterGameMode_HandleNewPlayer_original(_this, new_player, player_data, player_character,
-			                                                 is_from_login);
+				is_from_login);
 		}
 	}
 
@@ -69,14 +63,6 @@ void Hook_AShooterGameMode_Logout(AShooterGameMode* _this, AController* exiting)
 	}
 
 	AShooterGameMode_Logout_original(_this, exiting);
-}
-
-sqlite::database& ArkShop::GetDB()
-{
-	static sqlite::database db(config["General"].value("DbPathOverride", "").empty()
-		                           ? ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/ArkShop.db"
-		                           : config["General"]["DbPathOverride"]);
-	return db;
 }
 
 FString ArkShop::GetText(const std::string& str)
@@ -164,14 +150,7 @@ void Load()
 		throw;
 	}
 
-	auto& db = ArkShop::GetDB();
-
-	db << "create table if not exists Players ("
-		"Id integer primary key autoincrement not null,"
-		"SteamId integer default 0,"
-		"Kits text default '{}',"
-		"Points integer default 0"
-		");";
+	ArkShop::DatabaseRepository::CreateDatabase();
 
 	ArkShop::Points::Init();
 	ArkShop::Store::Init();
