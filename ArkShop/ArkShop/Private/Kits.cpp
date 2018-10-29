@@ -6,7 +6,7 @@
 
 #include "ArkShop.h"
 #include "ShopLog.h"
-#include "Database/DatabaseRepository.h"
+#include "Database/KitRepository.h"
 
 namespace ArkShop::Kits
 {
@@ -17,7 +17,7 @@ namespace ArkShop::Kits
 	 */
 	nlohmann::basic_json<> GetPlayerKitsConfig(uint64 steam_id)
 	{
-		std::string kits_config = DatabaseRepository::GetPlayerKits(steam_id);
+		std::string kits_config = KitRepository::GetPlayerKits(steam_id);
 
 		return nlohmann::json::parse(kits_config);
 	}
@@ -27,7 +27,7 @@ namespace ArkShop::Kits
 	 */
 	bool SaveConfig(const std::string& dump, uint64 steam_id)
 	{
-		return DatabaseRepository::UpdatePlayerKits(steam_id, dump);
+		return KitRepository::UpdatePlayerKits(steam_id, dump);
 	}
 
 	/**
@@ -501,7 +501,7 @@ namespace ArkShop::Kits
 		{
 			if (parsed[1].ToString() == "confirm")
 			{
-				DatabaseRepository::DeleteAllKits();
+				KitRepository::DeleteAllKits();
 
 				ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
 				                                        "Successfully reset kits");

@@ -3,9 +3,9 @@
 
 namespace ArkShop::KitRepository
 {
-	std::string GetPlayerKits(uint64 steam_id)
+	std::string GetPlayerKits(const uint64 steam_id)
 	{
-		auto& db = DbManager::GetDB();
+		auto& db = DbManager::GetDb();
 
 		std::string kits_config = "{}";
 
@@ -21,9 +21,9 @@ namespace ArkShop::KitRepository
 		return kits_config;
 	}
 
-	bool UpdatePlayerKits(uint64 steam_id, const std::string kits_data)
+	bool UpdatePlayerKits(const uint64 steam_id, const std::string kits_data)
 	{
-		auto& db = DbManager::GetDB();
+		auto& db = DbManager::GetDb();
 
 		try
 		{
@@ -39,7 +39,7 @@ namespace ArkShop::KitRepository
 
 	bool DeleteAllKits()
 	{
-		auto& db = DbManager::GetDB();
+		auto& db = DbManager::GetDb();
 
 		try
 		{

@@ -5,7 +5,7 @@ namespace ArkShop::PointsRepository
 {
 	int GetPoints(const uint64 steam_id)
 	{
-		auto& db = DbManager::GetDB();
+		auto& db = DbManager::GetDb();
 		int points = 0;
 
 		try
@@ -22,7 +22,7 @@ namespace ArkShop::PointsRepository
 
 	bool SetPoints(const uint64 steam_id, const int amount)
 	{
-		auto& db = DbManager::GetDB();
+		auto& db = DbManager::GetDb();
 
 		try
 		{
@@ -38,7 +38,7 @@ namespace ArkShop::PointsRepository
 
 	bool DeleteAllPoint()
 	{
-		auto& db = DbManager::GetDB();
+		auto& db = DbManager::GetDb();
 
 		try
 		{

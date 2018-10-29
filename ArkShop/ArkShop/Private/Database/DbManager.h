@@ -4,7 +4,7 @@
 
 namespace ArkShop::DbManager
 {
-	sqlite::database& GetDB();
+	sqlite::database& GetDb();
 	void CreateDatabase();
 
 	bool TryAddNewPlayer(uint64 steam_id);

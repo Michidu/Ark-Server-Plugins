@@ -1,10 +1,11 @@
+#include "DbManager.h"
+
 #include <Tools.h>
 
-#include "DbManager.h"
 
 namespace ArkShop::DbManager
 {
-	sqlite::database& GetDB()
+	sqlite::database& GetDb()
 	{
 		static sqlite::database db(config["General"].value("DbPathOverride", "").empty()
 			? ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/ArkShop.db"
@@ -14,7 +15,7 @@ namespace ArkShop::DbManager
 
 	void CreateDatabase()
 	{
-		auto& db = GetDB();
+		auto& db = GetDb();
 
 		db << "create table if not exists Players ("
 			"Id integer primary key autoincrement not null,"
@@ -26,7 +27,7 @@ namespace ArkShop::DbManager
 
 	bool TryAddNewPlayer(const uint64 steam_id)
 	{
-		auto& db = DbManager::GetDB();
+		auto& db = GetDb();
 
 		try
 		{

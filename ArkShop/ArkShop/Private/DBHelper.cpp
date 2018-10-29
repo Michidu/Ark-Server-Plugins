@@ -1,15 +1,14 @@
 #include <DBHelper.h>
 
 #include "ArkShop.h"
-#include "Database/DatabaseRepository.h"
 #include "Database/DbManager.h"
 
 
 namespace ArkShop::DBHelper
 {
-	bool IsPlayerExists(uint64 steam_id)
+	bool IsPlayerExists(const uint64 steam_id)
 	{
-		auto& db = ArkShop::DbManager::GetDB();
+		auto& db = DbManager::GetDb();
 
 		int count = 0;
 

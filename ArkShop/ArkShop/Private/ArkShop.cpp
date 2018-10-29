@@ -10,7 +10,7 @@
 #include "StoreSell.h"
 
 #include "TimedRewards.h"
-#include "Database/DatabaseRepository.h"
+#include "Database/DbManager.h"
 
 
 #pragma comment(lib, "ArkApi.lib")
@@ -30,7 +30,7 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 
 	if (!ArkShop::DBHelper::IsPlayerExists(steam_id))
 	{
-		const bool is_added = ArkShop::DatabaseRepository::TryAddNewPlayer(steam_id);
+		const bool is_added = ArkShop::DbManager::TryAddNewPlayer(steam_id);
 		if (!is_added)
 		{
 			return AShooterGameMode_HandleNewPlayer_original(_this, new_player, player_data, player_character,
@@ -150,7 +150,7 @@ void Load()
 		throw;
 	}
 
-	ArkShop::DatabaseRepository::CreateDatabase();
+	ArkShop::DbManager::CreateDatabase();
 
 	ArkShop::Points::Init();
 	ArkShop::Store::Init();

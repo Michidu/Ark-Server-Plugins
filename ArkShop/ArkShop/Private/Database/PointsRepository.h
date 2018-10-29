@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../ArkShop.h"
-#include "../hdr/sqlite_modern_cpp.h"
 
 namespace ArkShop::PointsRepository
 {

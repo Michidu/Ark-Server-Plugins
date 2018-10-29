@@ -3,7 +3,7 @@
 #include <DBHelper.h>
 
 #include "ArkShop.h"
-#include "Database/DatabaseRepository.h"
+#include "Database/PointsRepository.h"
 
 namespace ArkShop::Points
 {
@@ -15,8 +15,8 @@ namespace ArkShop::Points
 		{
 			return false;
 		}
-		const int point_count = DatabaseRepository::GetPoints(steam_id);
-		const bool is_added = DatabaseRepository::SetPoints(steam_id, point_count + amount);
+		const int point_count = PointsRepository::GetPoints(steam_id);
+		const bool is_added = PointsRepository::SetPoints(steam_id, point_count + amount);
 		if (!is_added)
 		{
 			return false;
@@ -39,10 +39,10 @@ namespace ArkShop::Points
 			return false;
 		}
 
-		const int point_count = DatabaseRepository::GetPoints(steam_id);
+		const int point_count = PointsRepository::GetPoints(steam_id);
 		if (point_count >= amount)
 		{
-			const bool is_spend = DatabaseRepository::SetPoints(steam_id, point_count - amount);
+			const bool is_spend = PointsRepository::SetPoints(steam_id, point_count - amount);
 			return is_spend;
 		}
 		return false;
@@ -50,12 +50,12 @@ namespace ArkShop::Points
 
 	int GetPoints(uint64 steam_id)
 	{
-		return DatabaseRepository::GetPoints(steam_id);
+		return PointsRepository::GetPoints(steam_id);
 	}
 
 	bool SetPoints(uint64 steam_id, int new_amount)
 	{
-		const bool is_spend = DatabaseRepository::SetPoints(steam_id, new_amount);
+		const bool is_spend = PointsRepository::SetPoints(steam_id, new_amount);
 		return is_spend;
 	}
 
@@ -337,7 +337,7 @@ namespace ArkShop::Points
 		{
 			if (parsed[1].ToString() == "confirm")
 			{
-				DatabaseRepository::DeleteAllPoint();
+				PointsRepository::DeleteAllPoint();
 
 				ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
 				                                        "Successfully reset points");
