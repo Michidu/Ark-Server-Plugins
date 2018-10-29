@@ -56,8 +56,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Private\Database\DatabaseRepository.h" />
     <ClInclude Include="Private\ArkShop.h" />
+    <ClInclude Include="Private\Database\DbManager.h" />
+    <ClInclude Include="Private\Database\KitRepository.h" />
+    <ClInclude Include="Private\Database\PointsRepository.h" />
     <ClInclude Include="Private\json.hpp" />
     <ClInclude Include="Private\ShopLog.h" />
     <ClInclude Include="Private\Database\sqlite3.h" />
@@ -71,8 +73,10 @@
     <ClInclude Include="Public\Store.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Private\Database\DatabaseRepository.cpp" />
     <ClCompile Include="Private\ArkShop.cpp" />
+    <ClCompile Include="Private\Database\DbManager.cpp" />
+    <ClCompile Include="Private\Database\KitRepository.cpp" />
+    <ClCompile Include="Private\Database\PointsRepository.cpp" />
     <ClCompile Include="Private\DBHelper.cpp" />
     <ClCompile Include="Private\Kits.cpp" />
     <ClCompile Include="Private\Points.cpp" />
