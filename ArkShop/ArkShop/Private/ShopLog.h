@@ -2,6 +2,7 @@
 
 #include "Logger/spdlog/spdlog.h"
 #include <Tools.h>
+#include <iostream>
 
 class ShopLog
 {
