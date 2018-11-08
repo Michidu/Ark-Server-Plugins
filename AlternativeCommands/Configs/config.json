@@ -1,0 +1,10 @@
+{  
+  "Commands":{  
+    "/shp":{  
+      "Command":"/shop"
+    },
+    "/kt":{  
+      "Command":"/kit"
+    }
+  }
+}

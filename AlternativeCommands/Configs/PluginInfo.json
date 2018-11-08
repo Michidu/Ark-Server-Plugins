@@ -1,0 +1,7 @@
+{  
+  "FullName":"Alternative Commands",
+  "Description":"Creates command synonyms",
+  "Version":1.0,
+  "MinApiVersion":2.7,
+  "ResourceId":52
+}
