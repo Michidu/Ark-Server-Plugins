@@ -3,6 +3,7 @@
 #include <DBHelper.h>
 
 #include "ArkShop.h"
+#include "Database/PointsRepository.h"
 
 namespace ArkShop::Points
 {
@@ -14,16 +15,10 @@ namespace ArkShop::Points
 		{
 			return false;
 		}
-
-		auto& db = GetDB();
-
-		try
+		const int point_count = PointsRepository::GetPoints(steam_id);
+		const bool is_added = PointsRepository::SetPoints(steam_id, point_count + amount);
+		if (!is_added)
 		{
-			db << "UPDATE Players SET Points = Points + ? WHERE SteamId = ?;" << amount << steam_id;
-		}
-		catch (const sqlite::sqlite_exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
 
@@ -44,54 +39,24 @@ namespace ArkShop::Points
 			return false;
 		}
 
-		auto& db = GetDB();
-
-		try
+		const int point_count = PointsRepository::GetPoints(steam_id);
+		if (point_count >= amount)
 		{
-			db << "UPDATE Players SET Points = Points - ? WHERE SteamId = ?;" << amount << steam_id;
+			const bool is_spend = PointsRepository::SetPoints(steam_id, point_count - amount);
+			return is_spend;
 		}
-		catch (const sqlite::sqlite_exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-			return false;
-		}
-
-		return true;
+		return false;
 	}
 
 	int GetPoints(uint64 steam_id)
 	{
-		auto& db = GetDB();
-
-		int points = 0;
-
-		try
-		{
-			db << "SELECT Points FROM Players WHERE SteamId = ?;" << steam_id >> points;
-		}
-		catch (const sqlite::sqlite_exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-		}
-
-		return points;
+		return PointsRepository::GetPoints(steam_id);
 	}
 
 	bool SetPoints(uint64 steam_id, int new_amount)
 	{
-		auto& db = GetDB();
-
-		try
-		{
-			db << "UPDATE Players SET Points = ? WHERE SteamId = ?;" << new_amount << steam_id;
-		}
-		catch (const sqlite::sqlite_exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-			return false;
-		}
-
-		return true;
+		const bool is_spend = PointsRepository::SetPoints(steam_id, new_amount);
+		return is_spend;
 	}
 
 	// Chat callbacks
@@ -372,9 +337,7 @@ namespace ArkShop::Points
 		{
 			if (parsed[1].ToString() == "confirm")
 			{
-				auto& db = GetDB();
-
-				db << "UPDATE Players SET Points = 0;";
+				PointsRepository::DeleteAllPoint();
 
 				ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
 				                                        "Successfully reset points");

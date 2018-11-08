@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Release|x64">
@@ -57,9 +57,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Private\ArkShop.h" />
+    <ClInclude Include="Private\Database\DbManager.h" />
+    <ClInclude Include="Private\Database\KitRepository.h" />
+    <ClInclude Include="Private\Database\PointsRepository.h" />
     <ClInclude Include="Private\json.hpp" />
     <ClInclude Include="Private\ShopLog.h" />
-    <ClInclude Include="Private\sqlite3.h" />
+    <ClInclude Include="Private\Database\sqlite3.h" />
     <ClInclude Include="Private\StoreSell.h" />
     <ClInclude Include="Private\TimedRewards.h" />
     <ClInclude Include="Private\Tools.h" />
@@ -71,10 +74,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Private\ArkShop.cpp" />
+    <ClCompile Include="Private\Database\DbManager.cpp" />
+    <ClCompile Include="Private\Database\KitRepository.cpp" />
+    <ClCompile Include="Private\Database\PointsRepository.cpp" />
     <ClCompile Include="Private\DBHelper.cpp" />
     <ClCompile Include="Private\Kits.cpp" />
     <ClCompile Include="Private\Points.cpp" />
-    <ClCompile Include="Private\sqlite3.c" />
+    <ClCompile Include="Private\Database\sqlite3.c" />
     <ClCompile Include="Private\Store.cpp" />
     <ClCompile Include="Private\StoreSell.cpp" />
     <ClCompile Include="Private\TimedRewards.cpp" />
