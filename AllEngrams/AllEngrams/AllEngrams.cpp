@@ -19,6 +19,7 @@ struct EngramEntry
 {
 	FString name;
 	TSubclassOf<UPrimalItem> engram;
+	int level{};
 };
 
 TArray<EngramEntry> original_engrams;
@@ -39,18 +40,18 @@ void ReadEngrams()
 	// Make a copy of original engrams list
 	if (original_engrams.Num() == 0)
 	{
-		TArray<UPrimalEngramEntry*> all_engrams_entries = Globals::GEngine()()
-		                                                  ->GameSingletonField()()->PrimalGameDataOverrideField()()->
-		                                                  EngramBlueprintEntriesField()();
+		TArray<UPrimalEngramEntry*> all_engrams_entries = static_cast<UPrimalGlobals*>(Globals::GEngine()()->
+				GameSingletonField())->PrimalGameDataOverrideField()->
+				                       EngramBlueprintEntriesField();
 
 		for (UPrimalEngramEntry* engram_entry : all_engrams_entries)
 		{
 			FString name;
-			engram_entry->NameField()().ToString(&name);
+			engram_entry->NameField().ToString(&name);
 
 			name.RemoveFromEnd("_1");
 
-			original_engrams.Add({name, engram_entry->BluePrintEntryField()()});
+			original_engrams.Add({name, engram_entry->BluePrintEntryField(), engram_entry->GetRequiredLevel()});
 		}
 	}
 
@@ -63,7 +64,9 @@ void ReadEngrams()
 			const FString name = engram_entry.name;
 
 			if (include_engrams.Find(name) != INDEX_NONE)
-				unlock_engrams.Add({name, engram_entry.engram});
+			{
+				unlock_engrams.Add({name, engram_entry.engram, engram_entry.level});
+			}
 		}
 	}
 	else if (auto_detect)
@@ -73,7 +76,9 @@ void ReadEngrams()
 			const FString name = engram_entry.name;
 
 			if (exclude_engrams.Find(name) == INDEX_NONE)
-				unlock_engrams.Add({name, engram_entry.engram});
+			{
+				unlock_engrams.Add({name, engram_entry.engram, engram_entry.level});
+			}
 		}
 	}
 }
@@ -81,21 +86,32 @@ void ReadEngrams()
 bool UnlockEngrams(AShooterPlayerController* player_controller)
 {
 	if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+	{
 		return false;
+	}
 
-	APrimalCharacter* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField()());
-	UPrimalCharacterStatusComponent* char_component = primal_character->MyCharacterStatusComponentField()();
+	auto* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField());
+	UPrimalCharacterStatusComponent* char_component = primal_character->MyCharacterStatusComponentField();
+
+	const bool auto_lvl = config.value("AutoDetectLevel", false);
 
 	const int required_lvl = config.value("RequiredLevel", 1);
-	const int level = char_component->BaseCharacterLevelField()() + char_component->ExtraCharacterLevelField()();
-	if (level >= required_lvl)
+	const int level = char_component->BaseCharacterLevelField() + char_component->ExtraCharacterLevelField();
+	if (auto_lvl || level >= required_lvl)
 	{
-		AShooterPlayerState* player_state = static_cast<AShooterPlayerState*>(player_controller->PlayerStateField()());
+		auto* player_state = static_cast<AShooterPlayerState*>(player_controller->PlayerStateField());
 
 		for (const auto& engram_entry : unlock_engrams)
 		{
+			if (auto_lvl && level < engram_entry.level)
+			{
+				continue;
+			}
+
 			if (!player_state->HasEngram(engram_entry.engram))
+			{
 				player_state->ServerUnlockEngram(engram_entry.engram, false, true);
+			}
 		}
 
 		return true;
@@ -118,12 +134,14 @@ void Hook_UPrimalCharacterStatusComponent_ServerApplyLevelUp(UPrimalCharacterSta
 {
 	UPrimalCharacterStatusComponent_ServerApplyLevelUp_original(_this, LevelUpValueType, ByPC);
 
-	if (ByPC)
+	if (ByPC != nullptr)
+	{
 		UnlockEngrams(ByPC);
+	}
 }
 
 // Helper function for dumping all engrams
-void DumpEngrams(APlayerController*, FString*, bool)
+void DumpEngrams(APlayerController* /*unused*/, FString* /*unused*/, bool /*unused*/)
 {
 	std::ofstream f(ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/AllEngrams/EngramsDump.txt");
 
@@ -135,10 +153,12 @@ void DumpEngrams(APlayerController*, FString*, bool)
 	f.close();
 }
 
-void GiveEngrams(AShooterPlayerController* player_controller, FString*, EChatSendMode::Type)
+void GiveEngrams(AShooterPlayerController* player_controller, FString* /*unused*/, EChatSendMode::Type /*unused*/)
 {
 	if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+	{
 		return;
+	}
 
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
 	if (!Permissions::IsPlayerHasPermission(steam_id, "AllEngrams.GiveEngrams"))
@@ -150,16 +170,23 @@ void GiveEngrams(AShooterPlayerController* player_controller, FString*, EChatSen
 	const int required_lvl = config.value("RequiredLevel", 1);
 
 	if (UnlockEngrams(player_controller))
+	{
 		ArkApi::GetApiUtils().SendChatMessage(player_controller, *GetText("Sender"), *GetText("Unlocked"));
+	}
 	else
-		ArkApi::GetApiUtils().SendChatMessage(player_controller, *GetText("Sender"), *GetText("LowLevel"), required_lvl);
+	{
+		ArkApi::GetApiUtils().SendChatMessage(player_controller, *GetText("Sender"), *GetText("LowLevel"),
+		                                      required_lvl);
+	}
 }
 
 bool ReadIncludeEngrams()
 {
 	std::ifstream file(ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/AllEngrams/Engrams.txt");
 	if (!file.good())
+	{
 		return false;
+	}
 
 	include_engrams.Empty();
 
@@ -178,7 +205,9 @@ bool ReadExcludeEngrams()
 {
 	std::ifstream file(ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/AllEngrams/ExcludeEngrams.txt");
 	if (!file.good())
+	{
 		return false;
+	}
 
 	exclude_engrams.Empty();
 
@@ -198,16 +227,18 @@ void ReadConfig()
 	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/AllEngrams/config.json";
 	std::ifstream file{config_path};
 	if (!file.is_open())
+	{
 		throw std::runtime_error("Can't open config.json");
+	}
 
 	file >> config;
 
 	file.close();
 }
 
-void ReloadCmd(APlayerController* player_controller, FString*, bool)
+void ReloadCmd(APlayerController* player_controller, FString* /*unused*/, bool /*unused*/)
 {
-	AShooterPlayerController* shooter_player = static_cast<AShooterPlayerController*>(player_controller);
+	auto* shooter_player = static_cast<AShooterPlayerController*>(player_controller);
 
 	if (!ReadIncludeEngrams() || !ReadExcludeEngrams())
 	{
@@ -280,7 +311,7 @@ void Unload()
 	ArkApi::GetCommands().RemoveConsoleCommand("AllEngrams.Reload");
 }
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+BOOL APIENTRY DllMain(HMODULE /*hModule*/, DWORD ul_reason_for_call, LPVOID /*lpReserved*/)
 {
 	switch (ul_reason_for_call)
 	{

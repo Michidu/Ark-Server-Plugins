@@ -1,8 +1,9 @@
-{
+{  
   "RequiredLevel":1,
   "AutoUnlockEngrams":true,
+  "AutoDetectLevel":true,
   "AutoDetectEngrams":true,
-  "Messages":{
+  "Messages":{  
     "Sender":"AllEngrams",
     "NoPermissions":"<RichColor Color=\"1, 0, 0, 1\">You don't have permissions to use this command</>",
     "LowLevel":"<RichColor Color=\"1, 0, 0, 1\">You should be at least level {} or higher to use this command</>",
