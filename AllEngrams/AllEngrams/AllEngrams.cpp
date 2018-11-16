@@ -85,7 +85,7 @@ void ReadEngrams()
 
 bool UnlockEngrams(AShooterPlayerController* player_controller)
 {
-	if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+	if (ArkApi::IApiUtils::IsPlayerDead(player_controller) || ArkApi::IApiUtils::IsRidingDino(player_controller))
 	{
 		return false;
 	}
@@ -136,6 +136,14 @@ void Hook_UPrimalCharacterStatusComponent_ServerApplyLevelUp(UPrimalCharacterSta
 
 	if (ByPC != nullptr)
 	{
+		const bool use_permission = config.value("UseAutoPermission", false);
+
+		const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(ByPC);
+		if (use_permission && !Permissions::IsPlayerHasPermission(steam_id, "AllEngrams.AutoGiveEngrams"))
+		{
+			return;
+		}
+
 		UnlockEngrams(ByPC);
 	}
 }
@@ -155,7 +163,7 @@ void DumpEngrams(APlayerController* /*unused*/, FString* /*unused*/, bool /*unus
 
 void GiveEngrams(AShooterPlayerController* player_controller, FString* /*unused*/, EChatSendMode::Type /*unused*/)
 {
-	if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+	if (ArkApi::IApiUtils::IsPlayerDead(player_controller) || ArkApi::IApiUtils::IsRidingDino(player_controller))
 	{
 		return;
 	}

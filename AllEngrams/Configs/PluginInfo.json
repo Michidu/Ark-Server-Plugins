@@ -1,7 +1,7 @@
 {
   "FullName":"All Engrams",
   "Description":"The easy way to learn all engrams",
-  "Version":1.5,
+  "Version":1.6,
   "MinApiVersion":2.8,
   "ResourceId":6,
   "Dependencies":[

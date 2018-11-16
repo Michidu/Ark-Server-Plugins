@@ -20,7 +20,7 @@
     <ProjectGuid>{ACBD1852-7779-43A7-A482-61A1E0463C41}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>AllEngrams</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -53,7 +53,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>f:\Projects;$(LibraryPath)</LibraryPath>
+    <LibraryPath>d:\Projects;$(LibraryPath)</LibraryPath>
     <IncludePath>$(MSBuildStartupDirectory)\..\Permissions\Permissions\Public;$(MSBuildStartupDirectory)\..\..\ARK-Server-API\version\Core\Public;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

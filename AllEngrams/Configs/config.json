@@ -3,6 +3,7 @@
   "AutoUnlockEngrams":true,
   "AutoDetectLevel":true,
   "AutoDetectEngrams":true,
+  "UseAutoPermission":false,
   "Messages":{  
     "Sender":"AllEngrams",
     "NoPermissions":"<RichColor Color=\"1, 0, 0, 1\">You don't have permissions to use this command</>",
