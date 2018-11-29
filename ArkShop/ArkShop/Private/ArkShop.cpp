@@ -78,7 +78,7 @@ bool ArkShop::IsStoreEnabled(AShooterPlayerController* player_controller)
 
 void ArkShop::ToogleStore(bool Enabled, const FString& Reason)
 {
-	StoreEnabled = !StoreEnabled;
+	StoreEnabled = Enabled;
 	ClosedStoreReason = Reason;
 }
 
