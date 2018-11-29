@@ -46,7 +46,7 @@ namespace ArkShop::Store
 				{
 					TArray<UPrimalItem*> out_items;
 					player_controller->GiveItem(&out_items, &fblueprint, default_amount, quality, force_blueprint,
-					                            false);
+					                            false, 0);
 				}
 			}
 
@@ -248,8 +248,13 @@ namespace ArkShop::Store
 	}
 
 	bool Buy(AShooterPlayerController* player_controller, const FString& item_id, int amount)
-	{
+	{		
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+		{
+			return false;
+		}
+
+		if (!IsStoreEnabled(player_controller))
 		{
 			return false;
 		}
@@ -455,6 +460,16 @@ namespace ArkShop::Store
 			                                       nullptr,
 			                                       *shopmessage);
 		}
+	}
+
+	bool IsStoreEnabled(AShooterPlayerController* player_controller)
+	{
+		return ArkShop::IsStoreEnabled(player_controller);
+	}
+
+	void ToogleStore(bool Enabled, const FString& Reason)
+	{
+		ArkShop::ToogleStore(Enabled, Reason);
 	}
 
 	void Init()

@@ -64,6 +64,23 @@ void Hook_AShooterGameMode_Logout(AShooterGameMode* _this, AController* exiting)
 
 	AShooterGameMode_Logout_original(_this, exiting);
 }
+FString ClosedStoreReason;
+bool StoreEnabled = true;
+bool ArkShop::IsStoreEnabled(AShooterPlayerController* player_controller)
+{
+	if (!StoreEnabled)
+	{
+		ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"), *ClosedStoreReason);
+		return false;
+	}
+	return true;
+}
+
+void ArkShop::ToogleStore(bool Enabled, const FString& Reason)
+{
+	StoreEnabled = !StoreEnabled;
+	ClosedStoreReason = Reason;
+}
 
 FString ArkShop::GetText(const std::string& str)
 {
