@@ -685,6 +685,98 @@ void SetDinoPos(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, 
 	}
 }
 
+void SetImprintToPlayer(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+{
+	FString msg = rcon_packet->Body;
+
+	TArray<FString> parsed;
+	msg.ParseIntoArray(parsed, L" ", true);
+
+	if (parsed.IsValidIndex(3))
+	{
+		int dino_id1;
+		int dino_id2;
+		uint64 steam_id;		
+		try
+		{
+			dino_id1 = std::stoi(*parsed[1]);
+			dino_id2 = std::stoi(*parsed[2]);
+			steam_id = std::stoull(*parsed[3]);		
+		}
+		catch (const std::exception&)
+		{
+			SendRconReply(rcon_connection, rcon_packet->Id, "Request has failed");
+			return;
+		}
+
+		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(ArkApi::GetApiUtils().GetWorld(), dino_id1,
+			dino_id2);
+		if (!dino)
+		{
+			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find dino");
+			return;
+		}
+		AShooterPlayerController* shooter_pc = ArkApi::GetApiUtils().FindPlayerFromSteamId(steam_id);
+		if (!shooter_pc) 
+		{
+
+			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find player from the given steam id");
+			return;
+		}
+		FString playerName;
+		shooter_pc->GetPlayerCharacterName(&playerName);
+		dino->UpdateImprintingDetails(&playerName, shooter_pc->LinkedPlayerIDField());
+
+		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully changed Imprint on dino");
+	}
+	else
+	{
+		SendRconReply(rcon_connection, rcon_packet->Id, "Not enough arguments");
+	}
+}
+
+void SetImprintQuality(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+{
+	FString msg = rcon_packet->Body;
+
+	TArray<FString> parsed;
+	msg.ParseIntoArray(parsed, L" ", true);
+
+	if (parsed.IsValidIndex(3))
+	{
+		int dino_id1;
+		int dino_id2;
+		float quality;
+
+		try
+		{
+			dino_id1 = std::stoi(*parsed[1]);
+			dino_id2 = std::stoi(*parsed[2]);
+			quality = std::stof(*parsed[3]);
+		}
+		catch (const std::exception&)
+		{
+			SendRconReply(rcon_connection, rcon_packet->Id, "Request has failed");
+			return;
+		}
+
+		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(ArkApi::GetApiUtils().GetWorld(), dino_id1,
+			dino_id2);
+		if (!dino)
+		{
+			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find dino");
+			return;
+		}
+		dino->UpdateImprintingQuality(quality);
+		
+		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully changed Imprint Quality on dino");
+	}
+	else
+	{
+		SendRconReply(rcon_connection, rcon_packet->Id, "Not enough arguments");
+	}
+}
+
 void AddDinoExperience(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
 {
 	FString msg = rcon_packet->Body;
@@ -992,6 +1084,8 @@ void Load()
 	commands.AddRconCommand("GetTribeLog", &GetTribeLog);
 	commands.AddRconCommand("GetDinoPos", &GetDinoPos);
 	commands.AddRconCommand("SetDinoPos", &SetDinoPos);
+	commands.AddRconCommand("SetImprintToPlayer", &SetImprintToPlayer);
+	commands.AddRconCommand("SetImprintQuality", &SetImprintQuality);	
 	commands.AddRconCommand("AddDinoExperience", &AddDinoExperience);
 	commands.AddRconCommand("KillDino", &KillDino);
 	commands.AddRconCommand("ClientChat", &ClientChat);
@@ -1020,6 +1114,8 @@ void Unload()
 	commands.RemoveRconCommand("GetTribeLog");
 	commands.RemoveRconCommand("GetDinoPos");
 	commands.RemoveRconCommand("SetDinoPos");
+	commands.RemoveRconCommand("SetImprintToPlayer");
+	commands.RemoveRconCommand("SetImprintQuality");	
 	commands.RemoveRconCommand("AddDinoExperience");
 	commands.RemoveRconCommand("KillDino");
 	commands.RemoveRconCommand("ClientChat");
