@@ -24,17 +24,29 @@ bool Hook_APrimalDinoCharacter_CanCarryCharacter(APrimalDinoCharacter* _this, AP
 			const bool can_carry_wild_dino = config["CanCarryWildDino"];
 			const bool can_carry_tamed_dino = config["CanCarryTamedDino"];
 
-			if (!can_carry_wild_dino && carry_team < 50000)
-				return false;
-			if (!can_carry_tamed_dino && carry_team >= 50000 && this_team != carry_team)
-				return false;
+			if (!can_carry_tamed_dino && (carry_team < 50000 || carry_team >= 50000 && this_team != carry_team))
+			{
+				const bool can_carry_alliance_dino = config["CanCarryAllianceDino"];
+				if (can_carry_alliance_dino)
+				{
+					FTribeData tribe;
+					ArkApi::GetApiUtils().GetShooterGameMode()->GetTribeData(&tribe, carry_team);
+					if (!tribe.IsTribeAlliedWith(this_team)) return false;
+				} else return false;
+			}
 		}
 		else
 		{
 			const bool can_carry_players = config["CanCarryPlayers"];
-
 			if (!can_carry_players && this_team != carry_team)
-				return false;
+			{
+				const bool can_carry_alliance_players = config["CanCarryAlliancePlayers"];
+				if (can_carry_alliance_players && can_carry_pawn->PlayerStateField() && can_carry_pawn->PlayerStateField()->IsA(AShooterPlayerState::StaticClass()))
+				{
+					AShooterPlayerState* Asps = static_cast<AShooterPlayerState*>(can_carry_pawn->PlayerStateField());
+					if (!Asps->MyTribeDataField()->IsTribeAlliedWith(this_team)) return false;
+				} else return false;
+			}
 		}
 	}
 
