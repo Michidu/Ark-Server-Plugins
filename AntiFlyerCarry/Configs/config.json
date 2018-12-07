@@ -1,5 +1,7 @@
 {  
-  "CanCarryWildDino":false,
+  "CanCarryWildDino":true,
   "CanCarryTamedDino":false,
-  "CanCarryPlayers":false
+  "CanCarryAlliedDino":true,
+  "CanCarryPlayers":false,
+  "CanCarryAlliedPlayers":true
 }

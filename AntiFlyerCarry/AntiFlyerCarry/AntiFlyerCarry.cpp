@@ -18,23 +18,28 @@ bool Hook_APrimalDinoCharacter_CanCarryCharacter(APrimalDinoCharacter* _this, AP
 	if (can_carry_pawn && this_team >= 50000)
 	{
 		const int carry_team = can_carry_pawn->TargetingTeamField();
-
+		const bool AreAllied = carry_team >= 50000 && ArkApi::GetApiUtils().GetShooterGameMode()->AreTribesAllied(this_team, carry_team);
 		if (can_carry_pawn->IsA(APrimalDinoCharacter::GetPrivateStaticClass()))
 		{
 			const bool can_carry_wild_dino = config["CanCarryWildDino"];
 			const bool can_carry_tamed_dino = config["CanCarryTamedDino"];
 
-			if (!can_carry_wild_dino && carry_team < 50000)
-				return false;
-			if (!can_carry_tamed_dino && carry_team >= 50000 && this_team != carry_team)
-				return false;
+			if (!can_carry_tamed_dino && (carry_team < 50000 || carry_team >= 50000 && this_team != carry_team))
+			{
+				const bool can_carry_allied_dino = config["CanCarryAlliedDino"];
+				if(!can_carry_allied_dino || !AreAllied)
+					return false;
+			}
 		}
 		else
 		{
 			const bool can_carry_players = config["CanCarryPlayers"];
-
 			if (!can_carry_players && this_team != carry_team)
-				return false;
+			{
+				const bool can_carry_allied_dino = config["CanCarryAlliedPlayers"];
+				if (!can_carry_allied_dino || !AreAllied)
+					return false;
+			}
 		}
 	}
 

@@ -102,7 +102,7 @@ namespace ArkShop::Points
 				}
 
 				TArray<AShooterPlayerController*> receiver_players = ArkApi::GetApiUtils().
-					FindPlayerFromCharacterName(receiver_name);
+					FindPlayerFromCharacterName(receiver_name, ESearchCase::CaseSensitive, true);
 
 				if (receiver_players.Num() > 1)
 				{

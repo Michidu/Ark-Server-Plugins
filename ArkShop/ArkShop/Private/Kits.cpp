@@ -200,7 +200,7 @@ namespace ArkShop::Kits
 			FString fblueprint(blueprint.c_str());
 
 			TArray<UPrimalItem*> out_items;
-			player_controller->GiveItem(&out_items, &fblueprint, amount, quality, force_blueprint, false);
+			player_controller->GiveItem(&out_items, &fblueprint, amount, quality, force_blueprint, false, 0);
 		}
 
 		// Give dinos
@@ -336,6 +336,11 @@ namespace ArkShop::Kits
 
 	void Kit(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
+		if (!IsStoreEnabled(player_controller))
+		{
+			return;
+		}
+
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);
 
@@ -352,6 +357,11 @@ namespace ArkShop::Kits
 	void BuyKit(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+		{
+			return;
+		}
+
+		if (!IsStoreEnabled(player_controller))
 		{
 			return;
 		}
