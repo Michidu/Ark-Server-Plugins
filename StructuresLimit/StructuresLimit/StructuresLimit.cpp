@@ -193,7 +193,10 @@ void ShowStructuresLimits(AShooterPlayerController* player_controller, FString* 
 		for (const auto& data : all_structures)
 		{
 			const FString bp = data.first;
-			const int count = data.second.at(team_id);
+
+			const int count = data.second.find(team_id) == data.second.end()
+				                  ? 0
+				                  : data.second.at(team_id);
 
 			const auto str_config = config["Structures"].value(bp.ToString(), nlohmann::json::object());
 
