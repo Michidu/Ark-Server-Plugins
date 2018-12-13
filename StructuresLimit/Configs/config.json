@@ -1,14 +1,25 @@
 {  
   "General":{  
-    "MaxAmount":10,
+    "MaxAmount":100,
     "CheckInterval":30,
     "NotificationDisplayTime":4.0,
     "NotificationScale":1.3
   },
   "Structures":{  
-    "Blueprint'/Game/PrimalEarth/Structures/BuildingBases/StructureTurretBaseBP.StructureTurretBaseBP'":2
+    "Blueprint'/Game/PrimalEarth/Structures/BuildingBases/StructureTurretBaseBP.StructureTurretBaseBP'":{  
+      "Name":"Auto Turret",
+      "Count":2
+    },
+    "Blueprint'/Game/PrimalEarth/Structures/BuildingBases/StructureTurretMinigun.StructureTurretMinigun'":{  
+      "Name":"Minigun Turret",
+      "Count":1
+    }
   },
   "Messages":{  
-    "ReachLimit":"You have reached your limit of structures"
+    "Sender":"StructuresLimit",
+    "ShowLimitsCmd":"/ShowLimits",
+    "ReachLimit":"You have reached your limit of structures",
+    "ShowLimitMsg":"{}: {}/{}\n",
+    "TotalLimitMsg":"Total: {}/{}"
   }
 }

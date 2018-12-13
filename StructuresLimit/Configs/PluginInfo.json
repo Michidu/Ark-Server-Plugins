@@ -1,6 +1,6 @@
 {
   "FullName":"Structures Limit",
   "Description":"Limit the structures of a tribe or a player in the whole map",
-  "Version":1.0,
-  "MinApiVersion":2.6
+  "Version":1.1,
+  "MinApiVersion":2.8
 }

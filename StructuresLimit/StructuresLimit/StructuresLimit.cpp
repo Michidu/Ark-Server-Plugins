@@ -1,6 +1,8 @@
-#include <API/ARK/Ark.h>
-#include <fstream>
 #include "json.hpp"
+
+#include <API/ARK/Ark.h>
+
+#include <fstream>
 
 #pragma comment(lib, "ArkApi.lib")
 
@@ -14,9 +16,14 @@ std::unordered_map<int, int> structures_count;
 
 nlohmann::json config;
 
+FString GetText(const std::string& str)
+{
+	return FString(ArkApi::Tools::Utf8Decode(config["Messages"].value(str, "No message")).c_str());
+}
+
 FString GetBlueprint(UObjectBase* object)
 {
-	if (object && object->ClassField())
+	if (object != nullptr && object->ClassField() != nullptr)
 	{
 		FString path_name;
 		object->ClassField()->GetDefaultObject(true)->GetFullName(&path_name, nullptr);
@@ -25,7 +32,8 @@ FString GetBlueprint(UObjectBase* object)
 		{
 			path_name = "Blueprint'" + path_name.Mid(find_index + 1,
 			                                         path_name.Len() - (find_index + (path_name.EndsWith(
-				                                                                          "_C", ESearchCase::CaseSensitive)
+				                                                                          "_C", ESearchCase::
+				                                                                          CaseSensitive)
 				                                                                          ? 3
 				                                                                          : 1))) + "'";
 			return path_name.Replace(L"Default__", L"", ESearchCase::CaseSensitive);
@@ -51,14 +59,14 @@ void UpdateStructuresCount()
 	const auto& actors = ArkApi::GetApiUtils().GetWorld()->PersistentLevelField()->GetActorsField();
 	for (AActor* actor : actors)
 	{
-		if (actor && actor->IsA(APrimalStructure::GetPrivateStaticClass()))
+		if (actor != nullptr && actor->IsA(APrimalStructure::GetPrivateStaticClass()))
 		{
 			const int team_id = actor->TargetingTeamField();
 			if (team_id != 0)
 			{
 				++structures_count[team_id];
 
-				APrimalStructure* structure = static_cast<APrimalStructure*>(actor);
+				auto* structure = static_cast<APrimalStructure*>(actor);
 
 				const FString path_name = GetBlueprint(structure);
 
@@ -108,7 +116,7 @@ int Hook_APrimalStructure_IsAllowedToBuild(APrimalStructure* _this, APlayerContr
                                            bool bDontAdjustForMaxRange, FRotator PlayerViewRotation,
                                            bool bFinalPlacement)
 {
-	if (bFinalPlacement && PC)
+	if (bFinalPlacement && PC != nullptr)
 	{
 		const int team_id = _this->TargetingTeamField();
 
@@ -118,10 +126,8 @@ int Hook_APrimalStructure_IsAllowedToBuild(APrimalStructure* _this, APlayerContr
 			const float display_scale = config["General"]["NotificationScale"];
 			const float display_time = config["General"]["NotificationDisplayTime"];
 
-			const std::wstring message = ArkApi::Tools::Utf8Decode(config["Messages"].value("ReachLimit", "No message"));
-
 			ArkApi::GetApiUtils().SendNotification(static_cast<AShooterPlayerController*>(PC), FLinearColor(1, 0, 0),
-			                                       display_scale, display_time, nullptr, message.c_str());
+			                                       display_scale, display_time, nullptr, *GetText("ReachLimit"));
 
 			return 0;
 		}
@@ -132,15 +138,15 @@ int Hook_APrimalStructure_IsAllowedToBuild(APrimalStructure* _this, APlayerContr
 			iter != all_structures.end())
 		{
 			int& count = iter->second[team_id];
-			if (count >= config["Structures"].value(path_name.ToString(), 9999))
+			if (count >= config["Structures"].value(path_name.ToString(), nlohmann::json::object())
+			                                 .value("Count", 9999))
 			{
 				const float display_scale = config["General"]["NotificationScale"];
 				const float display_time = config["General"]["NotificationDisplayTime"];
 
-				const std::wstring message = ArkApi::Tools::Utf8Decode(config["Messages"].value("ReachLimit", "No message"));
-
-				ArkApi::GetApiUtils().SendNotification(static_cast<AShooterPlayerController*>(PC), FLinearColor(1, 0, 0),
-				                                       display_scale, display_time, nullptr, message.c_str());
+				ArkApi::GetApiUtils().SendNotification(static_cast<AShooterPlayerController*>(PC),
+				                                       FLinearColor(1, 0, 0),
+				                                       display_scale, display_time, nullptr, *GetText("ReachLimit"));
 
 				return 0;
 			}
@@ -168,12 +174,79 @@ void Update()
 	}
 }
 
+void ShowStructuresLimits(AShooterPlayerController* player_controller, FString* /*unused*/, bool /*unused*/)
+{
+	if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+	{
+		return;
+	}
+
+	try
+	{
+		FString text;
+
+		const int team_id = player_controller->TargetingTeamField();
+
+		const int struct_count = structures_count[team_id];
+		const int max_struct_count = config["General"]["MaxAmount"];
+
+		for (const auto& data : all_structures)
+		{
+			const FString bp = data.first;
+			const int count = data.second.at(team_id);
+
+			const auto str_config = config["Structures"].value(bp.ToString(), nlohmann::json::object());
+
+			const int max_count = str_config.value("Count", 9999);
+			const std::string name = str_config.value("Name", "");
+
+			text += FString::Format(*GetText("ShowLimitMsg"), ArkApi::Tools::Utf8Decode(name).c_str(), count,
+			                        max_count);
+		}
+
+		text += FString::Format(*GetText("TotalLimitMsg"), struct_count, max_struct_count);
+
+		ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+		                                      *text);
+	}
+	catch (const std::exception& exception)
+	{
+		Log::GetLog()->warn(exception.what());
+	}
+}
+
+void GetBpPathCmd(APlayerController* player, FString* /*unused*/, bool /*unused*/)
+{
+	auto* player_controller = static_cast<AShooterPlayerController*>(player);
+
+	if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
+	{
+		return;
+	}
+
+	AActor* actor = player_controller->GetPlayerCharacter()->GetAimedActor(
+		ECC_GameTraceChannel2, nullptr, 0.0, 0.0, nullptr, nullptr,
+		false, false);
+
+	if (actor != nullptr && actor->IsA(APrimalStructure::GetPrivateStaticClass()))
+	{
+		const FString path_name = GetBlueprint(actor);
+
+		ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+		                                      *path_name);
+
+		Log::GetLog()->info(path_name.ToString());
+	}
+}
+
 void ReadConfig()
 {
 	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/StructuresLimit/config.json";
 	std::ifstream file{config_path};
 	if (!file.is_open())
+	{
 		throw std::runtime_error("Can't open config.json");
+	}
 
 	file >> config;
 
@@ -198,9 +271,13 @@ void Load()
 	              &APrimalStructure_IsAllowedToBuild_original);
 
 	ArkApi::GetCommands().AddOnTimerCallback("StructuresLimit", &Update);
+
+	ArkApi::GetCommands().AddChatCommand(*GetText("ShowLimitsCmd"), &ShowStructuresLimits);
+
+	ArkApi::GetCommands().AddConsoleCommand("GetBp", &GetBpPathCmd);
 }
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+BOOL APIENTRY DllMain(HMODULE /*hModule*/, DWORD ul_reason_for_call, LPVOID /*lpReserved*/)
 {
 	switch (ul_reason_for_call)
 	{
