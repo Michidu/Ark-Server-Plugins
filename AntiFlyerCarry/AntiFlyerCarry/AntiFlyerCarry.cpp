@@ -24,12 +24,13 @@ bool Hook_APrimalDinoCharacter_CanCarryCharacter(APrimalDinoCharacter* _this, AP
 			const bool can_carry_wild_dino = config["CanCarryWildDino"];
 			const bool can_carry_tamed_dino = config["CanCarryTamedDino"];
 
-			if (!can_carry_tamed_dino && (carry_team < 50000 || carry_team >= 50000 && this_team != carry_team))
+			if (!can_carry_tamed_dino && carry_team >= 50000 && this_team != carry_team)
 			{
 				const bool can_carry_allied_dino = config["CanCarryAlliedDino"];
 				if(!can_carry_allied_dino || !AreAllied)
 					return false;
-			}
+			} 
+			else if (!can_carry_wild_dino && carry_team < 50000) return false;
 		}
 		else
 		{
