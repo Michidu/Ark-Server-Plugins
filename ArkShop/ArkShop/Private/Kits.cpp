@@ -6,7 +6,6 @@
 
 #include "ArkShop.h"
 #include "ShopLog.h"
-#include "Database/KitRepository.h"
 
 namespace ArkShop::Kits
 {
@@ -17,7 +16,7 @@ namespace ArkShop::Kits
 	 */
 	nlohmann::basic_json<> GetPlayerKitsConfig(uint64 steam_id)
 	{
-		std::string kits_config = KitRepository::GetPlayerKits(steam_id);
+		const std::string kits_config = database->GetPlayerKits(steam_id);
 
 		return nlohmann::json::parse(kits_config);
 	}
@@ -27,7 +26,7 @@ namespace ArkShop::Kits
 	 */
 	bool SaveConfig(const std::string& dump, uint64 steam_id)
 	{
-		return KitRepository::UpdatePlayerKits(steam_id, dump);
+		return database->UpdatePlayerKits(steam_id, dump);
 	}
 
 	/**
@@ -98,7 +97,7 @@ namespace ArkShop::Kits
 	*/
 	bool CanUseKit(AShooterPlayerController* player_controller, uint64 steam_id, const FString& kit_name)
 	{
-		if ((player_controller == nullptr) || ArkApi::IApiUtils::IsPlayerDead(player_controller))
+		if (player_controller == nullptr || ArkApi::IApiUtils::IsPlayerDead(player_controller))
 		{
 			return false;
 		}
@@ -137,7 +136,7 @@ namespace ArkShop::Kits
 			return true;
 		}
 
-		const FString fpermissions(permissions.c_str());
+		const FString fpermissions(permissions);
 
 		TArray<FString> groups;
 		fpermissions.ParseIntoArray(groups, L",", true);
@@ -328,7 +327,7 @@ namespace ArkShop::Kits
 		const FString kits_list_str = FString::Format(TEXT("{}\n{}\n{}"), *GetText("AvailableKits"), *kits_str,
 		                                              *GetText("KitUsage"));
 
-		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::White, text_size, display_time, nullptr,
+		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::Green, text_size, display_time, nullptr,
 		                                       *kits_list_str);
 	}
 
@@ -357,11 +356,6 @@ namespace ArkShop::Kits
 	void BuyKit(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
-		{
-			return;
-		}
-
-		if (!IsStoreEnabled(player_controller))
 		{
 			return;
 		}
@@ -511,7 +505,7 @@ namespace ArkShop::Kits
 		{
 			if (parsed[1].ToString() == "confirm")
 			{
-				KitRepository::DeleteAllKits();
+				database->DeleteAllKits();
 
 				ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
 				                                        "Successfully reset kits");
@@ -590,5 +584,21 @@ namespace ArkShop::Kits
 
 		ArkApi::GetHooks().SetHook("AShooterCharacter.AuthPostSpawnInit", &Hook_AShooterCharacter_AuthPostSpawnInit,
 		                           &AShooterCharacter_AuthPostSpawnInit_original);
+	}
+
+	void Unload()
+	{
+		auto& commands = ArkApi::GetCommands();
+
+		commands.RemoveChatCommand(GetText("KitCmd"));
+		commands.RemoveChatCommand(GetText("BuyKitCmd"));
+
+		commands.RemoveConsoleCommand("ChangeKitAmount");
+		commands.RemoveConsoleCommand("ResetKits");
+
+		commands.RemoveRconCommand("ChangeKitAmount");
+
+		ArkApi::GetHooks().DisableHook("AShooterCharacter.AuthPostSpawnInit",
+		                               &Hook_AShooterCharacter_AuthPostSpawnInit);
 	}
 } // namespace Kits // namespace ArkShop

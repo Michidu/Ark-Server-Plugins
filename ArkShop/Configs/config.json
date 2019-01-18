@@ -169,7 +169,7 @@
   "SellItems":{  
     "metal":{  
       "Type":"item",
-      "Description":"100x metal",
+      "Description":"100x stone",
       "Price":10,
       "Amount":100,
       "Blueprint":"Blueprint'/Game/Mods/Stack50/Resources/PrimalItemResource_Stone_Child.PrimalItemResource_Stone_Child'"

@@ -3,7 +3,6 @@
 #include <DBHelper.h>
 
 #include "ArkShop.h"
-#include "Database/PointsRepository.h"
 
 namespace ArkShop::Points
 {
@@ -15,8 +14,8 @@ namespace ArkShop::Points
 		{
 			return false;
 		}
-		const int point_count = PointsRepository::GetPoints(steam_id);
-		const bool is_added = PointsRepository::SetPoints(steam_id, point_count + amount);
+
+		const bool is_added = database->AddPoints(steam_id, amount);
 		if (!is_added)
 		{
 			return false;
@@ -39,23 +38,30 @@ namespace ArkShop::Points
 			return false;
 		}
 
-		const int point_count = PointsRepository::GetPoints(steam_id);
-		if (point_count >= amount)
+		const bool is_spend = database->SpendPoints(steam_id, amount);
+		if (!is_spend)
 		{
-			const bool is_spend = PointsRepository::SetPoints(steam_id, point_count - amount);
-			return is_spend;
+			return false;
 		}
-		return false;
+
+		//database->AddTotalSpent(steam_id, amount);
+
+		return true;
 	}
 
 	int GetPoints(uint64 steam_id)
 	{
-		return PointsRepository::GetPoints(steam_id);
+		return database->GetPoints(steam_id);
+	}
+
+	int GetTotalSpent(uint64 steam_id)
+	{
+		return database->GetTotalSpent(steam_id);
 	}
 
 	bool SetPoints(uint64 steam_id, int new_amount)
 	{
-		const bool is_spend = PointsRepository::SetPoints(steam_id, new_amount);
+		const bool is_spend = database->SetPoints(steam_id, new_amount);
 		return is_spend;
 	}
 
@@ -102,7 +108,7 @@ namespace ArkShop::Points
 				}
 
 				TArray<AShooterPlayerController*> receiver_players = ArkApi::GetApiUtils().
-					FindPlayerFromCharacterName(receiver_name, ESearchCase::CaseSensitive, true);
+					FindPlayerFromCharacterName(receiver_name, ESearchCase::IgnoreCase, false);
 
 				if (receiver_players.Num() > 1)
 				{
@@ -337,7 +343,7 @@ namespace ArkShop::Points
 		{
 			if (parsed[1].ToString() == "confirm")
 			{
-				PointsRepository::DeleteAllPoint();
+				database->DeleteAllPoints();
 
 				ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
 				                                        "Successfully reset points");
@@ -453,5 +459,24 @@ namespace ArkShop::Points
 		commands.AddRconCommand("SetPoints", &SetPointsRcon);
 		commands.AddRconCommand("ChangePoints", &ChangePointsAmountRcon);
 		commands.AddRconCommand("GetPlayerPoints", &GetPlayerPointsRcon);
+	}
+
+	void Unload()
+	{
+		auto& commands = ArkApi::GetCommands();
+
+		commands.RemoveChatCommand(GetText("PointsCmd"));
+		commands.RemoveChatCommand(GetText("TradeCmd"));
+
+		commands.RemoveConsoleCommand("AddPoints");
+		commands.RemoveConsoleCommand("SetPoints");
+		commands.RemoveConsoleCommand("ChangePoints");
+		commands.RemoveConsoleCommand("GetPlayerPoints");
+		commands.RemoveConsoleCommand("ResetPoints");
+
+		commands.RemoveRconCommand("AddPoints");
+		commands.RemoveRconCommand("SetPoints");
+		commands.RemoveRconCommand("ChangePoints");
+		commands.RemoveRconCommand("GetPlayerPoints");
 	}
 } // namespace Points // namespace ArkShop

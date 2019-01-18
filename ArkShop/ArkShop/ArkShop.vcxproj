@@ -10,7 +10,7 @@
     <ProjectGuid>{E5774E31-613D-4A0B-AC0F-DEC680B2F16C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ArkShop</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -45,7 +45,7 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;SHOP_EXPORTS;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\ArkShop\Public</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ArkShop\Public;..\Includes</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -53,13 +53,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <DelayLoadDLLs>Permissions.dll</DelayLoadDLLs>
+      <AdditionalLibraryDirectories>..\Libs;</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Private\ArkShop.h" />
-    <ClInclude Include="Private\Database\DbManager.h" />
-    <ClInclude Include="Private\Database\KitRepository.h" />
-    <ClInclude Include="Private\Database\PointsRepository.h" />
+    <ClInclude Include="Private\Database\IDatabase.h" />
+    <ClInclude Include="Private\Database\MysqlDB.h" />
+    <ClInclude Include="Private\Database\SqlLiteDB.h" />
     <ClInclude Include="Private\json.hpp" />
     <ClInclude Include="Private\ShopLog.h" />
     <ClInclude Include="Private\Database\sqlite3.h" />
@@ -68,15 +69,13 @@
     <ClInclude Include="Private\Tools.h" />
     <ClInclude Include="Public\Base.h" />
     <ClInclude Include="Public\DBHelper.h" />
+    <ClInclude Include="Public\ITimedRewards.h" />
     <ClInclude Include="Public\Kits.h" />
     <ClInclude Include="Public\Points.h" />
     <ClInclude Include="Public\Store.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Private\ArkShop.cpp" />
-    <ClCompile Include="Private\Database\DbManager.cpp" />
-    <ClCompile Include="Private\Database\KitRepository.cpp" />
-    <ClCompile Include="Private\Database\PointsRepository.cpp" />
     <ClCompile Include="Private\DBHelper.cpp" />
     <ClCompile Include="Private\Kits.cpp" />
     <ClCompile Include="Private\Points.cpp" />

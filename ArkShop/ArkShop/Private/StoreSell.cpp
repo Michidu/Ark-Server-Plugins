@@ -253,4 +253,10 @@ namespace ArkShop::StoreSell
 		ArkApi::GetCommands().AddChatCommand(GetText("SellCmd"), &ChatSell);
 		ArkApi::GetCommands().AddChatCommand(GetText("ShopSellCmd"), &ShowItems);
 	}
+
+	void Unload()
+	{
+		ArkApi::GetCommands().RemoveChatCommand(GetText("SellCmd"));
+		ArkApi::GetCommands().RemoveChatCommand(GetText("ShopSellCmd"));
+	}
 } // namespace StoreSell // namespace ArkShop

@@ -1,14 +1,11 @@
 #include "TimedRewards.h"
 
 #include <Permissions.h>
-#include <Points.h>
 
 namespace ArkShop
 {
 	TimedRewards::TimedRewards()
 	{
-		points_interval_ = config["General"]["TimedPointsReward"]["Interval"];
-
 		ArkApi::GetCommands().AddOnTimerCallback("RewardTimer", std::bind(&TimedRewards::RewardTimer, this));
 	}
 
@@ -18,54 +15,41 @@ namespace ArkShop
 		return instance;
 	}
 
-	void TimedRewards::AddPlayer(uint64 steam_id)
+	void TimedRewards::AddTask(const FString& id, uint64 steam_id, const std::function<void()>& reward_callback,
+	                           int interval)
 	{
-		const auto iter = std::find_if(
-			online_players_.begin(), online_players_.end(),
-			[steam_id](const std::shared_ptr<OnlinePlayersData>& data) -> bool { return data->steam_id == steam_id; });
-
-		if (iter != online_players_.end())
-		{
-			return;
-		}
-
-		const int interval = points_interval_;
-
 		const auto now = std::chrono::system_clock::now();
 		const auto next_time = now + std::chrono::minutes(interval);
 
-		auto groups_map = config["General"]["TimedPointsReward"]["Groups"];
+		const auto iter = std::find_if(online_players_.begin(), online_players_.end(),
+		                               [steam_id](const std::shared_ptr<OnlinePlayersData>& data) -> bool
+		                               {
+			                               return data->steam_id == steam_id;
+		                               });
 
-		int points_amount = groups_map["Default"].value("Amount", 0);
-
-		for (auto group_iter = groups_map.begin(); group_iter != groups_map.end(); ++group_iter)
+		if (iter != online_players_.end())
 		{
-			const FString group_name(group_iter.key().c_str());
-			if (group_name == L"Default")
+			const auto iter2 = (*iter)->reward_callbacks.FindByPredicate([&id](const auto& data) -> bool
 			{
-				continue;
-			}
-
-			if (Permissions::IsPlayerInGroup(steam_id, group_name))
-			{
-				points_amount = group_iter.value().value("Amount", 0);
-				break;
-			}
+				return data.id == id;
+			});
+			if (!iter2)
+				(*iter)->reward_callbacks.Add({id, reward_callback, next_time, interval});
 		}
-
-		if (points_amount == 0)
+		else
 		{
-			return;
+			online_players_.push_back(
+				std::make_shared<OnlinePlayersData>(steam_id, id, reward_callback, next_time, interval));
 		}
-
-		online_players_.push_back(std::make_shared<OnlinePlayersData>(steam_id, points_amount, next_time));
 	}
 
 	void TimedRewards::RemovePlayer(uint64 steam_id)
 	{
-		const auto iter = std::find_if(
-			online_players_.begin(), online_players_.end(),
-			[steam_id](const std::shared_ptr<OnlinePlayersData>& data) -> bool { return data->steam_id == steam_id; });
+		const auto iter = std::find_if(online_players_.begin(), online_players_.end(),
+		                               [steam_id](const std::shared_ptr<OnlinePlayersData>& data) -> bool
+		                               {
+			                               return data->steam_id == steam_id;
+		                               });
 
 		if (iter != online_players_.end())
 		{
@@ -80,15 +64,22 @@ namespace ArkShop
 
 		for (const auto& data : online_players_)
 		{
-			const auto next_time = data->next_reward_time;
-			auto diff = std::chrono::duration_cast<std::chrono::seconds>(next_time - now);
-
-			if (diff.count() <= 0)
+			for (auto& reward_data : data->reward_callbacks)
 			{
-				data->next_reward_time = now + std::chrono::minutes(points_interval_);
+				const auto next_time = reward_data.next_reward_time;
+				if (now >= next_time)
+				{
+					reward_data.next_reward_time = now + std::chrono::minutes(reward_data.interval);
 
-				Points::AddPoints(data->points_amount, data->steam_id);
+					reward_data.reward_callback();
+				}
 			}
 		}
+	}
+
+	// Free function
+	ITimedRewards& GetTimedRewards()
+	{
+		return TimedRewards::Get();
 	}
 } // namespace ArkShop

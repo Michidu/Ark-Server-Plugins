@@ -139,7 +139,6 @@ namespace ArkShop::Store
 		return success;
 	}
 
-
 	/**
 	* \brief Buy a dino from shop
 	*/
@@ -248,13 +247,8 @@ namespace ArkShop::Store
 	}
 
 	bool Buy(AShooterPlayerController* player_controller, const FString& item_id, int amount)
-	{		
+	{
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
-		{
-			return false;
-		}
-
-		if (!IsStoreEnabled(player_controller))
 		{
 			return false;
 		}
@@ -325,7 +319,7 @@ namespace ArkShop::Store
 
 			if (success)
 			{
-				const std::wstring log = fmt::format(TEXT("{}({}) bought item \"{}\". Amount - {}"),
+				const std::wstring log = fmt::format(L"{}({}) bought item \"{}\". Amount - {}",
 				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
 				                                     *item_id, amount);
 
@@ -340,6 +334,11 @@ namespace ArkShop::Store
 
 	void ChatBuy(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
+		if (!IsStoreEnabled(player_controller))
+		{
+			return;
+		}
+
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);
 
@@ -353,9 +352,8 @@ namespace ArkShop::Store
 				{
 					amount = std::stoi(*parsed[2]);
 				}
-				catch (const std::exception& exception)
+				catch (const std::exception&)
 				{
-					Log::GetLog()->warn("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
 					return;
 				}
 			}
@@ -467,9 +465,9 @@ namespace ArkShop::Store
 		return ArkShop::IsStoreEnabled(player_controller);
 	}
 
-	void ToogleStore(bool Enabled, const FString& Reason)
+	void ToogleStore(bool enabled, const FString& reason)
 	{
-		ArkShop::ToogleStore(Enabled, Reason);
+		ArkShop::ToogleStore(enabled, reason);
 	}
 
 	void Init()
@@ -478,5 +476,13 @@ namespace ArkShop::Store
 
 		commands.AddChatCommand(GetText("BuyCmd"), &ChatBuy);
 		commands.AddChatCommand(GetText("ShopCmd"), &ShowItems);
+	}
+
+	void Unload()
+	{
+		auto& commands = ArkApi::GetCommands();
+
+		commands.RemoveChatCommand(GetText("BuyCmd"));
+		commands.RemoveChatCommand(GetText("ShopCmd"));
 	}
 } // namespace Store // namespace ArkShop

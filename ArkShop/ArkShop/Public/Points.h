@@ -5,6 +5,7 @@
 namespace ArkShop::Points
 {
 	void Init();
+	void Unload();
 
 	/**
 	* \brief Add points to the specific player
@@ -28,6 +29,8 @@ namespace ArkShop::Points
 	* \return Amount of points the player has
 	*/
 	SHOP_API int GetPoints(uint64 steam_id);
+
+	int GetTotalSpent(uint64 steam_id);
 
 	/**
 	* \brief Change points amount for the specific player

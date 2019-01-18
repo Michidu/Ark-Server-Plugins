@@ -1,16 +1,15 @@
 #pragma once
 
 #include <chrono>
+#include "ITimedRewards.h"
+
+#include <utility>
 
 #include "ArkShop.h"
-#include "Base.h"
 
 namespace ArkShop
 {
-	/**
-	 * \brief Added players will be receiving points every n minutes
-	 */
-	class TimedRewards
+	class TimedRewards : public ITimedRewards
 	{
 	public:
 		static TimedRewards& Get();
@@ -20,23 +19,30 @@ namespace ArkShop
 		TimedRewards& operator=(const TimedRewards&) = delete;
 		TimedRewards& operator=(TimedRewards&&) = delete;
 
-		void AddPlayer(uint64 steam_id);
+		void AddTask(const FString& id, uint64 steam_id, const std::function<void()>& reward_callback,
+		             int interval) override;
 		void RemovePlayer(uint64 steam_id);
 
 	private:
+		struct RewardData
+		{
+			FString id;
+			std::function<void()> reward_callback;
+			std::chrono::time_point<std::chrono::system_clock> next_reward_time;
+			int interval;
+		};
+
 		struct OnlinePlayersData
 		{
-			OnlinePlayersData(uint64 steam_id, int points_amount,
-			                  const std::chrono::time_point<std::chrono::system_clock>& next_reward_time)
-				: steam_id(steam_id),
-				  points_amount(points_amount),
-				  next_reward_time(next_reward_time)
+			OnlinePlayersData(uint64 steam_id, const FString& id, std::function<void()> reward_callback,
+			                  const std::chrono::time_point<std::chrono::system_clock>& next_reward_time, int interval)
+				: steam_id(steam_id)
 			{
+				reward_callbacks.Add({id, std::move(reward_callback), next_reward_time, interval});
 			}
 
 			uint64 steam_id;
-			int points_amount;
-			std::chrono::time_point<std::chrono::system_clock> next_reward_time;
+			TArray<RewardData> reward_callbacks;
 		};
 
 		TimedRewards();
@@ -44,7 +50,6 @@ namespace ArkShop
 
 		void RewardTimer();
 
-		int points_interval_;
 		std::vector<std::shared_ptr<OnlinePlayersData>> online_players_;
 	};
 } // namespace ArkShop

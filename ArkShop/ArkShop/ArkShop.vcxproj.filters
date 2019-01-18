@@ -48,13 +48,16 @@
     <ClInclude Include="Private\Database\sqlite3.h">
       <Filter>Private\Database</Filter>
     </ClInclude>
-    <ClInclude Include="Private\Database\DbManager.h">
+    <ClInclude Include="Private\Database\IDatabase.h">
       <Filter>Private\Database</Filter>
     </ClInclude>
-    <ClInclude Include="Private\Database\KitRepository.h">
+    <ClInclude Include="Private\Database\SqlLiteDB.h">
       <Filter>Private\Database</Filter>
     </ClInclude>
-    <ClInclude Include="Private\Database\PointsRepository.h">
+    <ClInclude Include="Public\ITimedRewards.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\MysqlDB.h">
       <Filter>Private\Database</Filter>
     </ClInclude>
   </ItemGroup>
@@ -81,16 +84,7 @@
       <Filter>Private\Database</Filter>
     </ClCompile>
     <ClCompile Include="Private\DBHelper.cpp">
-      <Filter>Private\Database</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Database\DbManager.cpp">
-      <Filter>Private\Database</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Database\KitRepository.cpp">
-      <Filter>Private\Database</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\Database\PointsRepository.cpp">
-      <Filter>Private\Database</Filter>
+      <Filter>Private</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

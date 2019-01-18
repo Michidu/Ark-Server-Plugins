@@ -5,6 +5,7 @@
 namespace ArkShop::Kits
 {
 	void Init();
+	void Unload();
 
 	/**
 	* \brief Adds or reduces kits of the specific player

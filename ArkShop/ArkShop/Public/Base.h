@@ -9,3 +9,7 @@
 #else
 #define SHOP_API __declspec(dllimport)
 #endif
+
+namespace ArkShop
+{
+}

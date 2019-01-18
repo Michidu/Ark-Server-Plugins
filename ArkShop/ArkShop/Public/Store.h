@@ -5,6 +5,7 @@
 namespace ArkShop::Store
 {
 	void Init();
+	void Unload();
 
 	/**
 	 * \brief Buys an item from shop for specific player
@@ -14,7 +15,7 @@ namespace ArkShop::Store
 	 * \return True if success, false otherwise
 	 */
 	SHOP_API bool Buy(AShooterPlayerController* player_controller, const FString& item_id, int amount);
-	SHOP_API bool IsStoreEnabled(AShooterPlayerController* player_controller);
-	SHOP_API void ToogleStore(bool Enabled, const FString& Reason = "");
 
+	SHOP_API bool IsStoreEnabled(AShooterPlayerController* player_controller);
+	SHOP_API void ToogleStore(bool enabled, const FString& reason = "");
 } // namespace Store // namespace ArkShop

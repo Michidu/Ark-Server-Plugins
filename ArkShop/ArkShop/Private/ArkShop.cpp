@@ -1,26 +1,31 @@
+#include "Database/MysqlDB.h"
+#include "Database/SqlLiteDB.h"
+
 #include "ArkShop.h"
 
 #include <fstream>
 
+#include <Permissions.h>
 #include <DBHelper.h>
 #include <Kits.h>
 #include <Points.h>
 #include <Store.h>
 
 #include "StoreSell.h"
-
 #include "TimedRewards.h"
-#include "Database/DbManager.h"
-
 
 #pragma comment(lib, "ArkApi.lib")
 #pragma comment(lib, "Permissions.lib")
 
-nlohmann::json ArkShop::config;
-
 DECLARE_HOOK(AShooterGameMode_HandleNewPlayer, bool, AShooterGameMode*, AShooterPlayerController*, UPrimalPlayerData*,
-	AShooterCharacter*, bool);
+AShooterCharacter*, bool);
 DECLARE_HOOK(AShooterGameMode_Logout, void, AShooterGameMode*, AController*);
+DECLARE_HOOK(URCONServer_Init, bool, URCONServer *, FString, int, UShooterCheatManager *);
+DECLARE_HOOK(AShooterPlayerController_GridTravelToLocalPos, void, AShooterPlayerController*, unsigned __int16, unsigned
+__int16, FVector *);
+
+FString closed_store_reason;
+bool store_enabled = true;
 
 bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlayerController* new_player,
                                            UPrimalPlayerData* player_data, AShooterCharacter* player_character,
@@ -30,25 +35,54 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 
 	if (!ArkShop::DBHelper::IsPlayerExists(steam_id))
 	{
-		const bool is_added = ArkShop::DbManager::TryAddNewPlayer(steam_id);
+		const bool is_added = ArkShop::database->TryAddNewPlayer(steam_id);
 		if (!is_added)
 		{
 			return AShooterGameMode_HandleNewPlayer_original(_this, new_player, player_data, player_character,
-				is_from_login);
+			                                                 is_from_login);
 		}
 	}
-
-	// Add new player to the online list
 
 	const bool rewards_enabled = ArkShop::config["General"]["TimedPointsReward"]["Enabled"];
 	if (rewards_enabled)
 	{
-		ArkShop::TimedRewards::Get().AddPlayer(steam_id);
-	}
+		const int interval = ArkShop::config["General"]["TimedPointsReward"]["Interval"];
 
+		ArkShop::TimedRewards::Get().AddTask(
+			FString::Format("Points_{}", steam_id), steam_id, [steam_id]()
+			{
+				auto groups_map = ArkShop::config["General"]["TimedPointsReward"]
+					["Groups"];
+
+				int points_amount = groups_map["Default"].value("Amount", 0);
+
+				for (auto group_iter = groups_map.begin(); group_iter != groups_map.
+				     end(); ++group_iter)
+				{
+					const FString group_name(group_iter.key().c_str());
+					if (group_name == L"Default")
+					{
+						continue;
+					}
+
+					if (Permissions::IsPlayerInGroup(steam_id, group_name))
+					{
+						points_amount = group_iter.value().value("Amount", 0);
+						break;
+					}
+				}
+
+				if (points_amount == 0)
+				{
+					return;
+				}
+
+				ArkShop::Points::AddPoints(points_amount, steam_id);
+			},
+			interval);
+	}
 	return AShooterGameMode_HandleNewPlayer_original(_this, new_player, player_data, player_character, is_from_login);
 }
-
 
 void Hook_AShooterGameMode_Logout(AShooterGameMode* _this, AController* exiting)
 {
@@ -56,40 +90,35 @@ void Hook_AShooterGameMode_Logout(AShooterGameMode* _this, AController* exiting)
 
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(exiting);
 
-	const bool rewards_enabled = ArkShop::config["General"]["TimedPointsReward"]["Enabled"];
-	if (rewards_enabled)
-	{
-		ArkShop::TimedRewards::Get().RemovePlayer(steam_id);
-	}
+	ArkShop::TimedRewards::Get().RemovePlayer(steam_id);
 
 	AShooterGameMode_Logout_original(_this, exiting);
 }
-FString ClosedStoreReason;
-bool StoreEnabled = true;
+
+FString ArkShop::GetText(const std::string& str)
+{
+	return FString(ArkApi::Tools::Utf8Decode(config["Messages"].value(str, "No message")));
+}
+
 bool ArkShop::IsStoreEnabled(AShooterPlayerController* player_controller)
 {
-	if (!StoreEnabled)
+	if (!store_enabled)
 	{
-		ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"), *ClosedStoreReason);
+		ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"), *closed_store_reason);
 		return false;
 	}
 	return true;
 }
 
-void ArkShop::ToogleStore(bool Enabled, const FString& Reason)
+void ArkShop::ToogleStore(bool enabled, const FString& reason)
 {
-	StoreEnabled = Enabled;
-	ClosedStoreReason = Reason;
-}
-
-FString ArkShop::GetText(const std::string& str)
-{
-	return FString(ArkApi::Tools::Utf8Decode(config["Messages"].value(str, "No message")).c_str());
+	store_enabled = enabled;
+	closed_store_reason = reason;
 }
 
 void ReadConfig()
 {
-	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/config.json";
+	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/AtlasApi/Plugins/AtlasShop/config.json";
 	std::ifstream file{config_path};
 	if (!file.is_open())
 	{
@@ -155,7 +184,7 @@ void ShowHelp(AShooterPlayerController* player_controller, FString* /*unused*/, 
 
 void Load()
 {
-	Log::Get().Init("ArkShop");
+	Log::Get().Init("AtlasShop");
 
 	try
 	{
@@ -167,7 +196,21 @@ void Load()
 		throw;
 	}
 
-	ArkShop::DbManager::CreateDatabase();
+	const auto& mysql_conf = ArkShop::config["Mysql"];
+
+	const bool use_mysql = mysql_conf["UseMysql"];
+	if (use_mysql)
+	{
+		ArkShop::database = std::make_unique<MySql>(mysql_conf.value("MysqlHost", ""),
+		                                            mysql_conf.value("MysqlUser", ""),
+		                                            mysql_conf.value("MysqlPass", ""),
+		                                            mysql_conf.value("MysqlDB", ""));
+	}
+	else
+	{
+		const std::string db_path = ArkShop::config["General"]["DbPathOverride"];
+		ArkShop::database = std::make_unique<SqlLite>(db_path);
+	}
 
 	ArkShop::Points::Init();
 	ArkShop::Store::Init();
@@ -186,8 +229,30 @@ void Load()
 	ArkApi::GetHooks().SetHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout,
 	                           &AShooterGameMode_Logout_original);
 
-	ArkApi::GetCommands().AddConsoleCommand("ArkShop.Reload", &ReloadConfig);
-	ArkApi::GetCommands().AddRconCommand("ArkShop.Reload", &ReloadConfigRcon);
+	ArkApi::GetCommands().AddConsoleCommand("AtlasShop.Reload", &ReloadConfig);
+	ArkApi::GetCommands().AddRconCommand("AtlasShop.Reload", &ReloadConfigRcon);
+}
+
+void Unload()
+{
+	const FString help = ArkShop::GetText("HelpCmd");
+	if (help != ArkApi::Tools::Utf8Decode("No message").c_str())
+	{
+		ArkApi::GetCommands().RemoveChatCommand(help);
+	}
+
+	ArkApi::GetHooks().DisableHook("AShooterGameMode.HandleNewPlayer_Implementation",
+	                               &Hook_AShooterGameMode_HandleNewPlayer);
+	ArkApi::GetHooks().DisableHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout);
+
+	ArkApi::GetCommands().RemoveConsoleCommand("AtlasShop.Reload");
+	ArkApi::GetCommands().RemoveRconCommand("AtlasShop.Reload");
+
+	ArkShop::Points::Unload();
+	ArkShop::Store::Unload();
+	ArkShop::Kits::Unload();
+
+	ArkShop::StoreSell::Unload();
 }
 
 BOOL APIENTRY DllMain(HMODULE /*hModule*/, DWORD ul_reason_for_call, LPVOID /*lpReserved*/)
@@ -198,6 +263,7 @@ BOOL APIENTRY DllMain(HMODULE /*hModule*/, DWORD ul_reason_for_call, LPVOID /*lp
 		Load();
 		break;
 	case DLL_PROCESS_DETACH:
+		Unload();
 		break;
 	}
 	return TRUE;
