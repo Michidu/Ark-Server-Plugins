@@ -12,7 +12,7 @@ class SqlLite : public IDatabase
 public:
 	explicit SqlLite(const std::string& path)
 		: db_(path.empty()
-			      ? ArkApi::Tools::GetCurrentDir() + "/AtlasApi/Plugins/AtlasShop/AtlasShop.db"
+			      ? ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/ArkShop.db"
 			      : path)
 	{
 		try

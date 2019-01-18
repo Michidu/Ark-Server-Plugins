@@ -118,7 +118,7 @@ void ArkShop::ToogleStore(bool enabled, const FString& reason)
 
 void ReadConfig()
 {
-	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/AtlasApi/Plugins/AtlasShop/config.json";
+	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/config.json";
 	std::ifstream file{config_path};
 	if (!file.is_open())
 	{
@@ -184,7 +184,7 @@ void ShowHelp(AShooterPlayerController* player_controller, FString* /*unused*/, 
 
 void Load()
 {
-	Log::Get().Init("AtlasShop");
+	Log::Get().Init("ArkShop");
 
 	try
 	{
@@ -229,8 +229,8 @@ void Load()
 	ArkApi::GetHooks().SetHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout,
 	                           &AShooterGameMode_Logout_original);
 
-	ArkApi::GetCommands().AddConsoleCommand("AtlasShop.Reload", &ReloadConfig);
-	ArkApi::GetCommands().AddRconCommand("AtlasShop.Reload", &ReloadConfigRcon);
+	ArkApi::GetCommands().AddConsoleCommand("ArkShop.Reload", &ReloadConfig);
+	ArkApi::GetCommands().AddRconCommand("ArkShop.Reload", &ReloadConfigRcon);
 }
 
 void Unload()
@@ -245,8 +245,8 @@ void Unload()
 	                               &Hook_AShooterGameMode_HandleNewPlayer);
 	ArkApi::GetHooks().DisableHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout);
 
-	ArkApi::GetCommands().RemoveConsoleCommand("AtlasShop.Reload");
-	ArkApi::GetCommands().RemoveRconCommand("AtlasShop.Reload");
+	ArkApi::GetCommands().RemoveConsoleCommand("ArkShop.Reload");
+	ArkApi::GetCommands().RemoveRconCommand("ArkShop.Reload");
 
 	ArkShop::Points::Unload();
 	ArkShop::Store::Unload();
