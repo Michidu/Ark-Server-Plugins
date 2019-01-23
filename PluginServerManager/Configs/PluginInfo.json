@@ -1,0 +1,6 @@
+{
+  "FullName":"Plugin Server Manager",
+  "Description":"Automatic save & restart after crash",
+  "Version":1.0,
+  "MinApiVersion":2.9
+}
