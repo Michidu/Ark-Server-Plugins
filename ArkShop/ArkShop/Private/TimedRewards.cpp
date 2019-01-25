@@ -1,6 +1,6 @@
 #include "TimedRewards.h"
 
-#include <Permissions.h>
+#include <ArkPermissions.h>
 
 namespace ArkShop
 {
