@@ -2,4 +2,9 @@
 
 #include "Database/IDatabase.h"
 
-extern IDatabase* database;
+namespace Permissions
+{
+	inline std::unique_ptr<IDatabase> database;
+
+	std::string GetDbPath();
+}

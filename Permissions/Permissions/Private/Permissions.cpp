@@ -1,4 +1,8 @@
-#include "../Public/Permissions.h"
+#ifdef PERMISSIONS_ARK
+#include "../Public/ArkPermissions.h"
+#else
+#include "../Public/AtlasPermissions.h"
+#endif
 
 #include "Main.h"
 
@@ -15,7 +19,7 @@ namespace Permissions
 			return {};
 		return database->GetGroupPermissions(group);
 	}
-	
+
 	TArray<FString> GetAllGroups()
 	{
 		return database->GetAllGroups();
@@ -28,7 +32,15 @@ namespace Permissions
 
 	bool IsPlayerInGroup(uint64 steam_id, const FString& group)
 	{
-		return database->IsPlayerInGroup(steam_id, group);
+		TArray<FString> groups = GetPlayerGroups(steam_id);
+
+		for (const auto& current_group : groups)
+		{
+			if (current_group == group)
+				return true;
+		}
+
+		return false;
 	}
 
 	std::optional<std::string> AddPlayerToGroup(uint64 steam_id, const FString& group)
@@ -53,12 +65,32 @@ namespace Permissions
 
 	bool IsGroupHasPermission(const FString& group, const FString& permission)
 	{
-		return database->IsGroupHasPermission(group, permission);
+		if (!database->IsGroupExists(group))
+			return false;
+
+		TArray<FString> permissions = GetGroupPermissions(group);
+
+		for (const auto& current_perm : permissions)
+		{
+			Log::GetLog()->info(current_perm.ToString());
+			if (current_perm == permission)
+				return true;
+		}
+
+		return false;
 	}
 
 	bool IsPlayerHasPermission(uint64 steam_id, const FString& permission)
 	{
-		return database->IsPlayerHasPermission(steam_id, permission);
+		TArray<FString> groups = GetPlayerGroups(steam_id);
+
+		for (const auto& current_group : groups)
+		{
+			if (IsGroupHasPermission(current_group, permission) || IsGroupHasPermission(current_group, "*"))
+				return true;
+		}
+
+		return false;
 	}
 
 	std::optional<std::string> GroupGrantPermission(const FString& group, const FString& permission)

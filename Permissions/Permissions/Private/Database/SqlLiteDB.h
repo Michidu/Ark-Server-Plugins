@@ -3,13 +3,14 @@
 #include <SQLiteCpp/Database.h>
 
 #include "IDatabase.h"
+#include "../Main.h"
 
 class SqlLite : public IDatabase
 {
 public:
 	explicit SqlLite(const std::string& path)
 		: db_(path.empty()
-			      ? ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/Permissions/ArkDB.db"
+			      ? Permissions::GetDbPath()
 			      : path, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE)
 	{
 		try
@@ -42,17 +43,20 @@ public:
 		}
 	}
 
-	void AddPlayer(uint64 steam_id) override
+	bool AddPlayer(uint64 steam_id) override
 	{
 		try
 		{
 			SQLite::Statement query(db_, "INSERT INTO Players (SteamId) VALUES (?);");
 			query.bind(1, static_cast<int64>(steam_id));
 			query.exec();
+
+			return true;
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+			return false;
 		}
 	}
 
@@ -98,19 +102,6 @@ public:
 		return count != 0;
 	}
 
-	bool IsPlayerInGroup(uint64 steam_id, const FString& group) override
-	{
-		TArray<FString> groups = GetPlayerGroups(steam_id);
-
-		for (const auto& current_group : groups)
-		{
-			if (current_group == group)
-				return true;
-		}
-
-		return false;
-	}
-
 	TArray<FString> GetPlayerGroups(uint64 steam_id) override
 	{
 		TArray<FString> groups;
@@ -119,13 +110,14 @@ public:
 		{
 			SQLite::Statement query(db_, "SELECT Groups FROM Players WHERE SteamId = ?;");
 			query.bind(1, static_cast<int64>(steam_id));
-			query.executeStep();
+			if (query.executeStep())
+			{
+				std::string groups_str = query.getColumn(0);
 
-			std::string groups_str = query.getColumn(0);
+				FString groups_fstr(groups_str.c_str());
 
-			FString groups_fstr(groups_str.c_str());
-
-			groups_fstr.ParseIntoArray(groups, L",", true);
+				groups_fstr.ParseIntoArray(groups, L",", true);
+			}
 		}
 		catch (const std::exception& exception)
 		{
@@ -192,7 +184,7 @@ public:
 			while (query.executeStep())
 			{
 				uint64 steam_id = static_cast<uint64>(query.getColumn(0).getInt64());
-				if (IsPlayerInGroup(steam_id, group))
+				if (Permissions::IsPlayerInGroup(steam_id, group))
 					members.Add(steam_id);
 			}
 		}
@@ -209,7 +201,7 @@ public:
 		if (!IsPlayerExists(steam_id) || !IsGroupExists(group))
 			return "Player or group does not exist";
 
-		if (IsPlayerInGroup(steam_id, group))
+		if (Permissions::IsPlayerInGroup(steam_id, group))
 			return "Player was already added";
 
 		try
@@ -233,7 +225,7 @@ public:
 		if (!IsPlayerExists(steam_id) || !IsGroupExists(group))
 			return "Player or group does not exist";
 
-		if (!IsPlayerInGroup(steam_id, group))
+		if (!Permissions::IsPlayerInGroup(steam_id, group))
 			return "Player is not in group";
 
 		TArray<FString> groups = GetPlayerGroups(steam_id);
@@ -312,46 +304,18 @@ public:
 		return {};
 	}
 
-	bool IsGroupHasPermission(const FString& group, const FString& permission) override
-	{
-		if (!IsGroupExists(group))
-			return false;
-
-		TArray<FString> permissions = GetGroupPermissions(group);
-
-		for (const auto& current_perm : permissions)
-		{
-			if (current_perm == permission)
-				return true;
-		}
-
-		return false;
-	}
-
-	bool IsPlayerHasPermission(uint64 steam_id, const FString& permission) override
-	{
-		TArray<FString> groups = GetPlayerGroups(steam_id);
-
-		for (const auto& current_group : groups)
-		{
-			if (IsGroupHasPermission(current_group, permission) || IsGroupHasPermission(current_group, "*"))
-				return true;
-		}
-
-		return false;
-	}
-
 	std::optional<std::string> GroupGrantPermission(const FString& group, const FString& permission) override
 	{
 		if (!IsGroupExists(group))
 			return "Group does not exist";
 
-		if (IsGroupHasPermission(group, permission))
+		if (Permissions::IsGroupHasPermission(group, permission))
 			return "Group already has this permission";
 
 		try
 		{
-			SQLite::Statement query(db_, "UPDATE Groups SET Permissions = Permissions || ? || ',' WHERE GroupName = ?;");
+			SQLite::Statement
+				query(db_, "UPDATE Groups SET Permissions = Permissions || ? || ',' WHERE GroupName = ?;");
 			query.bind(1, permission.ToString());
 			query.bind(2, group.ToString());
 			query.exec();
@@ -370,7 +334,7 @@ public:
 		if (!IsGroupExists(group))
 			return "Group does not exist";
 
-		if (!IsGroupHasPermission(group, permission))
+		if (!Permissions::IsGroupHasPermission(group, permission))
 			return "Group does not have this permission";
 
 		TArray<FString> permissions = GetGroupPermissions(group);

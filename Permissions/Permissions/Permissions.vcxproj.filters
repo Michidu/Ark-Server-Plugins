@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Public\Permissions.h">
-      <Filter>Public</Filter>
-    </ClInclude>
     <ClInclude Include="Private\Main.h">
       <Filter>Private</Filter>
     </ClInclude>
@@ -36,8 +33,17 @@
     <ClInclude Include="Private\Database\MysqlDB.h">
       <Filter>Private\Database</Filter>
     </ClInclude>
-    <ClInclude Include="Private\Database\MysqlDBObj.h">
-      <Filter>Private\Database</Filter>
+    <ClInclude Include="Private\Hooks.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Helper.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\ArkPermissions.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\AtlasPermissions.h">
+      <Filter>Public</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="Private\SQLiteCpp\Transaction.cpp">
       <Filter>Private\Sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Hooks.cpp">
+      <Filter>Private</Filter>
     </ClCompile>
     <ClCompile Include="..\Includes\sqlite3\sqlite3.c">
       <Filter>Private\Sqlite</Filter>
