@@ -72,7 +72,6 @@ namespace Permissions
 
 		for (const auto& current_perm : permissions)
 		{
-			Log::GetLog()->info(current_perm.ToString());
 			if (current_perm == permission)
 				return true;
 		}
