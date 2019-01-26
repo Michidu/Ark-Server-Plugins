@@ -7,11 +7,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlternativeCommands", "Alte
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Release|x64 = Release|x64
+		Ark|x64 = Ark|x64
+		Atlas|x64 = Atlas|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{92501F2B-D4B9-4AAE-9977-380C94170D53}.Release|x64.ActiveCfg = Release|x64
-		{92501F2B-D4B9-4AAE-9977-380C94170D53}.Release|x64.Build.0 = Release|x64
+		{92501F2B-D4B9-4AAE-9977-380C94170D53}.Ark|x64.ActiveCfg = Ark|x64
+		{92501F2B-D4B9-4AAE-9977-380C94170D53}.Ark|x64.Build.0 = Ark|x64
+		{92501F2B-D4B9-4AAE-9977-380C94170D53}.Atlas|x64.ActiveCfg = Atlas|x64
+		{92501F2B-D4B9-4AAE-9977-380C94170D53}.Atlas|x64.Build.0 = Atlas|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
