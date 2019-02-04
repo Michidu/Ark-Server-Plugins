@@ -1,12 +1,10 @@
-#include <API/ARK/Ark.h>
+#include "Helper.h"
 
+#ifdef RCON_ARK
 #pragma comment(lib, "ArkApi.lib")
-
-void SendRconReply(RCONClientConnection* rcon_connection, int packet_id, const FString& msg)
-{
-	FString reply = msg + "\n";
-	rcon_connection->SendMessageW(packet_id, 0, &reply);
-}
+#else
+#pragma comment(lib, "AtlasApi.lib")
+#endif
 
 void GiveItemNum(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
 {
@@ -54,7 +52,7 @@ void GiveItemNum(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet,
 	}
 }
 
-void GiveItem(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
+void GiveItemCmd(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld*)
 {
 	FString msg = rcon_packet->Body;
 
@@ -90,8 +88,7 @@ void GiveItem(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UW
 			return;
 		}
 
-		TArray<UPrimalItem*> out_items;
-		const bool result = shooter_pc->GiveItem(&out_items, &blueprint, quantity, quality, force_bp, false);
+		const bool result = GiveItem(shooter_pc, &blueprint, quantity, quality, force_bp);
 
 		SendRconReply(rcon_connection, rcon_packet->Id, result ? "Successfully gave items" : "Request has failed");
 	}
@@ -133,8 +130,7 @@ void GiveItemToAll(RCONClientConnection* rcon_connection, RCONPacket* rcon_packe
 		{
 			AShooterPlayerController* shooter_pc = static_cast<AShooterPlayerController*>(player_controller.Get());
 
-			TArray<UPrimalItem*> out_items;
-			shooter_pc->GiveItem(&out_items, &blueprint, quantity, quality, force_bp, false);
+			GiveItem(shooter_pc, &blueprint, quantity, quality, force_bp);
 		}
 
 		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully gave items");
@@ -388,7 +384,7 @@ void TeleportToPlayer(RCONClientConnection* rcon_connection, RCONPacket* rcon_pa
 			return;
 		}
 
-		std::optional<FString> result = ArkApi::IApiUtils::TeleportToPlayer(shooter_pc, shooter_pc2, false);
+		std::optional<FString> result = ArkApi::IApiUtils::TeleportToPlayer(shooter_pc, shooter_pc2, false, -1);
 
 		SendRconReply(rcon_connection, rcon_packet->Id, result.value_or("Successfully teleported player"));
 	}
@@ -428,7 +424,7 @@ void ListPlayerDinos(RCONClientConnection* rcon_connection, RCONPacket* rcon_pac
 
 		TArray<AActor*> found_actors;
 		UGameplayStatics::GetAllActorsOfClass(reinterpret_cast<UObject*>(ArkApi::GetApiUtils().GetWorld()),
-		                                      APrimalDinoCharacter::GetPrivateStaticClass(), &found_actors);
+		                                      APrimalDinoCharacter::StaticClass(), &found_actors);
 
 		const int player_team = shooter_pc->TargetingTeamField();
 
@@ -446,7 +442,8 @@ void ListPlayerDinos(RCONClientConnection* rcon_connection, RCONPacket* rcon_pac
 				FString dino_name;
 				dino->GetDinoDescriptiveName(&dino_name);
 
-				reply += FString::Format(TEXT("{}, ID1={}, ID2={}\n"), *dino_name, dino->DinoID1Field(), dino->DinoID2Field());
+				reply += FString::Format(TEXT("{}, ID1={}, ID2={}\n"), *dino_name, dino->DinoID1Field(),
+				                         dino->DinoID2Field());
 			}
 		}
 
@@ -535,7 +532,7 @@ void SpawnDino(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, U
 		const FString blueprint = parsed[2];
 		FVector location{x, y, z};
 
-		ArkApi::GetApiUtils().SpawnDino(shooter_pc, blueprint, &location, dino_lvl, force_tame);
+		ArkApi::GetApiUtils().SpawnDino(shooter_pc, blueprint, &location, dino_lvl, force_tame, false);
 
 		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully spawned dino");
 	}
@@ -616,8 +613,7 @@ void GetDinoPos(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, 
 			return;
 		}
 
-		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(ArkApi::GetApiUtils().GetWorld(), dino_id1,
-		                                                                  dino_id2);
+		APrimalDinoCharacter* dino = FindDinoWithID(dino_id1, dino_id2);
 		if (!dino)
 		{
 			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find dino");
@@ -664,8 +660,7 @@ void SetDinoPos(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, 
 			return;
 		}
 
-		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(ArkApi::GetApiUtils().GetWorld(), dino_id1,
-		                                                                  dino_id2);
+		APrimalDinoCharacter* dino = FindDinoWithID(dino_id1, dino_id2);
 		if (!dino)
 		{
 			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find dino");
@@ -696,12 +691,12 @@ void SetImprintToPlayer(RCONClientConnection* rcon_connection, RCONPacket* rcon_
 	{
 		int dino_id1;
 		int dino_id2;
-		uint64 steam_id;		
+		uint64 steam_id;
 		try
 		{
 			dino_id1 = std::stoi(*parsed[1]);
 			dino_id2 = std::stoi(*parsed[2]);
-			steam_id = std::stoull(*parsed[3]);		
+			steam_id = std::stoull(*parsed[3]);
 		}
 		catch (const std::exception&)
 		{
@@ -709,17 +704,15 @@ void SetImprintToPlayer(RCONClientConnection* rcon_connection, RCONPacket* rcon_
 			return;
 		}
 
-		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(ArkApi::GetApiUtils().GetWorld(), dino_id1,
-			dino_id2);
+		APrimalDinoCharacter* dino = FindDinoWithID(dino_id1, dino_id2);
 		if (!dino)
 		{
 			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find dino");
 			return;
 		}
 		AShooterPlayerController* shooter_pc = ArkApi::GetApiUtils().FindPlayerFromSteamId(steam_id);
-		if (!shooter_pc) 
+		if (!shooter_pc)
 		{
-
 			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find player from the given steam id");
 			return;
 		}
@@ -760,15 +753,14 @@ void SetImprintQuality(RCONClientConnection* rcon_connection, RCONPacket* rcon_p
 			return;
 		}
 
-		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(ArkApi::GetApiUtils().GetWorld(), dino_id1,
-			dino_id2);
+		APrimalDinoCharacter* dino = FindDinoWithID(dino_id1, dino_id2);
 		if (!dino)
 		{
 			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find dino");
 			return;
 		}
 		dino->UpdateImprintingQuality(quality);
-		
+
 		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully changed Imprint Quality on dino");
 	}
 	else
@@ -802,15 +794,18 @@ void AddDinoExperience(RCONClientConnection* rcon_connection, RCONPacket* rcon_p
 			return;
 		}
 
-		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(ArkApi::GetApiUtils().GetWorld(), dino_id1,
-		                                                                  dino_id2);
+		APrimalDinoCharacter* dino = FindDinoWithID(dino_id1, dino_id2);
 		if (!dino)
 		{
 			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find dino");
 			return;
 		}
 
+#ifdef RCON_ARK
 		dino->MyCharacterStatusComponentField()->AddExperience(how_much, false, EXPType::XP_GENERIC);
+#else
+		dino->MyCharacterStatusComponentField()->AddExperience(how_much, false, EXPType::XP_GENERIC, false);
+#endif
 
 		SendRconReply(rcon_connection, rcon_packet->Id, "Successfully added experience to dino");
 	}
@@ -843,8 +838,7 @@ void KillDino(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UW
 			return;
 		}
 
-		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(ArkApi::GetApiUtils().GetWorld(), dino_id1,
-		                                                                  dino_id2);
+		APrimalDinoCharacter* dino = FindDinoWithID(dino_id1, dino_id2);
 		if (!dino)
 		{
 			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find dino");
@@ -1040,8 +1034,7 @@ void DinoColor(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, U
 			return;
 		}
 
-		APrimalDinoCharacter* dino = APrimalDinoCharacter::FindDinoWithID(ArkApi::GetApiUtils().GetWorld(), dino_id1,
-		                                                                  dino_id2);
+		APrimalDinoCharacter* dino = FindDinoWithID(dino_id1, dino_id2);
 		if (!dino || dino->IsDead())
 		{
 			SendRconReply(rcon_connection, rcon_packet->Id, "Can't find dino");
@@ -1070,7 +1063,7 @@ void Load()
 	auto& commands = ArkApi::GetCommands();
 
 	commands.AddRconCommand("GiveItemNum", &GiveItemNum);
-	commands.AddRconCommand("GiveItem", &GiveItem);
+	commands.AddRconCommand("GiveItem", &GiveItemCmd);
 	commands.AddRconCommand("GiveItemToAll", &GiveItemToAll);
 	commands.AddRconCommand("AddExperience", &AddExperience);
 	commands.AddRconCommand("SetPlayerPos", &SetPlayerPos);
@@ -1085,7 +1078,7 @@ void Load()
 	commands.AddRconCommand("GetDinoPos", &GetDinoPos);
 	commands.AddRconCommand("SetDinoPos", &SetDinoPos);
 	commands.AddRconCommand("SetImprintToPlayer", &SetImprintToPlayer);
-	commands.AddRconCommand("SetImprintQuality", &SetImprintQuality);	
+	commands.AddRconCommand("SetImprintQuality", &SetImprintQuality);
 	commands.AddRconCommand("AddDinoExperience", &AddDinoExperience);
 	commands.AddRconCommand("KillDino", &KillDino);
 	commands.AddRconCommand("ClientChat", &ClientChat);
@@ -1115,7 +1108,7 @@ void Unload()
 	commands.RemoveRconCommand("GetDinoPos");
 	commands.RemoveRconCommand("SetDinoPos");
 	commands.RemoveRconCommand("SetImprintToPlayer");
-	commands.RemoveRconCommand("SetImprintQuality");	
+	commands.RemoveRconCommand("SetImprintQuality");
 	commands.RemoveRconCommand("AddDinoExperience");
 	commands.RemoveRconCommand("KillDino");
 	commands.RemoveRconCommand("ClientChat");
