@@ -424,7 +424,7 @@ void ListPlayerDinos(RCONClientConnection* rcon_connection, RCONPacket* rcon_pac
 
 		TArray<AActor*> found_actors;
 		UGameplayStatics::GetAllActorsOfClass(reinterpret_cast<UObject*>(ArkApi::GetApiUtils().GetWorld()),
-		                                      APrimalDinoCharacter::StaticClass(), &found_actors);
+		                                      APrimalDinoCharacter::GetPrivateStaticClass(), &found_actors);
 
 		const int player_team = shooter_pc->TargetingTeamField();
 
