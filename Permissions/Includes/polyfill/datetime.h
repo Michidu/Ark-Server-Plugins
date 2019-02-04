@@ -120,7 +120,7 @@ namespace daotk {
 			}
 
 			operator double() const {
-				return (double)time_t(*this) + sec - (int)sec;
+				return time_t(*this) + sec - (int)sec;
 			}
 
 		};

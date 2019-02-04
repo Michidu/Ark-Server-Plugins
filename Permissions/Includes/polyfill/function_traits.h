@@ -3,7 +3,7 @@
 #include <tuple>
 #include<type_traits>
 
-namespace sqlite {
+namespace sqlitemysql {
 	namespace utility {
 
 		template<typename> struct function_traits;
