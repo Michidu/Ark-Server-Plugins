@@ -204,6 +204,9 @@ public:
 		if (!IsGroupExists(group))
 			return  "Group does not exist";
 
+		if (Permissions::IsPlayerInGroup(steam_id, group))
+			return "Player was already added";
+
 		try
 		{
 			SQLite::Statement query(db_, "UPDATE Players SET Groups = Groups || ? || ',' WHERE SteamId = ?;");
