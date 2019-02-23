@@ -198,11 +198,11 @@ public:
 
 	std::optional<std::string> AddPlayerToGroup(uint64 steam_id, const FString& group) override
 	{
-		if (!IsPlayerExists(steam_id) || !IsGroupExists(group))
-			return "Player or group does not exist";
+		if (!IsPlayerExists(steam_id))
+			AddPlayer(steam_id);
 
-		if (Permissions::IsPlayerInGroup(steam_id, group))
-			return "Player was already added";
+		if (!IsGroupExists(group))
+			return  "Group does not exist";
 
 		try
 		{
