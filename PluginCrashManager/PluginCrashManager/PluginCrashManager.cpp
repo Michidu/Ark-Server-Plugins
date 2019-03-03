@@ -1,11 +1,19 @@
+#ifdef PLUGIN_ARK
 #include <API/ARK/Ark.h>
+#else
+#include <API/Atlas/Atlas.h>
+#endif
 
 #include <fstream>
 #include "json.hpp"
 
 #include "Helper.h"
 
+#ifdef PLUGIN_ARK
 #pragma comment(lib, "ArkApi.lib")
+#else
+#pragma comment(lib, "AtlasApi.lib")
+#endif
 
 DECLARE_HOOK(ReportCrash, int, void*);
 
@@ -13,13 +21,15 @@ nlohmann::json config;
 
 void RestartServer()
 {
+	const DWORD id = GetCurrentProcessId();
+
 	const std::wstring current_dir = ArkApi::Tools::Utf8Decode(ArkApi::Tools::GetCurrentDir());
 
 	Helper::LaunchApp(current_dir + LR"(\ShooterGameServer.exe)", GetCommandLineW());
 
 	Log::GetLog()->warn("Restarted server");
 
-	TerminateProcess(GetCurrentProcess(), 3);
+	system(fmt::format("taskkill /PID {}", id).c_str());
 }
 
 int Hook_ReportCrash(void* e)
@@ -30,18 +40,37 @@ int Hook_ReportCrash(void* e)
 	if (save_word)
 	{
 		Log::GetLog()->warn("Saving world..");
+
+#ifdef PLUGIN_ARK
 		ArkApi::GetApiUtils().GetShooterGameMode()->SaveWorld();
+#else
+		ArkApi::GetApiUtils().GetShooterGameMode()->SaveWorld(ESaveWorldType::Normal, true);
+#endif
+
 		Log::GetLog()->warn("Saved world!");
 	}
 
-	Helper::Timer(5, true, &RestartServer);
+	const bool should_restart = config.value("ShouldRestart", true);
+	if (should_restart)
+	{
+		Helper::Timer(10, true, &RestartServer);
+	}
 
 	return ReportCrash_original(e);
 }
 
+std::string GetConfigPath()
+{
+#ifdef PLUGIN_ARK
+	return ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/PluginCrashManager/config.json";
+#else
+	return ArkApi::Tools::GetCurrentDir() + "/AtlasApi/Plugins/PluginCrashManager/config.json";
+#endif
+}
+
 void ReadConfig()
 {
-	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/PluginServerManager/config.json";
+	const std::string config_path = GetConfigPath();
 	std::ifstream file{config_path};
 	if (!file.is_open())
 	{
@@ -55,7 +84,7 @@ void ReadConfig()
 
 void Load()
 {
-	Log::Get().Init("PluginServerManager");
+	Log::Get().Init("PluginCrashManager");
 
 	try
 	{

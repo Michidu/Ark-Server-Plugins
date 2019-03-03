@@ -3,15 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginServerManager", "PluginServerManager\PluginServerManager.vcxproj", "{E1710544-3666-42A1-9E87-BFF25EF7EB88}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginCrashManager", "PluginCrashManager\PluginCrashManager.vcxproj", "{E1710544-3666-42A1-9E87-BFF25EF7EB88}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Release|x64 = Release|x64
+		Ark|x64 = Ark|x64
+		Atlas|x64 = Atlas|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E1710544-3666-42A1-9E87-BFF25EF7EB88}.Release|x64.ActiveCfg = Release|x64
-		{E1710544-3666-42A1-9E87-BFF25EF7EB88}.Release|x64.Build.0 = Release|x64
+		{E1710544-3666-42A1-9E87-BFF25EF7EB88}.Ark|x64.ActiveCfg = Ark|x64
+		{E1710544-3666-42A1-9E87-BFF25EF7EB88}.Ark|x64.Build.0 = Ark|x64
+		{E1710544-3666-42A1-9E87-BFF25EF7EB88}.Atlas|x64.ActiveCfg = Atlas|x64
+		{E1710544-3666-42A1-9E87-BFF25EF7EB88}.Atlas|x64.Build.0 = Atlas|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
