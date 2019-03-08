@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2020
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AtlasShop", "AtlasShop\AtlasShop.vcxproj", "{E5774E31-613D-4A0B-AC0F-DEC680B2F16C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E5774E31-613D-4A0B-AC0F-DEC680B2F16C}.Release|x64.ActiveCfg = Release|x64
+		{E5774E31-613D-4A0B-AC0F-DEC680B2F16C}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F616F8F4-42B1-4695-AFC6-239EA6304B3E}
+	EndGlobalSection
+EndGlobal

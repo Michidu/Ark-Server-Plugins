@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Private">
+      <UniqueIdentifier>{abaf9be5-da36-4c3a-bf83-03dbf2877e54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Public">
+      <UniqueIdentifier>{f8043985-4572-4ac5-9526-d41f4c2bacf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Private\Database">
+      <UniqueIdentifier>{000d9792-63b8-4997-b1e2-7c23f45c0810}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Public\Points.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\Base.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\DBHelper.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\AtlasShop.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\json.hpp">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Tools.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\Store.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\TimedRewards.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\Kits.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\ShopLog.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\StoreSell.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\sqlite3.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\IDatabase.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\SqlLiteDB.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\ITimedRewards.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\MysqlDB.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Private\AtlasShop.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Points.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Store.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\TimedRewards.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Kits.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\StoreSell.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Database\sqlite3.c">
+      <Filter>Private\Database</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\DBHelper.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

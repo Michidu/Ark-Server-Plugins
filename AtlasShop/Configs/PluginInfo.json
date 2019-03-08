@@ -1,0 +1,10 @@
+{
+  "FullName":"Atlas Shop",
+  "Description":"Shop, Currency & Kits",
+  "Version":1.0,
+  "MinApiVersion":1.4,
+  "ResourceId":84,
+  "Dependencies":[
+    "Permissions"
+  ]
+}

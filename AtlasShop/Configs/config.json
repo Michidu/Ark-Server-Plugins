@@ -1,0 +1,248 @@
+{  
+  "Mysql":{  
+    "UseMysql":true,
+    "MysqlHost":"localhost",
+    "MysqlUser":"apitest",
+    "MysqlPass":"12345",
+    "MysqlDB":"apitest"
+  },
+  "General":{  
+    "TimedPointsReward":{  
+      "Enabled":true,
+      "Interval":5,
+      "Groups":{  
+        "Default":{  
+          "Amount":5
+        },
+        "Premiums":{  
+          "Amount":15
+        }
+      }
+    },
+    "ItemsPerPage":15,
+    "ShopDisplayTime":15.0,
+    "ShopTextSize":1.3,
+    "DbPathOverride":"",
+    "WebKey":"",
+    "DefaultKit":"vip,starter"
+  },
+  "Kits":{  
+    "starter":{  
+      "DefaultAmount":2,
+      "Price":90,
+      "Description":"Starter kit (carno with saddle)",
+      "OnlyFromSpawn":true,
+      "Items":[  
+        {  
+          "Amount":1,
+          "Quality":0,
+          "ForceBlueprint":false,
+          "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_CarnoSaddle.PrimalItemArmor_CarnoSaddle'"
+        }
+      ],
+      "Dinos":[  
+        {  
+          "Level":10,
+          "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
+        }
+      ]
+    },
+    "vip":{  
+      "DefaultAmount":1,
+      "Description":"Vip kit for premiums (ptero)",
+      "Permissions":"Admins,Premiums",
+      "Dinos":[  
+        {  
+          "Level":20,
+          "Neutered":true,
+          "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'"
+        }
+      ]
+    },
+    "tools":{  
+      "DefaultAmount":3,
+      "Price":50,
+      "MinLevel":1,
+      "MaxLevel":20,
+      "Description":"Tools kit (pike and club)",
+      "Items":[  
+        {  
+          "Amount":1,
+          "Quality":0,
+          "ForceBlueprint":false,
+          "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponPike.PrimalItem_WeaponPike'"
+        },
+        {  
+          "Amount":1,
+          "Quality":0,
+          "ForceBlueprint":false,
+          "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponStoneClub.PrimalItem_WeaponStoneClub'"
+        }
+      ]
+    }
+  },
+  "ShopItems":{  
+    "ingots100":{  
+      "Type":"item",
+      "Description":"Metal Ingot (100x)",
+      "Price":15,
+      "Items":[  
+        {  
+          "Quality":0,
+          "ForceBlueprint":false,
+          "Amount":100,
+          "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_MetalIngot.PrimalItemResource_MetalIngot'"
+        }
+      ]
+    },
+    "tools":{  
+      "Type":"item",
+      "Description":"Tools (Metal Hatchet, Metal Pick)",
+      "Price":5,
+      "Items":[  
+        {  
+          "Quality":0,
+          "ForceBlueprint":false,
+          "Amount":1,
+          "ArmorStat":400,
+          "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Leather/PrimalItemArmor_HideHelmet.PrimalItemArmor_HideHelmet'"
+        },
+        {  
+          "Quality":0,
+          "ForceBlueprint":false,
+          "Amount":1,
+          "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalPick.PrimalItem_WeaponMetalPick'"
+        }
+      ]
+    },
+    "para":{  
+      "Type":"dino",
+      "Description":"Turtle",
+      "Level":10,
+      "Price":20,
+      "MinLevel":5,
+      "MaxLevel":15,
+      "Blueprint":"Blueprint'/Game/Atlas/Creatures/Turtle/GiantTurtle_Character_BP.GiantTurtle_Character_BP'"
+    },
+    "carno":{  
+      "Type":"dino",
+      "Description":"Carnotaurus",
+      "Level":15,
+      "Price":50,
+      "Neutered":true,
+      "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
+    },
+    "crate25":{  
+      "Type":"beacon",
+      "Description":"SupplyCrate Lvl 25",
+      "Price":100,
+      "ClassName":"SupplyCrate_Level25_Double_C"
+    },
+    "crate2":{  
+      "Type":"beacon",
+      "Description":"Artifact Crate 2",
+      "Price":100,
+      "ClassName":"ArtifactCrate_2_C"
+    },
+    "exp1000":{  
+      "Type":"experience",
+      "Description":"1000 points of experience",
+      "GiveToDino":false,
+      "Price":55,
+      "Amount":1000.0
+    },
+    "tekengram":{  
+      "Type":"unlockengram",
+      "Description":"Engram TEK Boots & Gloves",
+      "Price":20,
+      "Items":[  
+        {  
+          "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/TEK/PrimalItemArmor_TekBoots.PrimalItemArmor_TekBoots'"
+        },
+        {  
+          "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/TEK/PrimalItemArmor_TekGloves.PrimalItemArmor_TekGloves'"
+        }
+      ]
+    },
+    "allengrams":{  
+      "Type":"command",
+      "Description":"All engrams",
+      "Price":1000,
+      "Items":[  
+        {  
+          "Command":"GiveEngrams"
+        }
+      ]
+    },
+    "galleon":{  
+      "Type":"ship",
+      "Description":"Galleon",
+      "Price":500,
+      "BlueprintShip":"Blueprint'/Game/Atlas/Vehicles/Ships/Galleon/Ship_BP_Galleon.Ship_BP_Galleon'",
+      "BlueprintHull":"Blueprint'/Game/Atlas/Structures/ShipHulls/ShipHullGalleon_BP.ShipHullGalleon_BP'"
+    }
+  },
+  "SellItems":{  
+    "metal":{  
+      "Type":"item",
+      "Description":"100x metal",
+      "Price":10,
+      "Amount":100,
+      "Blueprint":"Blueprint'/Game/Mods/Stack50/Resources/PrimalItemResource_Stone_Child.PrimalItemResource_Stone_Child'"
+    }
+  },
+  "Messages":{  
+    "Sender":"ArkShop",
+    "BoughtItem":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought item</>",
+    "BoughtDino":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought dino</>",
+    "BoughtBeacon":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought beacon</>",
+    "BoughtExp":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought experience</>",
+    "ReceivedPoints":"<RichColor Color=\"1, 1, 0, 1\">You have received {0} points! (total: {1})</>",
+    "HavePoints":"You have {0} points",
+    "NoPoints":"<RichColor Color=\"1, 0, 0, 1\">You don't have enough points</>",
+    "WrongId":"<RichColor Color=\"1, 0, 0, 1\">Wrong id</>",
+    "NoPermissionsKit":"<RichColor Color=\"1, 0, 0, 1\">You don't have permission to use this kit</>",
+    "CantBuyKit":"<RichColor Color=\"1, 0, 0, 1\">You can't buy this kit</>",
+    "BoughtKit":"<RichColor Color=\"0, 1, 0, 1\">You have successfully bought {0} kit</>",
+    "AvailableKits":"Available kits for you:",
+    "NoKits":"No available kits",
+    "KitsLeft":"You have {0} {1} kits left",
+    "NoKitsLeft":"You don't have {0} kits left",
+    "CantGivePoints":"<RichColor Color=\"1, 0, 0, 1\">You can't give points to yourself</>",
+    "RidingDino":"<RichColor Color=\"1, 0, 0, 1\">You can't buy this item while riding a dino</>",
+    "SentPoints":"<RichColor Color=\"0, 1, 0, 1\">You have successfully sent {0} points to {1}</>",
+    "GotPoints":"You have received {0} points from {1}",
+    "NoPlayer":"<RichColor Color=\"1, 0, 0, 1\">Player doesn't exist</>",
+    "FoundMorePlayers":"<RichColor Color=\"1, 0, 0, 1\">Found more than one player with the given name</>",
+    "BuyUsage":"Usage: /buy id amount",
+    "ShopUsage":"Usage: /shop page",
+    "KitUsage":"Usage: /kit KitName",
+    "BuyKitUsage":"Usage: /BuyKit KitName amount",
+    "TradeUsage":"Usage: /trade 'Player Name' amount",
+    "PointsCmd":"/points",
+    "TradeCmd":"/trade",
+    "BuyCmd":"/buy",
+    "ShopCmd":"/shop",
+    "KitCmd":"/kit",
+    "BuyKitCmd":"/buykit",
+    "SellCmd":"/sell",
+    "ShopSellCmd":"/shopsell",
+    "SellUsage":"Usage: /sell id amount",
+    "NotEnoughItems":"<RichColor Color=\"1, 0, 0, 1\">You don't have enough items ({0}/{1})</>",
+    "SoldItems":"<RichColor Color=\"0, 1, 0, 1\">You have successfully sold items</>",
+    "BadLevel":"<RichColor Color=\"1, 0, 0, 1\">Required level: {0} - {1}</>",
+    "KitsListPrice":"Price: {0}",
+    "KitsListFormat":"\"{0}\" - {1}. {2} left. {3}\n",
+    "StoreListDino":"{0}) {1}. Level: {2}. Id: {3}. Price: {4}\n",
+    "StoreListItem":"{0}) {1}. Id: {2}. Price: {3}\n",
+    "StoreListFormat":"{0}",
+    "OnlyOnSpawnKit":"This kit can be used only on spawn",
+    "HelpCmd":"/shophelp",
+    "ShopMessage":"Usage: /buy id amount",
+    "HelpMessage":"This is shop help message",
+    "ClaimCmd":"/claim",
+    "ClaimedItems":"You have successfully claimed the items",
+    "NothingToClaim":"You have nothing to claim",
+    "ReceivedFirstPoints":"{}"
+  }
+}

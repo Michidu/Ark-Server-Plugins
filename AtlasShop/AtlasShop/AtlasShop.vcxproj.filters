@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Private\AtlasShop.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\DBHelper.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Kits.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Points.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Store.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\StoreSell.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\TimedRewards.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Database\sqlite3.c">
+      <Filter>Private\Database</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Private\Tools.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\AtlasShop.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\json.hpp">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\ShopLog.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\StoreSell.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\TimedRewards.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\SqlLiteDB.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\MysqlDB.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\IDatabase.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Database\sqlite3.h">
+      <Filter>Private\Database</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\Base.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\DBHelper.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\ITimedRewards.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\Kits.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\Points.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\Store.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Private">
+      <UniqueIdentifier>{3ff04361-e2b0-4aec-a1db-b10160112a61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Public">
+      <UniqueIdentifier>{59e0417a-e066-4c5d-b657-1e29797a1da7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Private\Database">
+      <UniqueIdentifier>{6cae13ac-f243-45ca-88f7-867b24465f6e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
