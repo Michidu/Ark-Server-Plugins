@@ -10,7 +10,7 @@ namespace PlayerRewards
 	bool Hook_AShooterCharacter_Die(AShooterCharacter* _this, float KillingDamage, FDamageEvent* DamageEvent,
 	                                AController* Killer, AActor* DamageCauser)
 	{
-		if (Killer && !Killer->IsLocalController() && Killer->IsA(AShooterPlayerController::StaticClass()) &&
+		if (Killer && !Killer->IsLocalController() && Killer->IsA(AShooterPlayerController::GetPrivateStaticClass()) &&
 			_this->TargetingTeamField() != Killer->TargetingTeamField() && _this->GetPlayerData())
 		{
 			FUniqueNetIdSteam* steam_net_id = static_cast<FUniqueNetIdSteam*>(

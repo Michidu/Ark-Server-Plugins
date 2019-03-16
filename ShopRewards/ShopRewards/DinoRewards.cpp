@@ -44,7 +44,7 @@ namespace DinoRewards
 	bool Hook_APrimalDinoCharacter_Die(APrimalDinoCharacter* _this, float KillingDamage, FDamageEvent* DamageEvent,
 	                                   AController* Killer, AActor* DamageCauser)
 	{
-		if (Killer && !Killer->IsLocalController() && Killer->IsA(AShooterPlayerController::StaticClass()) &&
+		if (Killer && !Killer->IsLocalController() && Killer->IsA(AShooterPlayerController::GetPrivateStaticClass()) &&
 			_this->TargetingTeamField() != Killer->TargetingTeamField())
 		{
 			const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(Killer);
