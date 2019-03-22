@@ -30,7 +30,7 @@ public:
 			result = db_.query("CREATE TABLE IF NOT EXISTS ArkShopPlayers ("
 				"Id INT NOT NULL AUTO_INCREMENT,"
 				"SteamId BIGINT(11) NOT NULL DEFAULT 0,"
-				"Kits VARCHAR(256) NOT NULL DEFAULT '{}',"
+				"Kits VARCHAR(768) NOT NULL DEFAULT '{}',"
 				"Points INT DEFAULT 0,"
 				"TotalSpent INT DEFAULT 0,"
 				"PRIMARY KEY(Id),"
