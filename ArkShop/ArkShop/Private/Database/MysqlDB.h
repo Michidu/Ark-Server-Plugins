@@ -10,11 +10,24 @@ class MySql : public IDatabase
 {
 public:
 	explicit MySql(std::string server, std::string username, std::string password, std::string db_name)
-		: db_(move(server), move(username), move(password), move(db_name))
 	{
 		try
 		{
-			const bool result = db_.query("CREATE TABLE IF NOT EXISTS ArkShopPlayers ("
+			daotk::mysql::connect_options options;
+			options.server = move(server);
+			options.username = move(username);
+			options.password = move(password);
+			options.dbname = move(db_name);
+			options.autoreconnect = true;
+			options.timeout = 30;
+
+			bool result = db_.open(options);
+			if (!result)
+			{
+				Log::GetLog()->critical("Failed to open connection!");
+			}
+
+			result = db_.query("CREATE TABLE IF NOT EXISTS ArkShopPlayers ("
 				"Id INT NOT NULL AUTO_INCREMENT,"
 				"SteamId BIGINT(11) NOT NULL DEFAULT 0,"
 				"Kits VARCHAR(256) NOT NULL DEFAULT '{}',"
