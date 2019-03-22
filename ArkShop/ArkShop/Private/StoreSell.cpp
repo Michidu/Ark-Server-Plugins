@@ -8,6 +8,29 @@
 
 namespace ArkShop::StoreSell
 {
+	FString GetItemBlueprint(UPrimalItem* item)
+	{
+		if (item != nullptr)
+		{
+			FString path_name;
+			item->ClassField()->GetDefaultObject(true)->GetFullName(&path_name, nullptr);
+
+			int find_index = 0;
+			const bool found = path_name.FindChar(' ', find_index);
+			if (found)
+			{
+				path_name.RemoveAt(0, find_index + 1);
+			}
+
+			path_name = path_name.Replace(L"Default__", L"", ESearchCase::CaseSensitive);
+			path_name = path_name.Replace(L"_C", L"'", ESearchCase::CaseSensitive);
+
+			return "Blueprint'" + path_name;
+		}
+
+		return FString("");
+	}
+
 	bool SellItem(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry,
 	              uint64 steam_id,
 	              int amount)
@@ -44,7 +67,7 @@ namespace ArkShop::StoreSell
 		{
 			if (item->ClassField() != nullptr)
 			{
-				const FString item_bp = ArkApi::IApiUtils::GetItemBlueprint(item);
+				const FString item_bp = GetItemBlueprint(item);
 
 				if (item_bp == blueprint)
 				{
@@ -248,15 +271,47 @@ namespace ArkShop::StoreSell
 		                                       *store_str);
 	}
 
+	// Console callbacks
+
+	void ListInvItemsCmd(APlayerController* controller, FString* /*cmd*/, bool /*unused*/)
+	{
+		const auto shooter_controller = static_cast<AShooterPlayerController*>(controller);
+		AShooterCharacter* character = shooter_controller->GetPlayerCharacter();
+		if (!character)
+		{
+			return;
+		}
+
+		UPrimalInventoryComponent* inventory = character->MyInventoryComponentField();
+		if (!inventory)
+		{
+			return;
+		}
+
+		TArray<UPrimalItem*> items = inventory->InventoryItemsField();
+		for (UPrimalItem* item : items)
+		{
+			if (item->ClassField() != nullptr)
+			{
+				const FString item_bp = GetItemBlueprint(item);
+				Log::GetLog()->info(item_bp.ToString());
+			}
+		}
+	}
+
 	void Init()
 	{
 		ArkApi::GetCommands().AddChatCommand(GetText("SellCmd"), &ChatSell);
 		ArkApi::GetCommands().AddChatCommand(GetText("ShopSellCmd"), &ShowItems);
+
+		ArkApi::GetCommands().AddConsoleCommand(L"ListInvItems", &ListInvItemsCmd);
 	}
 
 	void Unload()
 	{
 		ArkApi::GetCommands().RemoveChatCommand(GetText("SellCmd"));
 		ArkApi::GetCommands().RemoveChatCommand(GetText("ShopSellCmd"));
+
+		ArkApi::GetCommands().RemoveConsoleCommand(L"ListInvItems");
 	}
 } // namespace StoreSell // namespace ArkShop

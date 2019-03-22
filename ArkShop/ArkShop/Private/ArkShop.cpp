@@ -196,41 +196,49 @@ void Load()
 		throw;
 	}
 
-	const auto& mysql_conf = ArkShop::config["Mysql"];
-
-	const bool use_mysql = mysql_conf["UseMysql"];
-	if (use_mysql)
+	try
 	{
-		ArkShop::database = std::make_unique<MySql>(mysql_conf.value("MysqlHost", ""),
-		                                            mysql_conf.value("MysqlUser", ""),
-		                                            mysql_conf.value("MysqlPass", ""),
-		                                            mysql_conf.value("MysqlDB", ""));
+		const auto& mysql_conf = ArkShop::config["Mysql"];
+
+		const bool use_mysql = mysql_conf["UseMysql"];
+		if (use_mysql)
+		{
+			ArkShop::database = std::make_unique<MySql>(mysql_conf.value("MysqlHost", ""),
+			                                            mysql_conf.value("MysqlUser", ""),
+			                                            mysql_conf.value("MysqlPass", ""),
+			                                            mysql_conf.value("MysqlDB", ""));
+		}
+		else
+		{
+			const std::string db_path = ArkShop::config["General"]["DbPathOverride"];
+			ArkShop::database = std::make_unique<SqlLite>(db_path);
+		}
+
+		ArkShop::Points::Init();
+		ArkShop::Store::Init();
+		ArkShop::Kits::Init();
+		ArkShop::StoreSell::Init();
+
+		const FString help = ArkShop::GetText("HelpCmd");
+		if (help != ArkApi::Tools::Utf8Decode("No message").c_str())
+		{
+			ArkApi::GetCommands().AddChatCommand(help, &ShowHelp);
+		}
+
+		ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation",
+		                           &Hook_AShooterGameMode_HandleNewPlayer,
+		                           &AShooterGameMode_HandleNewPlayer_original);
+		ArkApi::GetHooks().SetHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout,
+		                           &AShooterGameMode_Logout_original);
+
+		ArkApi::GetCommands().AddConsoleCommand("ArkShop.Reload", &ReloadConfig);
+		ArkApi::GetCommands().AddRconCommand("ArkShop.Reload", &ReloadConfigRcon);
 	}
-	else
+	catch (const std::exception& error)
 	{
-		const std::string db_path = ArkShop::config["General"]["DbPathOverride"];
-		ArkShop::database = std::make_unique<SqlLite>(db_path);
+		Log::GetLog()->error(error.what());
+		throw;
 	}
-
-	ArkShop::Points::Init();
-	ArkShop::Store::Init();
-	ArkShop::Kits::Init();
-	ArkShop::StoreSell::Init();
-
-	const FString help = ArkShop::GetText("HelpCmd");
-	if (help != ArkApi::Tools::Utf8Decode("No message").c_str())
-	{
-		ArkApi::GetCommands().AddChatCommand(help, &ShowHelp);
-	}
-
-	ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation",
-	                           &Hook_AShooterGameMode_HandleNewPlayer,
-	                           &AShooterGameMode_HandleNewPlayer_original);
-	ArkApi::GetHooks().SetHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout,
-	                           &AShooterGameMode_Logout_original);
-
-	ArkApi::GetCommands().AddConsoleCommand("ArkShop.Reload", &ReloadConfig);
-	ArkApi::GetCommands().AddRconCommand("ArkShop.Reload", &ReloadConfigRcon);
 }
 
 void Unload()

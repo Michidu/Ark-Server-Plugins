@@ -18,7 +18,18 @@ namespace ArkShop::Kits
 	{
 		const std::string kits_config = database->GetPlayerKits(steam_id);
 
-		return nlohmann::json::parse(kits_config);
+		nlohmann::json conf = nlohmann::json::object();
+
+		try
+		{
+			conf = nlohmann::json::parse(kits_config);
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Couldn't parse config: {}", __FILE__, __FUNCTION__, exception.what());
+		}
+
+		return conf;
 	}
 
 	/**
@@ -550,21 +561,28 @@ namespace ArkShop::Kits
 				static_cast<AShooterCharacter*>(_this));
 			if (player != nullptr)
 			{
-				const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player);
-
-				const FString fdefault_kit(default_kit);
-
-				TArray<FString> kits;
-				fdefault_kit.ParseIntoArray(kits, L",", true);
-
-				for (const auto& kit : kits)
+				try
 				{
-					if (const int kit_amount = GetKitAmount(steam_id, kit);
-						kit_amount > 0 && CanUseKit(player, steam_id, kit))
+					const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player);
+
+					const FString fdefault_kit(default_kit);
+
+					TArray<FString> kits;
+					fdefault_kit.ParseIntoArray(kits, L",", true);
+
+					for (const auto& kit : kits)
 					{
-						RedeemKit(player, kit, false, true);
-						break;
+						if (const int kit_amount = GetKitAmount(steam_id, kit);
+							kit_amount > 0 && CanUseKit(player, steam_id, kit))
+						{
+							RedeemKit(player, kit, false, true);
+							break;
+						}
 					}
+				}
+				catch (const std::exception& exception)
+				{
+					Log::GetLog()->error("({} {}) Unexpected error {}", __FILE__, __FUNCTION__, exception.what());
 				}
 			}
 		}
