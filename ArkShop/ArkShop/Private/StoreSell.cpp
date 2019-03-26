@@ -15,17 +15,16 @@ namespace ArkShop::StoreSell
 			FString path_name;
 			item->ClassField()->GetDefaultObject(true)->GetFullName(&path_name, nullptr);
 
-			int find_index = 0;
-			const bool found = path_name.FindChar(' ', find_index);
-			if (found)
+			if (int find_index = 0; path_name.FindChar(' ', find_index))
 			{
-				path_name.RemoveAt(0, find_index + 1);
+				path_name = "Blueprint'" + path_name.Mid(find_index + 1,
+				                                         path_name.Len() - (find_index + (path_name.EndsWith(
+					                                                                          "_C", ESearchCase::
+					                                                                          CaseSensitive)
+					                                                                          ? 3
+					                                                                          : 1))) + "'";
+				return path_name.Replace(L"Default__", L"", ESearchCase::CaseSensitive);
 			}
-
-			path_name = path_name.Replace(L"Default__", L"", ESearchCase::CaseSensitive);
-			path_name = path_name.Replace(L"_C", L"'", ESearchCase::CaseSensitive);
-
-			return "Blueprint'" + path_name;
 		}
 
 		return FString("");

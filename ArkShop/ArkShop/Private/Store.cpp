@@ -120,7 +120,8 @@ namespace ArkShop::Store
 			{
 				const std::string command = item["Command"];
 
-				FString fcommand(command);
+				FString fcommand = fmt::format(command, fmt::arg("steamid", steam_id)).c_str();
+
 				FString result;
 				player_controller->ConsoleCommand(&result, &fcommand, true);
 			}

@@ -17,7 +17,7 @@ public:
 	{
 		try
 		{
-			db_ << "PRAGMA journal_mode=WAL;";
+			//db_ << "PRAGMA journal_mode=WAL;";
 
 			db_ << "create table if not exists Players ("
 				"Id integer primary key autoincrement not null,"
