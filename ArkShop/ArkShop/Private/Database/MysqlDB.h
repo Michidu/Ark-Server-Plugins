@@ -9,7 +9,8 @@
 class MySql : public IDatabase
 {
 public:
-	explicit MySql(std::string server, std::string username, std::string password, std::string db_name)
+	explicit MySql(std::string server, std::string username, std::string password, std::string db_name, std::string table_players)
+		: table_players_(move(table_players))
 	{
 		try
 		{
@@ -27,14 +28,15 @@ public:
 				Log::GetLog()->critical("Failed to open connection!");
 			}
 
-			result = db_.query("CREATE TABLE IF NOT EXISTS ArkShopPlayers ("
+			result = db_.query(fmt::format("CREATE TABLE IF NOT EXISTS {} ("
 				"Id INT NOT NULL AUTO_INCREMENT,"
 				"SteamId BIGINT(11) NOT NULL DEFAULT 0,"
-				"Kits VARCHAR(768) NOT NULL DEFAULT '{}',"
+				"Kits VARCHAR(768) NOT NULL DEFAULT '{{}}',"
 				"Points INT DEFAULT 0,"
 				"TotalSpent INT DEFAULT 0,"
 				"PRIMARY KEY(Id),"
-				"UNIQUE INDEX SteamId_UNIQUE (SteamId ASC)); ");
+				"UNIQUE INDEX SteamId_UNIQUE (SteamId ASC));", table_players_));
+
 			if (!result)
 			{
 				Log::GetLog()->critical("({} {}) Failed to create table!", __FILE__, __FUNCTION__);
@@ -50,7 +52,7 @@ public:
 	{
 		try
 		{
-			return db_.query("INSERT INTO ArkShopPlayers (SteamId) VALUES (%I64u);", steam_id);
+			return db_.query(fmt::format("INSERT INTO {} (SteamId) VALUES ({});", table_players_, steam_id));
 		}
 		catch (const std::exception& exception)
 		{
@@ -63,7 +65,8 @@ public:
 	{
 		try
 		{
-			auto result = db_.query("SELECT count(1) FROM ArkShopPlayers WHERE SteamId = %I64u;", steam_id).get_value<int>();
+			const auto result = db_.query(fmt::format("SELECT count(1) FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<int>();
+
 			return result > 0;
 		}
 		catch (const std::exception& exception)
@@ -79,7 +82,7 @@ public:
 
 		try
 		{
-			kits_config = db_.query("SELECT Kits FROM ArkShopPlayers WHERE SteamId = %I64u;", steam_id).get_value<std::string>();
+			kits_config = db_.query(fmt::format("SELECT Kits FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<std::string>();
 		}
 		catch (const std::exception& exception)
 		{
@@ -93,8 +96,7 @@ public:
 	{
 		try
 		{
-			return db_.query("UPDATE ArkShopPlayers SET Kits = '%s' WHERE SteamId = %I64u;", kits_data.c_str(),
-			                 steam_id);
+			return db_.query(fmt::format("UPDATE {} SET Kits = '{}' WHERE SteamId = {};", table_players_, kits_data.c_str(), steam_id));
 		}
 		catch (const std::exception& exception)
 		{
@@ -107,7 +109,7 @@ public:
 	{
 		try
 		{
-			return db_.query("UPDATE ArkShopPlayers SET Kits = \"{}\";");
+			return db_.query(fmt::format("UPDATE {} SET Kits = '{{}}';", table_players_));
 		}
 		catch (const std::exception& exception)
 		{
@@ -122,7 +124,7 @@ public:
 
 		try
 		{
-			points = db_.query("SELECT Points FROM ArkShopPlayers WHERE SteamId = %I64u;", steam_id).get_value<int>();
+			points = db_.query(fmt::format("SELECT Points FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<int>();
 		}
 		catch (const std::exception& exception)
 		{
@@ -136,7 +138,7 @@ public:
 	{
 		try
 		{
-			return db_.query("UPDATE ArkShopPlayers SET Points = %d WHERE SteamId = %I64u;", amount, steam_id);
+			return db_.query(fmt::format("UPDATE {} SET Points = {} WHERE SteamId = {};", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)
 		{
@@ -151,9 +153,8 @@ public:
 			return false;
 
 		try
-		{
-			return db_.query("UPDATE ArkShopPlayers SET Points = Points + %d WHERE SteamId = %I64u;", amount,
-			                 steam_id);
+		{	
+			return db_.query(fmt::format("UPDATE {} SET Points = Points + {} WHERE SteamId = {};", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)
 		{
@@ -169,8 +170,7 @@ public:
 
 		try
 		{
-			return db_.query("UPDATE ArkShopPlayers SET Points = Points - %d WHERE SteamId = %I64u;", amount,
-			                 steam_id);
+			return db_.query(fmt::format("UPDATE {} SET Points = Points - {} WHERE SteamId = {};", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)
 		{
@@ -186,7 +186,7 @@ public:
 
 		try
 		{
-			return db_.query("UPDATE ArkShopPlayers SET TotalSpent = %d WHERE SteamId = %I64u;", amount, steam_id);
+			return db_.query(fmt::format("UPDATE {} SET TotalSpent = {} WHERE SteamId = {}", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)
 		{
@@ -201,7 +201,7 @@ public:
 
 		try
 		{
-			points = db_.query("SELECT TotalSpent FROM ArkShopPlayers WHERE SteamId = %I64u;", steam_id).get_value<int>();
+			points = db_.query(fmt::format("SELECT TotalSpent FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<int>();
 		}
 		catch (const std::exception& exception)
 		{
@@ -215,7 +215,7 @@ public:
 	{
 		try
 		{
-			return db_.query("UPDATE ArkShopPlayers SET Points = 0;");
+			return db_.query(fmt::format("UPDATE {} SET Points = 0;"));
 		}
 		catch (const std::exception& exception)
 		{
@@ -226,4 +226,5 @@ public:
 
 private:
 	daotk::mysql::connection db_;
+	std::string table_players_;
 };
