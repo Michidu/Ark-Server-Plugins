@@ -206,7 +206,8 @@ void Load()
 			ArkShop::database = std::make_unique<MySql>(mysql_conf.value("MysqlHost", ""),
 			                                            mysql_conf.value("MysqlUser", ""),
 			                                            mysql_conf.value("MysqlPass", ""),
-			                                            mysql_conf.value("MysqlDB", ""));
+			                                            mysql_conf.value("MysqlDB", ""),
+														mysql_conf.value("MysqlPlayersTable", "ArkShopPlayers"));
 		}
 		else
 		{
