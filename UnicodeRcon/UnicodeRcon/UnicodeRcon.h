@@ -16,6 +16,7 @@ DECLARE_HOOK(AShooterGameMode_HandleNewPlayer, bool, AShooterGameMode*, AShooter
 
 inline bool loaded_rcon_port = false;
 inline FString rcon_cmd_data;
+inline int last_packet_id;
 inline int rconport;
 
 inline void LoadServerRconPort()

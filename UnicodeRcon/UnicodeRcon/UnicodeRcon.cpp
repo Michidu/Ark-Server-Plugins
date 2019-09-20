@@ -28,13 +28,19 @@ bool Hook_FSocketBSD_Recv(FSocketBSD* _this, char* Data, int BufferSize, int* By
                           ESocketReceiveFlags::Type Flags)
 {
 	const bool ret = FSocketBSD_Recv_original(_this, Data, BufferSize, BytesRead, Flags);
-	if (rconport != -1 && _this->GetPortNo() == rconport && BufferSize > 14)
+	if (rconport != -1 && rconport != 0 && _this->GetPortNo() == rconport && BufferSize > 14)
 	{
-		int packet_id;
-		memcpy(&packet_id, Data + 8, 4);
+		int packet_type;
+		memcpy(&packet_type, Data + 8, 4);
 
-		if (packet_id == 2)
+		int packet_id;
+		memcpy(&packet_id, Data + 4, 4);
+
+		if (packet_type == 2)
+		{
 			rcon_cmd_data = ArkApi::Tools::Utf8Decode(Data + 12).data();
+			last_packet_id = packet_id;
+		}
 	}
 
 	return ret;
@@ -43,8 +49,13 @@ bool Hook_FSocketBSD_Recv(FSocketBSD* _this, char* Data, int BufferSize, int* By
 void Hook_RCONClientConnection_ProcessRCONPacket(RCONClientConnection* _this, RCONPacket* packet,
                                                  UWorld* in_world)
 {
-	if (_this->IsAuthenticatedField())
+	if (_this->IsAuthenticatedField() && last_packet_id == packet->Id)
+	{
 		packet->Body = rcon_cmd_data;
+		rcon_cmd_data.Empty();
+		last_packet_id = -1;
+	}
+
 	RCONClientConnection_ProcessRCONPacket_original(_this, packet, in_world);
 }
 
