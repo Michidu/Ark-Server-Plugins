@@ -189,7 +189,7 @@ namespace HomeSystem
 		{
 			APrimalStructure* structure = static_cast<APrimalStructure*>(actor);
 
-			if (structure->TargetingTeamField() != player_controller->TargetingTeamField())
+			if (structure->TargetingTeamField() != 0 && structure->TargetingTeamField() != player_controller->TargetingTeamField())
 				return true;
 		}
 
@@ -213,7 +213,7 @@ namespace HomeSystem
 		{
 			APrimalStructure* structure = static_cast<APrimalStructure*>(actor);
 
-			if (structure->TargetingTeamField() != team_id)
+			if (structure->TargetingTeamField() != 0 && structure->TargetingTeamField() != team_id)
 				return true;
 		}
 
