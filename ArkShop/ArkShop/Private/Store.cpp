@@ -293,6 +293,19 @@ namespace ArkShop::Store
 				return false;
 			}
 
+			const unsigned time = item_entry.value("Time", 0) * 3600;
+			auto currentServerTime = ArkApi::GetApiUtils().GetWorld()->TimeSecondsField();
+
+			if (time > currentServerTime)
+			{
+				Tools::Time_t timediff = Tools::GetAvailableTimeDiff(time, currentServerTime);
+
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+					*GetText("BadTimeShop"), timediff.hours, timediff.minutes);
+
+				return false;
+			}
+
 			if (type == "item")
 			{
 				success = BuyItem(player_controller, item_entry, steam_id, amount);

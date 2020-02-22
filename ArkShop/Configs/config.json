@@ -71,9 +71,29 @@
           "Blueprint":"Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponStoneClub.PrimalItem_WeaponStoneClub'"
         }
       ]
-    }
+    },
+	"Startflyer": {
+	"DefaultAmount": 2,
+	"Description": "Ptera and saddle (useable 40 hours after wipe)",
+	"OnlyFromSpawn": false,
+	"Time": 40,
+	"Items": [
+		{
+			"Amount": 1,
+			"Quality": 0,
+			"ForceBlueprint": false,
+			"Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_PteroSaddle.PrimalItemArmor_PteroSaddle'"
+		}
+		],
+		"Dinos": [
+			{
+				"Level": 180,
+				"Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'"
+			}
+		]
+	}
   },
-  "ShopItems":{  
+  "ShopItems":{ 
     "ingots100":{  
       "Type":"item",
       "Description":"Metal Ingot (100x)",
@@ -115,6 +135,15 @@
       "MaxLevel":15,
       "Blueprint":"Blueprint'/Game/PrimalEarth/Dinos/Para/Para_Character_BP.Para_Character_BP'"
     },
+	"Pteranodon": {
+	   "Type": "dino",
+	   "Description": "Pteranodon (buyable 72 hours after wipe)",
+	   "Level": 224,
+	   "Price": 1200,
+	   "Time": 72,
+	   "Neutered": false,
+	   "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'"
+	}, 
     "carno":{  
       "Type":"dino",
       "Description":"Carnotaurus",
@@ -215,6 +244,8 @@
     "NotEnoughItems":"<RichColor Color=\"1, 0, 0, 1\">You don't have enough items ({0}/{1})</>",
     "SoldItems":"<RichColor Color=\"0, 1, 0, 1\">You have successfully sold items</>",
     "BadLevel":"<RichColor Color=\"1, 0, 0, 1\">Required level: {0} - {1}</>",
+	"BadTimeShop": "<RichColor Color=\"1, 0, 0, 1\">Item available in: {0} hours, {1} minutes </>",
+	"BadTimeKit": "<RichColor Color=\"1, 0, 0, 1\">Kit available in: {0} hours, {1} minutes </>",
     "KitsListPrice":"Price: {0}",
     "KitsListFormat":"\"{0}\" - {1}. {2} left. {3}\n",
     "StoreListDino":"{0}) {1}. Level: {2}. Id: {3}. Price: {4}\n",
