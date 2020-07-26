@@ -30,7 +30,7 @@ namespace Permissions
 		return database->GetGroupMembers(group);
 	}
 
-	bool IsPlayerInGroup(uint64 steam_id, const FString& group)
+	bool _IsPlayerInGroup(uint64 steam_id, const FString& group)
 	{
 		TArray<FString> groups = GetPlayerGroups(steam_id);
 
@@ -43,23 +43,50 @@ namespace Permissions
 		return false;
 	}
 
+	bool IsPlayerInGroup(uint64 steam_id, const FString& group)
+	{
+		if (use_cache)
+		{
+			const int cache_player_in_group = Cache::IsPlayerInGroup(steam_id, group);
+
+			if (cache_player_in_group == -1)
+				Cache::AddPlayerToGroup(steam_id, group, _IsPlayerInGroup(steam_id, group));
+
+			return cache_player_in_group == 1;
+		}
+
+		return _IsPlayerInGroup(steam_id, group);
+	}
+
 	std::optional<std::string> AddPlayerToGroup(uint64 steam_id, const FString& group)
 	{
+		if(use_cache)
+			Cache::RemovePlayer(steam_id);
+
 		return database->AddPlayerToGroup(steam_id, group);
 	}
 
 	std::optional<std::string> RemovePlayerFromGroup(uint64 steam_id, const FString& group)
 	{
+		if (use_cache)
+			Cache::RemovePlayer(steam_id);
+
 		return database->RemovePlayerFromGroup(steam_id, group);
 	}
 
 	std::optional<std::string> AddGroup(const FString& group)
 	{
+		if (use_cache)
+			Cache::ClearAll();
+
 		return database->AddGroup(group);
 	}
 
 	std::optional<std::string> RemoveGroup(const FString& group)
 	{
+		if (use_cache)
+			Cache::ClearAll();
+
 		return database->RemoveGroup(group);
 	}
 
@@ -79,7 +106,7 @@ namespace Permissions
 		return false;
 	}
 
-	bool IsPlayerHasPermission(uint64 steam_id, const FString& permission)
+	bool _IsPlayerHasPermission(uint64 steam_id, const FString& permission)
 	{
 		TArray<FString> groups = GetPlayerGroups(steam_id);
 
@@ -92,13 +119,34 @@ namespace Permissions
 		return false;
 	}
 
+	bool IsPlayerHasPermission(uint64 steam_id, const FString& permission)
+	{
+		if (use_cache)
+		{
+			const int cache_player_in_group = Cache::IsPlayerHasPermission(steam_id, permission);
+
+			if (cache_player_in_group == -1)
+				Cache::AddPlayerToPermission(steam_id, permission, _IsPlayerHasPermission(steam_id, permission));
+
+			return cache_player_in_group == 1;
+		}
+
+		return _IsPlayerHasPermission(steam_id, permission);
+	}
+
 	std::optional<std::string> GroupGrantPermission(const FString& group, const FString& permission)
 	{
+		if (use_cache)
+			Cache::ClearAll();
+
 		return database->GroupGrantPermission(group, permission);
 	}
 
 	std::optional<std::string> GroupRevokePermission(const FString& group, const FString& permission)
 	{
+		if (use_cache)
+			Cache::ClearAll();
+
 		return database->GroupRevokePermission(group, permission);
 	}
 }

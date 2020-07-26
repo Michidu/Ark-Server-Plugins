@@ -33,8 +33,8 @@ public:
 			db_.exec("INSERT INTO Groups(GroupName, Permissions)"
 				"SELECT 'Admins', '*,'"
 				"WHERE NOT EXISTS(SELECT 1 FROM Groups WHERE GroupName = 'Admins');");
-			db_.exec("INSERT INTO Groups(GroupName)"
-				"SELECT 'Default'"
+			db_.exec("INSERT INTO Groups(GroupName, Permissions)"
+				"SELECT 'Default', 'Default,'"
 				"WHERE NOT EXISTS(SELECT 1 FROM Groups WHERE GroupName = 'Default');");
 		}
 		catch (const std::exception& exception)

@@ -13,6 +13,9 @@
     <Filter Include="Private\Sqlite">
       <UniqueIdentifier>{b090c175-c079-441f-bf0c-01d206683d33}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Private\Cache">
+      <UniqueIdentifier>{c048ee96-81a8-4d9f-846e-4fbea9158926}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Private\Main.h">
@@ -44,6 +47,9 @@
     </ClInclude>
     <ClInclude Include="Public\AtlasPermissions.h">
       <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Cache\Cache.h">
+      <Filter>Private\Cache</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
