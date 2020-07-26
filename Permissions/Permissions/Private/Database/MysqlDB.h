@@ -51,8 +51,8 @@ public:
 			                                "WHERE NOT EXISTS(SELECT 1 FROM {} WHERE GroupName = 'Admins');",
 			                                table_groups_,
 			                                table_groups_));
-			result |= db_.query(fmt::format("INSERT INTO {} (GroupName)"
-			                                "SELECT 'Default'"
+			result |= db_.query(fmt::format("INSERT INTO {} (GroupName, Permissions)"
+			                                "SELECT 'Default', 'Default,'"
 			                                "WHERE NOT EXISTS(SELECT 1 FROM {} WHERE GroupName = 'Default');",
 			                                table_groups_,
 			                                table_groups_));

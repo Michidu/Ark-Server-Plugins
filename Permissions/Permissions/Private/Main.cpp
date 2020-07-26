@@ -460,6 +460,8 @@ namespace Permissions
 			database = std::make_unique<SqlLite>(config.value("DbPathOverride", ""));
 		}
 
+		use_cache = config.value("UseCache", true);
+
 		Hooks::Init();
 
 		ArkApi::GetCommands().AddConsoleCommand("Permissions.Add", &AddPlayerToGroupCmd);
