@@ -2,7 +2,7 @@
 
 #include <API/ARK/Ark.h>
 #include <API/UE/Math/ColorList.h>
-#include <Permissions.h>
+#include <ArkPermissions.h>
 
 #include "json.hpp"
 
@@ -161,6 +161,48 @@ void DumpEngrams(APlayerController* /*unused*/, FString* /*unused*/, bool /*unus
 	f.close();
 }
 
+
+void DumpEngramsRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_packet, UWorld* /*unused*/)
+{
+	FString reply;
+	TArray<UPrimalEngramEntry*> all_engrams_entries = static_cast<UPrimalGlobals*>(Globals::GEngine()()->
+		GameSingletonField())->PrimalGameDataOverrideField()->
+		EngramBlueprintEntriesField();
+
+	for (UPrimalEngramEntry* engram_entry : all_engrams_entries)
+	{
+		FString name;
+		engram_entry->NameField().ToString(&name);
+
+		name.RemoveFromEnd("_1");
+
+		original_engrams.Add({ name, engram_entry->BluePrintEntryField(), engram_entry->GetRequiredLevel() });
+	}
+	try
+	{
+		std::ofstream f(ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/AllEngrams/EngramsDump.txt");
+
+		for (const auto& engram_entry : original_engrams)
+		{
+			f << engram_entry.name.ToString() << "\n";
+		}
+
+		f.close();
+	}
+	catch (const std::exception& error)
+	{
+		Log::GetLog()->error(error.what());
+
+		reply = error.what();
+		rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
+		return;
+	}
+
+	reply = "Dumped Engrams";
+	rcon_connection->SendMessageW(rcon_packet->Id, 0, &reply);
+}
+
+
 void GiveEngrams(AShooterPlayerController* player_controller, FString* /*unused*/, EChatSendMode::Type /*unused*/)
 {
 	if (ArkApi::IApiUtils::IsPlayerDead(player_controller) || ArkApi::IApiUtils::IsRidingDino(player_controller))
@@ -305,6 +347,8 @@ void Load()
 	}
 
 	ArkApi::GetCommands().AddConsoleCommand("DumpEngrams", &DumpEngrams);
+	ArkApi::GetCommands().AddRconCommand("DumpEngrams", &DumpEngramsRcon);
+	
 	ArkApi::GetCommands().AddConsoleCommand("AllEngrams.Reload", &ReloadCmd);
 }
 
@@ -316,6 +360,7 @@ void Unload()
 
 	ArkApi::GetCommands().RemoveChatCommand("/GiveEngrams");
 	ArkApi::GetCommands().RemoveConsoleCommand("DumpEngrams");
+	ArkApi::GetCommands().RemoveRconCommand("DumpEngrams");
 	ArkApi::GetCommands().RemoveConsoleCommand("AllEngrams.Reload");
 }
 
