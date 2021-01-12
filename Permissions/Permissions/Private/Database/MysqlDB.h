@@ -76,7 +76,7 @@ public:
 			if (db_.query(fmt::format("INSERT INTO {} (SteamId) VALUES ({});", table_players_, steam_id)))
 			{
 				std::lock_guard<std::mutex> lg(playersMutex);
-				permissionPlayers[steam_id] = "";
+				permissionPlayers[steam_id] = "Default,";
 				return true;
 			}
 		}
