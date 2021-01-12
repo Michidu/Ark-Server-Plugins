@@ -9,10 +9,10 @@
 class MySql : public IDatabase
 {
 public:
-	explicit MySql(std::string server, std::string username, std::string password, std::string db_name,
-	               std::string table_players, std::string table_groups)
+	explicit MySql(std::string server, std::string username, std::string password, std::string db_name, const unsigned int port,
+		std::string table_players, std::string table_groups)
 		: table_players_(move(table_players)),
-		  table_groups_(move(table_groups))
+		table_groups_(move(table_groups))
 	{
 		try
 		{
@@ -23,6 +23,7 @@ public:
 			options.dbname = move(db_name);
 			options.autoreconnect = true;
 			options.timeout = 30;
+			options.port = port;
 
 			bool result = db_.open(options);
 			if (!result)
@@ -32,30 +33,30 @@ public:
 			}
 
 			result = db_.query(fmt::format("CREATE TABLE IF NOT EXISTS {} ("
-			                               "Id INT NOT NULL AUTO_INCREMENT,"
-			                               "SteamId BIGINT(11) NOT NULL,"
-			                               "PermissionGroups VARCHAR(256) NOT NULL DEFAULT 'Default,',"
-			                               "PRIMARY KEY(Id),"
-			                               "UNIQUE INDEX SteamId_UNIQUE (SteamId ASC));", table_players_));
+				"Id INT NOT NULL AUTO_INCREMENT,"
+				"SteamId BIGINT(11) NOT NULL,"
+				"PermissionGroups VARCHAR(256) NOT NULL DEFAULT 'Default,',"
+				"PRIMARY KEY(Id),"
+				"UNIQUE INDEX SteamId_UNIQUE (SteamId ASC));", table_players_));
 			result |= db_.query(fmt::format("CREATE TABLE IF NOT EXISTS {} ("
-			                                "Id INT NOT NULL AUTO_INCREMENT,"
-			                                "GroupName VARCHAR(128) NOT NULL,"
-			                                "Permissions VARCHAR(768) NOT NULL DEFAULT '',"
-			                                "PRIMARY KEY(Id),"
-			                                "UNIQUE INDEX GroupName_UNIQUE (GroupName ASC));", table_groups_));
+				"Id INT NOT NULL AUTO_INCREMENT,"
+				"GroupName VARCHAR(128) NOT NULL,"
+				"Permissions VARCHAR(768) NOT NULL DEFAULT '',"
+				"PRIMARY KEY(Id),"
+				"UNIQUE INDEX GroupName_UNIQUE (GroupName ASC));", table_groups_));
 
 			// Add default groups
 
 			result |= db_.query(fmt::format("INSERT INTO {} (GroupName, Permissions)"
-			                                "SELECT 'Admins', '*,'"
-			                                "WHERE NOT EXISTS(SELECT 1 FROM {} WHERE GroupName = 'Admins');",
-			                                table_groups_,
-			                                table_groups_));
+				"SELECT 'Admins', '*,'"
+				"WHERE NOT EXISTS(SELECT 1 FROM {} WHERE GroupName = 'Admins');",
+				table_groups_,
+				table_groups_));
 			result |= db_.query(fmt::format("INSERT INTO {} (GroupName)"
-			                                "SELECT 'Default'"
-			                                "WHERE NOT EXISTS(SELECT 1 FROM {} WHERE GroupName = 'Default');",
-			                                table_groups_,
-			                                table_groups_));
+				"SELECT 'Default'"
+				"WHERE NOT EXISTS(SELECT 1 FROM {} WHERE GroupName = 'Default');",
+				table_groups_,
+				table_groups_));
 
 			if (!result)
 			{
@@ -72,70 +73,40 @@ public:
 	{
 		try
 		{
-			return db_.query(fmt::format("INSERT INTO {} (SteamId) VALUES ({});", table_players_, steam_id));
+			if (db_.query(fmt::format("INSERT INTO {} (SteamId) VALUES ({});", table_players_, steam_id)))
+			{
+				std::lock_guard<std::mutex> lg(playersMutex);
+				permissionPlayers[steam_id] = "";
+				return true;
+			}
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
+		return false;
 	}
 
 	bool IsPlayerExists(uint64 steam_id) override
 	{
-		try
-		{
-			const auto result = db_.query(fmt::format("SELECT count(1) FROM {} WHERE SteamId = {};", table_players_,
-			                                          steam_id))
-			                       .get_value<int>();
-			return result > 0;
-		}
-		catch (const std::exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-			return false;
-		}
+		return permissionPlayers.count(steam_id) > 0;
 	}
 
 	bool IsGroupExists(const FString& group) override
 	{
-		try
-		{
-			const auto result = db_.query(fmt::format("SELECT count(1) FROM {} WHERE GroupName = '{}';", table_groups_,
-			                                          group.ToString()))
-			                       .get_value<int>();
-
-			return result > 0;
-		}
-		catch (const std::exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-		}
-
-		return false;
+		return permissionGroups.count(group.ToString()) > 0;
 	}
 
 	TArray<FString> GetPlayerGroups(uint64 steam_id) override
 	{
 		TArray<FString> groups;
 
-		try
+		if (permissionPlayers.count(steam_id) > 0)
 		{
-			const auto permission_groups = db_.query(
-				                                  fmt::format(
-					                                  "SELECT PermissionGroups FROM {} WHERE SteamId = {};",
-					                                  table_players_, steam_id))
-			                                  .get_value<daotk::mysql::optional_type<std::string>>();
-
-			if (permission_groups)
-			{
-				FString groups_fstr(*permission_groups);
-				groups_fstr.ParseIntoArray(groups, L",", true);
-			}
-		}
-		catch (const std::exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+			FString groups_fstr(permissionPlayers[steam_id]);
+			groups_fstr.ParseIntoArray(groups, L",", true);
 		}
 
 		return groups;
@@ -148,19 +119,10 @@ public:
 
 		TArray<FString> permissions;
 
-		try
+		if (permissionGroups.count(group.ToString()) > 0)
 		{
-			const std::string permission_groups = db_.query(fmt::format(
-				                                         "SELECT Permissions FROM {} WHERE GroupName = '{}';",
-				                                         table_groups_, group.ToString()))
-			                                         .get_value<std::string>();
-
-			FString permissions_fstr(permission_groups);
+			FString permissions_fstr(permissionGroups[group.ToString()]);
 			permissions_fstr.ParseIntoArray(permissions, L",", true);
-		}
-		catch (const std::exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 		}
 
 		return permissions;
@@ -170,18 +132,9 @@ public:
 	{
 		TArray<FString> all_groups;
 
-		try
+		for (auto& group : permissionGroups)
 		{
-			db_.query(fmt::format("SELECT GroupName FROM {};", table_groups_))
-			   .each([&all_groups](std::string group)
-			   {
-				   all_groups.Add(group.c_str());
-				   return true;
-			   });
-		}
-		catch (const std::exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+			all_groups.Add(group.second.c_str());
 		}
 
 		return all_groups;
@@ -191,20 +144,10 @@ public:
 	{
 		TArray<uint64> members;
 
-		try
+		for (auto& players : permissionPlayers)
 		{
-			db_.query(fmt::format("SELECT SteamId FROM {};", table_players_))
-			   .each([&members, &group](uint64 steam_id)
-			   {
-				   if (Permissions::IsPlayerInGroup(steam_id, group))
-					   members.Add(steam_id);
-
-				   return true;
-			   });
-		}
-		catch (const std::exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+			if (Permissions::IsPlayerInGroup(players.first, group))
+				members.Add(players.first);
 		}
 
 		return members;
@@ -229,6 +172,12 @@ public:
 			if (!res)
 			{
 				return "Unexpected DB error";
+			}
+			else
+			{
+				std::lock_guard<std::mutex> lg(playersMutex);
+				std::string groups = fmt::format("{},{}", group.ToString(), permissionPlayers[steam_id]);
+				permissionPlayers[steam_id] = groups;
 			}
 		}
 		catch (const std::exception& exception)
@@ -261,10 +210,15 @@ public:
 		try
 		{
 			const bool res = db_.query(fmt::format("UPDATE {} SET PermissionGroups = '{}' WHERE SteamId = {};",
-			                                       table_players_, new_groups.ToString(), steam_id));
+				table_players_, new_groups.ToString(), steam_id));
 			if (!res)
 			{
 				return "Unexpected DB error";
+			}
+			else
+			{
+				std::lock_guard<std::mutex> lg(playersMutex);
+				permissionPlayers[steam_id] = new_groups.ToString();
 			}
 		}
 		catch (const std::exception& exception)
@@ -284,10 +238,15 @@ public:
 		try
 		{
 			const bool res = db_.query(fmt::format("INSERT INTO {} (GroupName) VALUES ('{}');", table_groups_,
-			                                       group.ToString()));
+				group.ToString()));
 			if (!res)
 			{
 				return "Unexpected DB error";
+			}
+			else
+			{
+				std::lock_guard<std::mutex> lg(groupsMutex);
+				permissionGroups[group.ToString()] = "";
 			}
 		}
 		catch (const std::exception& exception)
@@ -317,10 +276,15 @@ public:
 		try
 		{
 			const bool res = db_.query(fmt::format("DELETE FROM {} WHERE GroupName = '{}';", table_groups_,
-			                                       group.ToString()));
+				group.ToString()));
 			if (!res)
 			{
 				return "Unexpected DB error";
+			}
+			else
+			{
+				std::lock_guard<std::mutex> lg(groupsMutex);
+				permissionGroups.erase(group.ToString());
 			}
 		}
 		catch (const std::exception& exception)
@@ -348,6 +312,12 @@ public:
 			if (!res)
 			{
 				return "Unexpected DB error";
+			}
+			else
+			{
+				std::lock_guard<std::mutex> lg(groupsMutex);
+				std::string groupPermissions = fmt::format("{},{}", permission.ToString(), permissionGroups[group.ToString()]);
+				permissionGroups[group.ToString()] = groupPermissions;
 			}
 		}
 		catch (const std::exception& exception)
@@ -380,10 +350,15 @@ public:
 		try
 		{
 			const bool res = db_.query(fmt::format("UPDATE {} SET Permissions = '{}' WHERE GroupName = '{}';",
-			                                       table_groups_, new_permissions.ToString(), group.ToString()));
+				table_groups_, new_permissions.ToString(), group.ToString()));
 			if (!res)
 			{
 				return "Unexpected DB error";
+			}
+			else
+			{
+				std::lock_guard<std::mutex> lg(groupsMutex);
+				permissionGroups[group.ToString()] = new_permissions.ToString();
 			}
 		}
 		catch (const std::exception& exception)
@@ -393,6 +368,54 @@ public:
 		}
 
 		return {};
+	}
+
+	void Init() override
+	{
+		permissionGroups = InitGroups();
+		permissionPlayers = InitPlayers();
+	}
+
+	std::unordered_map<std::string, std::string> InitGroups() override
+	{
+		std::unordered_map<std::string, std::string> pGroups;
+
+		try
+		{
+			db_.query(fmt::format("SELECT GroupName, Permissions FROM {};", table_groups_))
+				.each([&pGroups](std::string groupName, std::string groupPermissions)
+					{
+						pGroups[groupName] = groupPermissions;
+						return true;
+					});
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+		}
+
+		return pGroups;
+	}
+
+	std::unordered_map<uint64, std::string> InitPlayers() override
+	{
+		std::unordered_map<uint64, std::string> pPlayers;
+
+		try
+		{
+			db_.query(fmt::format("SELECT SteamId, PermissionGroups FROM {};", table_players_))
+				.each([&pPlayers](uint64 steam_id, std::string groups)
+					{
+						pPlayers[steam_id] = groups;
+						return true;
+					});
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+		}
+
+		return pPlayers;
 	}
 
 private:

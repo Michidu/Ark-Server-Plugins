@@ -27,6 +27,8 @@
 namespace Permissions
 {
 	nlohmann::json config;
+	time_t lastDatabaseSyncTime = time(0);
+	int SyncFrequency = 300;
 
 	// AddPlayerToGroup
 
@@ -109,7 +111,7 @@ namespace Permissions
 		auto result = RemovePlayerFromGroup(*cmd);
 		if (!result.has_value())
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
-			                                        "Successfully removed player");
+				"Successfully removed player");
 		else
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, result.value().c_str());
 	}
@@ -180,7 +182,7 @@ namespace Permissions
 		auto result = RemoveGroupCommand(*cmd);
 		if (!result.has_value())
 			ArkApi::GetApiUtils().
-				SendServerMessage(shooter_controller, FColorList::Green, "Successfully removed group");
+			SendServerMessage(shooter_controller, FColorList::Green, "Successfully removed group");
 		else
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, result.value().c_str());
 	}
@@ -217,7 +219,7 @@ namespace Permissions
 		auto result = GroupGrantPermission(*cmd);
 		if (!result.has_value())
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
-			                                        "Successfully granted permission");
+				"Successfully granted permission");
 		else
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, result.value().c_str());
 	}
@@ -254,7 +256,7 @@ namespace Permissions
 		auto result = GroupRevokePermission(*cmd);
 		if (!result.has_value())
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
-			                                        "Successfully revoked permission");
+				"Successfully revoked permission");
 		else
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Red, result.value().c_str());
 	}
@@ -420,10 +422,23 @@ namespace Permissions
 		ArkApi::GetApiUtils().SendChatMessage(player_controller, L"Permissions", *groups_str);
 	}
 
+	void DatabaseSync()
+	{
+		if (difftime(time(0), lastDatabaseSyncTime) >= SyncFrequency)
+		{
+			std::thread([]
+				{
+					database->Init();
+				}).detach();
+
+				lastDatabaseSyncTime = time(0);
+		}
+	}
+
 	void ReadConfig()
 	{
 		const std::string config_path = GetConfigPath();
-		std::ifstream file{config_path};
+		std::ifstream file{ config_path };
 		if (!file.is_open())
 			throw std::runtime_error("Can't open config.json");
 
@@ -439,6 +454,7 @@ namespace Permissions
 		try
 		{
 			ReadConfig();
+			SyncFrequency = config.value("ClusterSyncTime", 5) * 60; //convert to seconds
 		}
 		catch (const std::exception& error)
 		{
@@ -448,17 +464,22 @@ namespace Permissions
 
 		if (config.value("Database", "sqlite") == "mysql")
 		{
-			database = std::make_unique<MySql>(config.value("MysqlHost", ""),
-			                                   config.value("MysqlUser", ""),
-			                                   config.value("MysqlPass", ""),
-			                                   config.value("MysqlDB", ""),
-			                                   config.value("MysqlPlayersTable", "Players"),
-			                                   config.value("MysqlGroupsTable", "PermissionGroups"));
+			database = std::make_unique<MySql>(
+				config.value("MysqlHost", ""),
+				config.value("MysqlUser", ""),
+				config.value("MysqlPass", ""),
+				config.value("MysqlDB", ""),
+				config.value("MysqlPort", 3306),
+				config.value("MysqlPlayersTable", "Players"),
+				config.value("MysqlGroupsTable", "PermissionGroups"));
 		}
 		else
 		{
 			database = std::make_unique<SqlLite>(config.value("DbPathOverride", ""));
 		}
+
+		database->Init();
+		lastDatabaseSyncTime = time(0);
 
 		Hooks::Init();
 
@@ -483,6 +504,8 @@ namespace Permissions
 		ArkApi::GetCommands().AddRconCommand("Permissions.ListGroups", &ListGroupsRcon);
 
 		ArkApi::GetCommands().AddChatCommand("/groups", &ShowMyGroupsChat);
+
+		ArkApi::GetCommands().AddOnTimerCallback("DatabaseSync", &DatabaseSync);
 	}
 }
 

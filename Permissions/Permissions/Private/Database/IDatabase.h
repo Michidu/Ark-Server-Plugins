@@ -9,6 +9,10 @@
 class IDatabase
 {
 public:
+	std::unordered_map<std::string, std::string> permissionGroups;
+	std::unordered_map<uint64, std::string> permissionPlayers;
+	std::mutex playersMutex, groupsMutex;
+
 	virtual ~IDatabase() = default;
 
 	virtual bool AddPlayer(uint64 steam_id) = 0;
@@ -24,4 +28,8 @@ public:
 	virtual std::optional<std::string> RemoveGroup(const FString& group) = 0;
 	virtual std::optional<std::string> GroupGrantPermission(const FString& group, const FString& permission) = 0;
 	virtual std::optional<std::string> GroupRevokePermission(const FString& group, const FString& permission) = 0;
+
+	virtual void Init() = 0;
+	virtual std::unordered_map<std::string, std::string> InitGroups() = 0;
+	virtual std::unordered_map<uint64, std::string> InitPlayers() = 0;
 };
