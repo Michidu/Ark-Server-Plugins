@@ -52,7 +52,7 @@ public:
 			query.exec();
 
 			std::lock_guard<std::mutex> lg(playersMutex);
-			permissionPlayers[steam_id] = "";
+			permissionPlayers[steam_id] = "Default, ";
 
 			return true;
 		}
