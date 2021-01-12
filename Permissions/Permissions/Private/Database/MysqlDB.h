@@ -372,8 +372,13 @@ public:
 
 	void Init() override
 	{
+		groupsMutex.lock();
 		permissionGroups = InitGroups();
+		groupsMutex.unlock();
+
+		playersMutex.lock();
 		permissionPlayers = InitPlayers();
+		playersMutex.unlock();
 	}
 
 	std::unordered_map<std::string, std::string> InitGroups() override

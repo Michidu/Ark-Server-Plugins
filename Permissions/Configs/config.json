@@ -6,4 +6,5 @@
   "MysqlDB":"arkdb",
   "MysqlPort":3306,
   "DbPathOverride":""
+  "ClusterSyncTime": 5
 }
