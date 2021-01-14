@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Private\CachedPermission.h" />
     <ClInclude Include="Private\Database\IDatabase.h" />
     <ClInclude Include="Private\Database\MysqlDB.h" />
     <ClInclude Include="Private\Database\SqlLiteDB.h" />
@@ -99,6 +100,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\Libs;..\..\..\ARK-Server-API\out_lib</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Atlas|x64'">
     <ClCompile>
