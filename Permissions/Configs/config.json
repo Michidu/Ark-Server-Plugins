@@ -5,6 +5,6 @@
   "MysqlPass":"pass",
   "MysqlDB":"arkdb",
   "MysqlPort":3306,
-  "DbPathOverride":""
+  "DbPathOverride":"",
   "ClusterSyncTime": 5
 }
