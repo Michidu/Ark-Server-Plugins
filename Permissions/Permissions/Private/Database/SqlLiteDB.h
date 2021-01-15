@@ -418,64 +418,6 @@ public:
 		return {};
 	}
 
-	void Init() override
-	{
-		groupsMutex.lock();
-		permissionGroups = InitGroups();
-		groupsMutex.unlock();
-
-		playersMutex.lock();
-		permissionPlayers = InitPlayers();
-		playersMutex.unlock();
-
-		tribesMutex.lock();
-		permissionTribes = InitTribes();
-		tribesMutex.unlock();
-	}
-
-	std::unordered_map<std::string, std::string> InitGroups() override
-	{
-		std::unordered_map<std::string, std::string> pGroups;
-
-		try
-		{
-			SQLite::Statement query(db_, "SELECT GroupName, Permissions FROM Groups;");
-			while (query.executeStep())
-			{
-				pGroups[query.getColumn(0).getText()] = query.getColumn(1).getText();
-			}
-		}
-		catch (const std::exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-		}
-
-		return pGroups;
-	}
-
-	std::unordered_map<uint64, CachedPermission> InitPlayers() override
-	{
-		std::unordered_map<uint64, CachedPermission> pPlayers;
-
-		try
-		{
-			SQLite::Statement query(db_, "SELECT SteamId, Groups, TimedGroups FROM Players;");
-			if (query.executeStep())
-			{
-				uint64 steam_id = query.getColumn(0).getInt64();
-				FString Groups = query.getColumn(1).getText();
-				FString TimedGroups = query.getColumn(2).getText();
-				pPlayers[steam_id] = CachedPermission(Groups, TimedGroups);
-			}
-		}
-		catch (const std::exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-		}
-
-		return pPlayers;
-	}
-
 	bool AddTribe(int tribeId) override
 	{
 		try
@@ -675,6 +617,67 @@ public:
 		}
 
 		return {};
+	}
+
+	void Init() override
+	{
+		auto tempGroups = InitGroups();
+		groupsMutex.lock();
+		permissionGroups = tempGroups;
+		groupsMutex.unlock();
+
+		auto tempPlayers = InitPlayers();
+		playersMutex.lock();
+		permissionPlayers = tempPlayers;
+		playersMutex.unlock();
+
+		auto tempTribes = InitTribes();
+		tribesMutex.lock();
+		permissionTribes = tempTribes;
+		tribesMutex.unlock();
+	}
+
+	std::unordered_map<std::string, std::string> InitGroups() override
+	{
+		std::unordered_map<std::string, std::string> pGroups;
+
+		try
+		{
+			SQLite::Statement query(db_, "SELECT GroupName, Permissions FROM Groups;");
+			while (query.executeStep())
+			{
+				pGroups[query.getColumn(0).getText()] = query.getColumn(1).getText();
+			}
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+		}
+
+		return pGroups;
+	}
+
+	std::unordered_map<uint64, CachedPermission> InitPlayers() override
+	{
+		std::unordered_map<uint64, CachedPermission> pPlayers;
+
+		try
+		{
+			SQLite::Statement query(db_, "SELECT SteamId, Groups, TimedGroups FROM Players;");
+			if (query.executeStep())
+			{
+				uint64 steam_id = query.getColumn(0).getInt64();
+				FString Groups = query.getColumn(1).getText();
+				FString TimedGroups = query.getColumn(2).getText();
+				pPlayers[steam_id] = CachedPermission(Groups, TimedGroups);
+			}
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+		}
+
+		return pPlayers;
 	}
 
 	std::unordered_map<int, CachedPermission> InitTribes() override
