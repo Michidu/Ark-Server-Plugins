@@ -45,9 +45,6 @@
     <ClInclude Include="Public\AtlasPermissions.h">
       <Filter>Public</Filter>
     </ClInclude>
-    <ClInclude Include="Private\CachedPermission.h">
-      <Filter>Private</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Private\Permissions.cpp">
