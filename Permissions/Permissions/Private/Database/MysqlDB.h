@@ -547,7 +547,7 @@ public:
 	{
 		try
 		{
-			if (db_.query(fmt::format("INSERT INTO {} (TribeId) VALUES ({});", table_players_, tribeId)))
+			if (db_.query(fmt::format("INSERT INTO {} (TribeId) VALUES ({});", table_tribes_, tribeId)))
 			{
 				std::lock_guard<std::mutex> lg(tribesMutex);
 				permissionTribes[tribeId] = CachedPermission("", "");
@@ -596,7 +596,7 @@ public:
 		{
 			const bool res = db_.query(fmt::format(
 				"UPDATE {} SET PermissionGroups = concat(PermissionGroups, '{},') WHERE TribeId = {};",
-				table_players_, group.ToString(), tribeId));
+				table_tribes_, group.ToString(), tribeId));
 			if (!res)
 			{
 				return "Unexpected DB error";
@@ -637,7 +637,7 @@ public:
 		try
 		{
 			const bool res = db_.query(fmt::format("UPDATE {} SET PermissionGroups = '{}' WHERE TribeId = {};",
-				table_players_, new_groups.ToString(), tribeId));
+				table_tribes_, new_groups.ToString(), tribeId));
 			if (!res)
 			{
 				return "Unexpected DB error";
@@ -697,7 +697,7 @@ public:
 		try
 		{
 			const bool res = db_.query(fmt::format("UPDATE {} SET TimedPermissionGroups = '{}' WHERE TribeId = {};",
-				table_players_, new_groups.ToString(), tribeId));
+				table_tribes_, new_groups.ToString(), tribeId));
 			if (!res)
 			{
 				return "Unexpected DB error";
@@ -741,7 +741,7 @@ public:
 		try
 		{
 			const bool res = db_.query(fmt::format("UPDATE {} SET TimedPermissionGroups = '{}' WHERE TribeId = {};",
-				table_players_, new_groups.ToString(), tribeId));
+				table_tribes_, new_groups.ToString(), tribeId));
 			if (!res)
 			{
 				return "Unexpected DB error";
@@ -767,7 +767,7 @@ public:
 
 		try
 		{
-			db_.query(fmt::format("SELECT TribeId, PermissionGroups, TimedPermissionGroups FROM {};", table_players_))
+			db_.query(fmt::format("SELECT TribeId, PermissionGroups, TimedPermissionGroups FROM {};", table_tribes_))
 				.each([&pTribes](int tribeId, std::string groups, std::string timedGroups)
 			{
 				pTribes[tribeId] = CachedPermission(FString(groups), FString(timedGroups));
