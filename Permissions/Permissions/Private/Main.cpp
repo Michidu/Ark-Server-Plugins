@@ -638,26 +638,26 @@ namespace Permissions
 				if (timeLeft.size() > 0) timeLeft += ", ";
 				timeLeft += fmt::format("{} Day{}", (int)days, (days >= 1 ? "s" : ""));
 				secsLeft -= days * 86400;
-				shown++;
+				intervalsToShow++;
 			}
 			hours = secsLeft / 3600;
 			if (hours > 0 && intervalsToShow > shown) {
 				if (timeLeft.size() > 0) timeLeft += ", ";
 				timeLeft += fmt::format("{} Hr{}", (int)hours, (hours >= 1 ? "s" : ""));
 				secsLeft -= hours * 3600;
-				shown++;
+				intervalsToShow++;
 			}
 			mins = secsLeft / 60;
 			if (mins > 0 && intervalsToShow > shown) {
 				if (timeLeft.size() > 0) timeLeft += ", ";
 				timeLeft += fmt::format("{} Min{}", (int)mins, (mins >= 1 ? "s" : ""));
 				secsLeft -= mins * 60;
-				shown++;
+				intervalsToShow++;
 			}
 			if (secsLeft > 0 && intervalsToShow > shown) {
 				if (timeLeft.size() > 0) timeLeft += ", ";
 				timeLeft += fmt::format("{} Sec{}", (int)secsLeft, (secsLeft >= 1 ? "s" : ""));
-				shown++;
+				intervalsToShow++;
 			}
 		}
 		return timeLeft;
@@ -678,7 +678,7 @@ namespace Permissions
 		for (int32 Index = 0; Index != permissions.TimedGroups.Num(); ++Index) {
 			const TimedGroup& current_group = permissions.TimedGroups[Index];
 			if (current_group.ExpireAtTime <= nowSecs) continue;
-			if (groups_str.Len() > 0)
+			if (permissions.Groups.Num() > 0 || Index > 0)
 				groups_str += "\n";
 			groups_str += current_group.GroupName;
 			if (current_group.DelayUntilTime > 0 && current_group.DelayUntilTime > nowSecs) {
