@@ -34,8 +34,8 @@ public:
 				"GroupName text not null COLLATE NOCASE,"
 				"Permissions text default '' COLLATE NOCASE"
 				");");
-			// Add default groups
 
+			// Add default groups
 			db_.exec("INSERT INTO Groups(GroupName, Permissions)"
 				"SELECT 'Admins', '*,'"
 				"WHERE NOT EXISTS(SELECT 1 FROM Groups WHERE GroupName = 'Admins');");
@@ -51,12 +51,34 @@ public:
 		}
 	}
 
+	bool IsFieldExists(std::string tableName, std::string fieldName) override
+	{
+		int count = 0;
+
+		try
+		{
+			std::string sql = fmt::format("SELECT count(1) FROM pragma_table_info('{}') WHERE name = '{}';", tableName, fieldName);
+			SQLite::Statement query(db_, sql);
+			query.executeStep();
+
+			count = query.getColumn(0);
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({}) Unexpected DB error {}", __FUNCTION__, exception.what());
+			return false;
+		}
+
+		return count != 0;
+	}
+
 	bool AddPlayer(uint64 steam_id) override
 	{
 		try
 		{
-			SQLite::Statement query(db_, "INSERT INTO Players (SteamId) VALUES (?);");
+			SQLite::Statement query(db_, "INSERT INTO Players (SteamId, Groups) VALUES (?, ?);");
 			query.bind(1, static_cast<int64>(steam_id));
+			query.bind(2, "Default,");
 			query.exec();
 
 			std::lock_guard<std::mutex> lg(playersMutex);
@@ -700,15 +722,18 @@ public:
 		return pTribes;
 	}
 
-	void upgradeDatabase() {
-		SQLite::Statement query(db_, "PRAGMA table_info('Players')");
-		int cols = 0;
-		while (query.executeStep()) {
-			cols++;
-		}
-		if (cols == 3) {
-			db_.exec("ALTER TABLE players ADD COLUMN TimedGroups text default '' COLLATE NOCASE;");
-			Log::GetLog()->warn("Upgraded Permissions DB Tables.");
+	void upgradeDatabase()
+	{
+		if (!IsFieldExists("players", "TimedGroups"))
+		{
+			try
+			{
+				db_.exec("ALTER TABLE players ADD COLUMN TimedGroups text DEFAULT '';");
+			}
+			catch (const std::exception& exception)
+			{
+				Log::GetLog()->critical("({} {}) Failed to update Permissions players table!", __FILE__, __FUNCTION__);
+			}
 		}
 	}
 

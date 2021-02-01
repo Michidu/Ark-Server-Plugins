@@ -54,7 +54,6 @@ public:
 				"UNIQUE INDEX GroupName_UNIQUE (GroupName ASC));", table_groups_));
 
 			// Add default groups
-
 			result |= db_.query(fmt::format("INSERT INTO {} (GroupName, Permissions)"
 				"SELECT 'Admins', '*,'"
 				"WHERE NOT EXISTS(SELECT 1 FROM {} WHERE GroupName = 'Admins');",
@@ -79,11 +78,27 @@ public:
 		}
 	}
 
+	bool IsFieldExists(std::string tableName, std::string fieldName) override
+	{
+		try
+		{
+			auto result = db_.query(fmt::format(
+				"SHOW COLUMNS FROM {} LIKE '{}';",
+				tableName, fieldName)).count();
+			return result > 0;
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({}) Unexpected DB error {}", __FUNCTION__, exception.what());
+			return false;
+		}
+	}
+
 	bool AddPlayer(uint64 steam_id) override
 	{
 		try
 		{
-			if (db_.query(fmt::format("INSERT INTO {} (SteamId) VALUES ('{}');", table_players_, steam_id, "Default,")))
+			if (db_.query(fmt::format("INSERT INTO {} (SteamId, PermissionGroups) VALUES ('{}', '{}');", table_players_, steam_id, "Default,")))
 			{
 				std::lock_guard<std::mutex> lg(playersMutex);
 				permissionPlayers[steam_id] = CachedPermission("Default,", "");
@@ -246,7 +261,7 @@ public:
 
 		if (!IsGroupExists(group))
 			return  "Group does not exist";
-		
+
 		TArray<TimedGroup> groups;
 		if (permissionPlayers.count(steam_id) > 0)
 		{
@@ -769,10 +784,10 @@ public:
 		{
 			db_.query(fmt::format("SELECT TribeId, PermissionGroups, TimedPermissionGroups FROM {};", table_tribes_))
 				.each([&pTribes](int tribeId, std::string groups, std::string timedGroups)
-			{
-				pTribes[tribeId] = CachedPermission(FString(groups), FString(timedGroups));
-				return true;
-			});
+					{
+						pTribes[tribeId] = CachedPermission(FString(groups), FString(timedGroups));
+						return true;
+					});
 		}
 		catch (const std::exception& exception)
 		{
@@ -782,25 +797,13 @@ public:
 		return pTribes;
 	}
 
-	void upgradeDatabase(std::string db_name) {
-		auto query = fmt::format("SELECT IF(count(*) = 1, 'Exist', 'Not Exist') AS result FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}' AND column_name = '{}';",
-			db_name, table_players_, "TimedPermissionGroups");
-		auto selectResult = db_.query(query);
-		if (!selectResult)
+	void upgradeDatabase(std::string db_name)
+	{
+		if (!IsFieldExists(table_players_, "TimedPermissionGroups"))
 		{
-			Log::GetLog()->critical("({} {}Failed to check Permissions table!", __FILE__, __FUNCTION__);
-		}
-		else {
-			auto exists = selectResult.get_value<std::string>();
-			if (exists.c_str() == "Not Exist") {
-				auto updateResult = db_.query(fmt::format("ALTER TABLE {} ADD COLUMN TimedPermissionGroups VARCHAR(256) DEFAULT '' AFTER PermissionGroups;", table_players_));
-				if (!updateResult)
-				{
-					Log::GetLog()->critical("({} {})Failed to update Permissions table!", __FILE__, __FUNCTION__);
-				}
-				else {
-					Log::GetLog()->warn("Upgraded Permissions DB Tables.");
-				}
+			if (!db_.query(fmt::format("ALTER TABLE {} ADD COLUMN TimedPermissionGroups VARCHAR(256) DEFAULT '' AFTER PermissionGroups;", table_players_)))
+			{
+				Log::GetLog()->critical("({} {}) Failed to update Permissions {} table!", __FILE__, __FUNCTION__, table_players_);
 			}
 		}
 	}

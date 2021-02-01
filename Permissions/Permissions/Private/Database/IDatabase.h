@@ -17,6 +17,7 @@ public:
 
 	virtual ~IDatabase() = default;
 
+	virtual bool IsFieldExists(std::string tableName, std::string fieldName) = 0;
 	virtual bool AddPlayer(uint64 steam_id) = 0;
 	virtual bool IsPlayerExists(uint64 steam_id) = 0;
 	virtual bool IsGroupExists(const FString& group) = 0;
@@ -30,7 +31,7 @@ public:
 	virtual std::optional<std::string> RemoveGroup(const FString& group) = 0;
 	virtual std::optional<std::string> GroupGrantPermission(const FString& group, const FString& permission) = 0;
 	virtual std::optional<std::string> GroupRevokePermission(const FString& group, const FString& permission) = 0;
-	
+
 	virtual std::optional<std::string> AddPlayerToTimedGroup(uint64 steam_id, const FString& group, int secs, int delaySecs) = 0;
 	virtual std::optional<std::string> RemovePlayerFromTimedGroup(uint64 steam_id, const FString& group) = 0;
 
