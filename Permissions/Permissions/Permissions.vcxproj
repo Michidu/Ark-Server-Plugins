@@ -116,14 +116,14 @@
       <PreprocessorDefinitions>NDEBUG;PERMISSIONS_EXPORTS;_WINDOWS;_USRDLL;ARK_EXPORTS;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;PERMISSIONS_ATLAS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\Includes;..\Includes\sqlite3</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Includes;..\Includes\sqlite3;..\..\..\ARK-Server-API\version\Core\Public</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\Libs;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\Libs;..\..\..\ARK-Server-API\out_lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

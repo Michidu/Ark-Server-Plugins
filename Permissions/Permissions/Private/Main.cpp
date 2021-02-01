@@ -83,7 +83,6 @@ namespace Permissions
 	}
 
 	// AddPlayerToGroup
-
 	std::optional<std::string> AddPlayerToGroup(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -130,7 +129,6 @@ namespace Permissions
 	}
 
 	// RemovePlayerFromGroup
-
 	std::optional<std::string> RemovePlayerFromGroup(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -178,7 +176,6 @@ namespace Permissions
 	}
 
 	// AddPlayerToTimedGroup
-
 	std::optional<std::string> AddPlayerToTimedGroup(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -235,7 +232,6 @@ namespace Permissions
 	}
 
 	// RemovePlayerFromTimedGroup
-
 	std::optional<std::string> RemovePlayerFromTimedGroup(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -281,8 +277,7 @@ namespace Permissions
 			SendRconReply(rcon_connection, rcon_packet->Id, result.value().c_str());
 	}
 
-
-
+	// AddTribeToGroup
 	std::optional<std::string> AddTribeToGroup(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -329,7 +324,6 @@ namespace Permissions
 	}
 
 	// RemoveTribeFromGroup
-
 	std::optional<std::string> RemoveTribeFromGroup(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -377,7 +371,6 @@ namespace Permissions
 	}
 
 	// AddTribeToTimedGroup
-
 	std::optional<std::string> AddTribeToTimedGroup(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -434,7 +427,6 @@ namespace Permissions
 	}
 
 	// RemoveTribeFromTimedGroup
-
 	std::optional<std::string> RemoveTribeFromTimedGroup(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -480,9 +472,7 @@ namespace Permissions
 			SendRconReply(rcon_connection, rcon_packet->Id, result.value().c_str());
 	}
 
-
 	// AddGroup
-
 	std::optional<std::string> AddGroupCommand(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -517,7 +507,6 @@ namespace Permissions
 	}
 
 	// RemoveGroup
-
 	std::optional<std::string> RemoveGroupCommand(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -553,7 +542,6 @@ namespace Permissions
 	}
 
 	// GroupGrantPermission
-
 	std::optional<std::string> GroupGrantPermission(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -590,7 +578,6 @@ namespace Permissions
 	}
 
 	// GroupRevokePermission
-
 	std::optional<std::string> GroupRevokePermission(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -797,7 +784,6 @@ namespace Permissions
 	}
 
 	// TribeGroups
-
 	FString TribeGroups(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -836,7 +822,6 @@ namespace Permissions
 	}
 
 	// GroupPermissions
-
 	FString GroupPermissions(const FString& cmd)
 	{
 		TArray<FString> parsed;
@@ -877,7 +862,6 @@ namespace Permissions
 	}
 
 	// ListGroups
-
 	FString ListGroups()
 	{
 		FString groups;
@@ -916,7 +900,6 @@ namespace Permissions
 	}
 
 	// Chat commands
-
 	void ShowMyGroupsChat(AShooterPlayerController* player_controller, FString*, EChatSendMode::Type)
 	{
 		const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player_controller);
