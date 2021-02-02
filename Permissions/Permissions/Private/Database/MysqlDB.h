@@ -159,7 +159,7 @@ public:
 
 		for (auto& group : permissionGroups)
 		{
-			all_groups.Add(group.second.c_str());
+			all_groups.Add(group.first.c_str());
 		}
 
 		return all_groups;
