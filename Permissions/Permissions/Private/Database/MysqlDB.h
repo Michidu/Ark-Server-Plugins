@@ -116,11 +116,13 @@ public:
 
 	bool IsPlayerExists(uint64 steam_id) override
 	{
+		std::lock_guard<std::mutex> lg(playersMutex);
 		return permissionPlayers.count(steam_id) > 0;
 	}
 
 	bool IsGroupExists(const FString& group) override
 	{
+		std::lock_guard<std::mutex> lg(groupsMutex);
 		return permissionGroups.count(group.ToString()) > 0;
 	}
 
@@ -129,8 +131,9 @@ public:
 		TArray<FString> groups;
 		auto nowSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-		if (permissionPlayers.count(steam_id) > 0)
+		if (IsPlayerExists(steam_id))
 		{
+			std::lock_guard<std::mutex> lg(playersMutex);
 			groups = permissionPlayers[steam_id].getGroups(nowSecs);
 		}
 
@@ -144,8 +147,9 @@ public:
 
 		TArray<FString> permissions;
 
-		if (permissionGroups.count(group.ToString()) > 0)
+		if (IsGroupExists(group))
 		{
+			std::lock_guard<std::mutex> lg(groupsMutex);
 			FString permissions_fstr(permissionGroups[group.ToString()]);
 			permissions_fstr.ParseIntoArray(permissions, L",", true);
 		}
@@ -157,6 +161,7 @@ public:
 	{
 		TArray<FString> all_groups;
 
+		std::lock_guard<std::mutex> lg(groupsMutex);
 		for (auto& group : permissionGroups)
 		{
 			all_groups.Add(group.first.c_str());
@@ -169,6 +174,7 @@ public:
 	{
 		TArray<uint64> members;
 
+		std::lock_guard<std::mutex> lg(playersMutex);
 		for (auto& players : permissionPlayers)
 		{
 			if (Permissions::IsPlayerInGroup(players.first, group))
@@ -263,9 +269,11 @@ public:
 			return  "Group does not exist";
 
 		TArray<TimedGroup> groups;
-		if (permissionPlayers.count(steam_id) > 0)
+		if (IsPlayerExists(steam_id))
 		{
+			playersMutex.lock();
 			groups = permissionPlayers[steam_id].TimedGroups;
+			playersMutex.unlock();
 		}
 		for (int32 Index = groups.Num() - 1; Index >= 0; --Index)
 		{
@@ -319,7 +327,9 @@ public:
 		if (!IsPlayerExists(steam_id) || !IsGroupExists(group))
 			return "Player or group does not exist";
 
+		playersMutex.lock();
 		TArray<TimedGroup> groups = permissionPlayers[steam_id].TimedGroups;
+		playersMutex.unlock();
 
 		FString new_groups;
 
@@ -394,6 +404,7 @@ public:
 		// Remove all players from this group
 
 		TArray<uint64> group_members = GetGroupMembers(group);
+
 		for (uint64 player : group_members)
 		{
 			RemovePlayerFromGroup(player, group);
@@ -580,6 +591,7 @@ public:
 
 	bool IsTribeExists(int tribeId) override
 	{
+		std::lock_guard<std::mutex> lg(tribesMutex);
 		return permissionTribes.count(tribeId) > 0;
 	}
 
@@ -588,8 +600,9 @@ public:
 		TArray<FString> groups;
 		auto nowSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-		if (permissionTribes.count(tribeId) > 0)
+		if (IsTribeExists(tribeId))
 		{
+			std::lock_guard<std::mutex> lg(tribesMutex);
 			groups = permissionTribes[tribeId].getGroups(nowSecs);
 		}
 
@@ -681,9 +694,11 @@ public:
 			return  "Group does not exist";
 
 		TArray<TimedGroup> groups;
-		if (permissionTribes.count(tribeId) > 0)
+		if (IsTribeExists(tribeId))
 		{
+			tribesMutex.lock();
 			groups = permissionTribes[tribeId].TimedGroups;
+			tribesMutex.unlock();
 		}
 		for (int32 Index = groups.Num() - 1; Index >= 0; --Index)
 		{
@@ -737,7 +752,9 @@ public:
 		if (!IsTribeExists(tribeId) || !IsGroupExists(group))
 			return "Tribe or group does not exist";
 
+		tribesMutex.lock();
 		TArray<TimedGroup> groups = permissionTribes[tribeId].TimedGroups;
+		tribesMutex.unlock();
 
 		FString new_groups;
 
