@@ -30,7 +30,7 @@ namespace Permissions
 	}
 	void RemovePlayerPermissionCallback(FString CallbackName) {
 		auto iter = std::find_if(playerPermissionCallbacks.begin(), playerPermissionCallbacks.end(),
-			[&CallbackName](const std::shared_ptr<PermissionCallback>& data) -> bool {return data->command == CallbackName;});
+			[&CallbackName](const std::shared_ptr<PermissionCallback>& data) -> bool {return data->command == CallbackName; });
 
 		if (iter != playerPermissionCallbacks.end())
 		{
@@ -43,9 +43,14 @@ namespace Permissions
 		{
 			bool cache = false;
 			if (permissionCallback->onlyCheckOnline) continue;
-			if (permissionCallback->cacheBySteamId && database->permissionPlayers.count(steamId) > 0) {
-				if (database->permissionPlayers[steamId].hasCheckedCallbacks) {
-					for (auto group : database->permissionPlayers[steamId].CallbackGroups) {
+			if (permissionCallback->cacheBySteamId && database->IsPlayerExists(steamId))
+			{
+				CachedPermission permissions = database->HydratePlayerGroups(steamId);
+
+				if (permissions.hasCheckedCallbacks)
+				{
+					for (auto group : permissions.CallbackGroups)
+					{
 						if (!groups.Contains(group))
 							groups.Add(group);
 					}
@@ -53,9 +58,14 @@ namespace Permissions
 				}
 				cache = true;
 			}
-			if (permissionCallback->cacheByTribe && database->permissionTribes.count(tribeId) > 0) {
-				if (database->permissionTribes[tribeId].hasCheckedCallbacks) {
-					for (auto group : database->permissionTribes[tribeId].CallbackGroups) {
+			if (permissionCallback->cacheByTribe && database->IsTribeExists(tribeId))
+			{
+				CachedPermission permissions = database->HydrateTribeGroups(tribeId);
+
+				if (permissions.hasCheckedCallbacks)
+				{
+					for (auto group : permissions.CallbackGroups)
+					{
 						if (!groups.Contains(group))
 							groups.Add(group);
 					}
@@ -64,22 +74,26 @@ namespace Permissions
 				cache = true;
 			}
 			auto callbackGroups = permissionCallback->callback(&steamId, &tribeId);
-			if (cache && callbackGroups.Num() > 0) {
-				if (permissionCallback->cacheBySteamId && database->permissionPlayers.count(steamId) > 0) {
-					database->permissionPlayers[tribeId].CallbackGroups = callbackGroups;
+			if (cache && callbackGroups.Num() > 0)
+			{
+				if (permissionCallback->cacheBySteamId && database->IsPlayerExists(steamId))
+				{
+					database->UpdatePlayerGroupCallbacks(steamId, callbackGroups);
 				}
-				if (permissionCallback->cacheByTribe && database->permissionTribes.count(tribeId) > 0) {
-					database->permissionTribes[tribeId].CallbackGroups = callbackGroups;
+				if (permissionCallback->cacheByTribe && database->IsTribeExists(tribeId))
+				{
+					database->UpdateTribeGroupCallbacks(tribeId, callbackGroups);
 				}
 			}
-			for (auto group : callbackGroups) {
+			for (auto group : callbackGroups)
+			{
 				if (!groups.Contains(group))
 					groups.Add(group);
 			}
 		}
 		return groups;
 	}
-	
+
 	TArray<FString> GetPlayerGroups(uint64 steam_id)
 	{
 		auto world = ArkApi::GetApiUtils().GetWorld();
