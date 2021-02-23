@@ -651,9 +651,10 @@ namespace Permissions
 	}
 
 	FString GetTribeGroupsStr(FString tribeDefaults, int tribe_id, bool forChat) {
-		if (database->permissionTribes.count(tribe_id) == 0)
+		if (!database->IsTribeExists(tribe_id))
 			return "";
-		CachedPermission permissions = database->permissionTribes[tribe_id];
+
+		CachedPermission permissions = database->HydrateTribeGroups(tribe_id);
 
 		FString groups_str = tribeDefaults;
 		for (int32 Index = 0; Index != permissions.Groups.Num(); ++Index) {
@@ -689,9 +690,10 @@ namespace Permissions
 	}
 
 	FString GetPlayerGroupsStr(uint64 steam_id, bool forChat) {
-		if (database->permissionPlayers.count(steam_id) == 0)
+		if (!database->IsPlayerExists(steam_id))
 			return "";
-		CachedPermission permissions = database->permissionPlayers[steam_id];
+
+		CachedPermission permissions = database->HydratePlayerGroups(steam_id);
 
 		FString groups_str;
 		for (const FString& current_group : permissions.Groups)

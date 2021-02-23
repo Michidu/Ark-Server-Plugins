@@ -94,6 +94,12 @@ public:
 		}
 	}
 
+	bool IsPlayerExists(uint64 steam_id) override
+	{
+		std::lock_guard<std::mutex> lg(playersMutex);
+		return permissionPlayers.count(steam_id) > 0;
+	}
+
 	bool AddPlayer(uint64 steam_id) override
 	{
 		try
@@ -114,12 +120,6 @@ public:
 		return false;
 	}
 
-	bool IsPlayerExists(uint64 steam_id) override
-	{
-		std::lock_guard<std::mutex> lg(playersMutex);
-		return permissionPlayers.count(steam_id) > 0;
-	}
-
 	bool IsGroupExists(const FString& group) override
 	{
 		std::lock_guard<std::mutex> lg(groupsMutex);
@@ -138,6 +138,12 @@ public:
 		}
 
 		return groups;
+	}
+
+	CachedPermission HydratePlayerGroups(uint64 steam_id) override
+	{
+		std::lock_guard<std::mutex> lg(playersMutex);
+		return permissionPlayers[steam_id];
 	}
 
 	TArray<FString> GetGroupPermissions(const FString& group) override
@@ -249,114 +255,6 @@ public:
 			{
 				std::lock_guard<std::mutex> lg(playersMutex);
 				permissionPlayers[steam_id].Groups.Remove(group);
-			}
-		}
-		catch (const std::exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-			return "Unexpected DB error";
-		}
-
-		return {};
-	}
-
-	std::optional<std::string> AddPlayerToTimedGroup(uint64 steam_id, const FString& group, int secs, int delaySecs) override
-	{
-		if (!IsPlayerExists(steam_id))
-			AddPlayer(steam_id);
-
-		if (!IsGroupExists(group))
-			return  "Group does not exist";
-
-		TArray<TimedGroup> groups;
-		if (IsPlayerExists(steam_id))
-		{
-			playersMutex.lock();
-			groups = permissionPlayers[steam_id].TimedGroups;
-			playersMutex.unlock();
-		}
-		for (int32 Index = groups.Num() - 1; Index >= 0; --Index)
-		{
-			const TimedGroup& current_group = groups[Index];
-			if (current_group.GroupName.Equals(group)) {
-				groups.RemoveAt(Index);
-				continue;
-			}
-		}
-		if (Permissions::IsPlayerInGroup(steam_id, group))
-			return "Player is already permanetly in this group.";
-
-		long long ExpireAtSecs = 0;
-		long long delayUntilSecs = 0;
-		if (delaySecs > 0) {
-			delayUntilSecs = std::chrono::duration_cast<std::chrono::seconds>((std::chrono::system_clock::now() + std::chrono::seconds(delaySecs)).time_since_epoch()).count();
-		}
-		ExpireAtSecs = std::chrono::duration_cast<std::chrono::seconds>((std::chrono::system_clock::now() + std::chrono::seconds(secs)).time_since_epoch()).count();
-
-		groups.Add(TimedGroup{ group, delayUntilSecs, ExpireAtSecs });
-		FString new_groups;
-		for (const TimedGroup& current_group : groups)
-		{
-			new_groups += FString::Format("{};{};{},", current_group.DelayUntilTime, current_group.ExpireAtTime, current_group.GroupName.ToString());
-		}
-		try
-		{
-			const bool res = db_.query(fmt::format("UPDATE {} SET TimedPermissionGroups = '{}' WHERE SteamId = {};",
-				table_players_, new_groups.ToString(), steam_id));
-			if (!res)
-			{
-				return "Unexpected DB error";
-			}
-			else
-			{
-				std::lock_guard<std::mutex> lg(playersMutex);
-				permissionPlayers[steam_id].TimedGroups = groups;
-			}
-		}
-		catch (const std::exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-			return "Unexpected DB error";
-		}
-
-		return {};
-	}
-
-	std::optional<std::string> RemovePlayerFromTimedGroup(uint64 steam_id, const FString& group) override
-	{
-		if (!IsPlayerExists(steam_id) || !IsGroupExists(group))
-			return "Player or group does not exist";
-
-		playersMutex.lock();
-		TArray<TimedGroup> groups = permissionPlayers[steam_id].TimedGroups;
-		playersMutex.unlock();
-
-		FString new_groups;
-
-		int32 groupIndex = INDEX_NONE;
-		for (int32 Index = 0; Index != groups.Num(); ++Index)
-		{
-			const TimedGroup& current_group = groups[Index];
-			if (current_group.GroupName != group)
-				new_groups += FString::Format("{};{};{},", current_group.DelayUntilTime, current_group.ExpireAtTime, current_group.GroupName.ToString());
-			else
-				groupIndex = Index;
-		}
-		if (groupIndex == INDEX_NONE)
-			return "Player is not in timed group";
-
-		try
-		{
-			const bool res = db_.query(fmt::format("UPDATE {} SET TimedPermissionGroups = '{}' WHERE SteamId = {};",
-				table_players_, new_groups.ToString(), steam_id));
-			if (!res)
-			{
-				return "Unexpected DB error";
-			}
-			else
-			{
-				std::lock_guard<std::mutex> lg(playersMutex);
-				permissionPlayers[steam_id].TimedGroups.RemoveAt(groupIndex);
 			}
 		}
 		catch (const std::exception& exception)
@@ -509,64 +407,124 @@ public:
 		return {};
 	}
 
-	void Init() override
+	std::optional<std::string> AddPlayerToTimedGroup(uint64 steam_id, const FString& group, int secs, int delaySecs) override
 	{
-		auto pGroups = InitGroups();
-		groupsMutex.lock();
-		permissionGroups = pGroups;
-		groupsMutex.unlock();
+		if (!IsPlayerExists(steam_id))
+			AddPlayer(steam_id);
 
-		auto pPlayers = InitPlayers();
+		if (!IsGroupExists(group))
+			return  "Group does not exist";
+
+		TArray<TimedGroup> groups;
+		if (IsPlayerExists(steam_id))
+		{
+			playersMutex.lock();
+			groups = permissionPlayers[steam_id].TimedGroups;
+			playersMutex.unlock();
+		}
+		for (int32 Index = groups.Num() - 1; Index >= 0; --Index)
+		{
+			const TimedGroup& current_group = groups[Index];
+			if (current_group.GroupName.Equals(group)) {
+				groups.RemoveAt(Index);
+				continue;
+			}
+		}
+		if (Permissions::IsPlayerInGroup(steam_id, group))
+			return "Player is already permanetly in this group.";
+
+		long long ExpireAtSecs = 0;
+		long long delayUntilSecs = 0;
+		if (delaySecs > 0) {
+			delayUntilSecs = std::chrono::duration_cast<std::chrono::seconds>((std::chrono::system_clock::now() + std::chrono::seconds(delaySecs)).time_since_epoch()).count();
+		}
+		ExpireAtSecs = std::chrono::duration_cast<std::chrono::seconds>((std::chrono::system_clock::now() + std::chrono::seconds(secs)).time_since_epoch()).count();
+
+		groups.Add(TimedGroup{ group, delayUntilSecs, ExpireAtSecs });
+		FString new_groups;
+		for (const TimedGroup& current_group : groups)
+		{
+			new_groups += FString::Format("{};{};{},", current_group.DelayUntilTime, current_group.ExpireAtTime, current_group.GroupName.ToString());
+		}
+		try
+		{
+			const bool res = db_.query(fmt::format("UPDATE {} SET TimedPermissionGroups = '{}' WHERE SteamId = {};",
+				table_players_, new_groups.ToString(), steam_id));
+			if (!res)
+			{
+				return "Unexpected DB error";
+			}
+			else
+			{
+				std::lock_guard<std::mutex> lg(playersMutex);
+				permissionPlayers[steam_id].TimedGroups = groups;
+			}
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+			return "Unexpected DB error";
+		}
+
+		return {};
+	}
+
+	std::optional<std::string> RemovePlayerFromTimedGroup(uint64 steam_id, const FString& group) override
+	{
+		if (!IsPlayerExists(steam_id) || !IsGroupExists(group))
+			return "Player or group does not exist";
+
 		playersMutex.lock();
-		permissionPlayers = pPlayers;
+		TArray<TimedGroup> groups = permissionPlayers[steam_id].TimedGroups;
 		playersMutex.unlock();
 
-		auto pTribes = InitTribes();
-		tribesMutex.lock();
-		permissionTribes = pTribes;
-		tribesMutex.unlock();
-	}
+		FString new_groups;
 
-	std::unordered_map<std::string, std::string> InitGroups() override
-	{
-		std::unordered_map<std::string, std::string> pGroups;
+		int32 groupIndex = INDEX_NONE;
+		for (int32 Index = 0; Index != groups.Num(); ++Index)
+		{
+			const TimedGroup& current_group = groups[Index];
+			if (current_group.GroupName != group)
+				new_groups += FString::Format("{};{};{},", current_group.DelayUntilTime, current_group.ExpireAtTime, current_group.GroupName.ToString());
+			else
+				groupIndex = Index;
+		}
+		if (groupIndex == INDEX_NONE)
+			return "Player is not in timed group";
 
 		try
 		{
-			db_.query(fmt::format("SELECT GroupName, Permissions FROM {};", table_groups_))
-				.each([&pGroups](std::string groupName, std::string groupPermissions)
-					{
-						pGroups[groupName] = groupPermissions;
-						return true;
-					});
+			const bool res = db_.query(fmt::format("UPDATE {} SET TimedPermissionGroups = '{}' WHERE SteamId = {};",
+				table_players_, new_groups.ToString(), steam_id));
+			if (!res)
+			{
+				return "Unexpected DB error";
+			}
+			else
+			{
+				std::lock_guard<std::mutex> lg(playersMutex);
+				permissionPlayers[steam_id].TimedGroups.RemoveAt(groupIndex);
+			}
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+			return "Unexpected DB error";
 		}
 
-		return pGroups;
+		return {};
 	}
 
-	std::unordered_map<uint64, CachedPermission> InitPlayers() override
+	void UpdatePlayerGroupCallbacks(uint64 steamId, TArray<FString> groups) override
 	{
-		std::unordered_map<uint64, CachedPermission> pPlayers;
+		std::lock_guard<std::mutex> lg(playersMutex);
+		permissionPlayers[steamId].CallbackGroups = groups;
+	}
 
-		try
-		{
-			db_.query(fmt::format("SELECT SteamId, PermissionGroups, TimedPermissionGroups FROM {};", table_players_))
-				.each([&pPlayers](uint64 steam_id, std::string groups, std::string timedGroups)
-					{
-						pPlayers[steam_id] = CachedPermission(FString(groups), FString(timedGroups));
-						return true;
-					});
-		}
-		catch (const std::exception& exception)
-		{
-			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-		}
-
-		return pPlayers;
+	bool IsTribeExists(int tribeId) override
+	{
+		std::lock_guard<std::mutex> lg(tribesMutex);
+		return permissionTribes.count(tribeId) > 0;
 	}
 
 	bool AddTribe(int tribeId) override
@@ -589,12 +547,6 @@ public:
 		return false;
 	}
 
-	bool IsTribeExists(int tribeId) override
-	{
-		std::lock_guard<std::mutex> lg(tribesMutex);
-		return permissionTribes.count(tribeId) > 0;
-	}
-
 	TArray<FString> GetTribeGroups(int tribeId) override
 	{
 		TArray<FString> groups;
@@ -607,6 +559,12 @@ public:
 		}
 
 		return groups;
+	}
+
+	CachedPermission HydrateTribeGroups(int tribeId) override
+	{
+		std::lock_guard<std::mutex> lg(tribesMutex);
+		return permissionTribes[tribeId];
 	}
 
 	std::optional<std::string> AddTribeToGroup(int tribeId, const FString& group) override
@@ -791,6 +749,72 @@ public:
 		}
 
 		return {};
+	}
+
+	void UpdateTribeGroupCallbacks(int tribeId, TArray<FString> groups) override
+	{
+		std::lock_guard<std::mutex> lg(tribesMutex);
+		permissionTribes[tribeId].CallbackGroups = groups;
+	}
+
+	void Init() override
+	{
+		auto pGroups = InitGroups();
+		groupsMutex.lock();
+		permissionGroups = pGroups;
+		groupsMutex.unlock();
+
+		auto pPlayers = InitPlayers();
+		playersMutex.lock();
+		permissionPlayers = pPlayers;
+		playersMutex.unlock();
+
+		auto pTribes = InitTribes();
+		tribesMutex.lock();
+		permissionTribes = pTribes;
+		tribesMutex.unlock();
+	}
+
+	std::unordered_map<std::string, std::string> InitGroups() override
+	{
+		std::unordered_map<std::string, std::string> pGroups;
+
+		try
+		{
+			db_.query(fmt::format("SELECT GroupName, Permissions FROM {};", table_groups_))
+				.each([&pGroups](std::string groupName, std::string groupPermissions)
+					{
+						pGroups[groupName] = groupPermissions;
+						return true;
+					});
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+		}
+
+		return pGroups;
+	}
+
+	std::unordered_map<uint64, CachedPermission> InitPlayers() override
+	{
+		std::unordered_map<uint64, CachedPermission> pPlayers;
+
+		try
+		{
+			db_.query(fmt::format("SELECT SteamId, PermissionGroups, TimedPermissionGroups FROM {};", table_players_))
+				.each([&pPlayers](uint64 steam_id, std::string groups, std::string timedGroups)
+					{
+						pPlayers[steam_id] = CachedPermission(FString(groups), FString(timedGroups));
+						return true;
+					});
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+		}
+
+		return pPlayers;
 	}
 
 	std::unordered_map<int, CachedPermission> InitTribes() override
