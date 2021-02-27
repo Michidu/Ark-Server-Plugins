@@ -1,4 +1,12 @@
-{  
+{
+  "Mysql":{  
+    "UseMysql":false,
+    "MysqlHost":"localhost",
+    "MysqlUser":"apitest",
+    "MysqlPass":"12345",
+    "MysqlDB":"apitest",
+	"MysqlPort": 3306
+  },
   "General":{  
     "TimedPointsReward":{  
       "Enabled":true,
