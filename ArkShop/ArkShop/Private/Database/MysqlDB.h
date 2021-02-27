@@ -9,7 +9,7 @@
 class MySql : public IDatabase
 {
 public:
-	explicit MySql(std::string server, std::string username, std::string password, std::string db_name, std::string table_players)
+	explicit MySql(std::string server, std::string username, std::string password, std::string db_name, std::string table_players, const int port)
 		: table_players_(move(table_players))
 	{
 		try
@@ -21,6 +21,7 @@ public:
 			options.dbname = move(db_name);
 			options.autoreconnect = true;
 			options.timeout = 30;
+			options.port = port;
 
 			bool result = db_.open(options);
 			if (!result)
@@ -153,7 +154,7 @@ public:
 			return false;
 
 		try
-		{	
+		{
 			return db_.query(fmt::format("UPDATE {} SET Points = Points + {} WHERE SteamId = {};", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)

@@ -20,16 +20,16 @@
 DECLARE_HOOK(AShooterGameMode_HandleNewPlayer, bool, AShooterGameMode*, AShooterPlayerController*, UPrimalPlayerData*,
 AShooterCharacter*, bool);
 DECLARE_HOOK(AShooterGameMode_Logout, void, AShooterGameMode*, AController*);
-DECLARE_HOOK(URCONServer_Init, bool, URCONServer *, FString, int, UShooterCheatManager *);
+DECLARE_HOOK(URCONServer_Init, bool, URCONServer*, FString, int, UShooterCheatManager*);
 DECLARE_HOOK(AShooterPlayerController_GridTravelToLocalPos, void, AShooterPlayerController*, unsigned __int16, unsigned
-__int16, FVector *);
+__int16, FVector*);
 
 FString closed_store_reason;
 bool store_enabled = true;
 
 bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlayerController* new_player,
-                                           UPrimalPlayerData* player_data, AShooterCharacter* player_character,
-                                           bool is_from_login)
+	UPrimalPlayerData* player_data, AShooterCharacter* player_character,
+	bool is_from_login)
 {
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(new_player);
 
@@ -39,7 +39,7 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 		if (!is_added)
 		{
 			return AShooterGameMode_HandleNewPlayer_original(_this, new_player, player_data, player_character,
-			                                                 is_from_login);
+				is_from_login);
 		}
 	}
 
@@ -57,7 +57,7 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 				int points_amount = groups_map["Default"].value("Amount", 0);
 
 				for (auto group_iter = groups_map.begin(); group_iter != groups_map.
-				     end(); ++group_iter)
+					end(); ++group_iter)
 				{
 					const FString group_name(group_iter.key().c_str());
 					if (group_name == L"Default")
@@ -119,7 +119,7 @@ void ArkShop::ToogleStore(bool enabled, const FString& reason)
 void ReadConfig()
 {
 	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/config.json";
-	std::ifstream file{config_path};
+	std::ifstream file{ config_path };
 	if (!file.is_open())
 	{
 		throw std::runtime_error("Can't open config.json");
@@ -178,7 +178,7 @@ void ShowHelp(AShooterPlayerController* player_controller, FString* /*unused*/, 
 		const float display_time = ArkShop::config["General"].value("ShopDisplayTime", 15.0f);
 		const float text_size = ArkShop::config["General"].value("ShopTextSize", 1.3f);
 		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::Green, text_size, display_time, nullptr,
-		                                       *help);
+			*help);
 	}
 }
 
@@ -203,11 +203,13 @@ void Load()
 		const bool use_mysql = mysql_conf["UseMysql"];
 		if (use_mysql)
 		{
-			ArkShop::database = std::make_unique<MySql>(mysql_conf.value("MysqlHost", ""),
-			                                            mysql_conf.value("MysqlUser", ""),
-			                                            mysql_conf.value("MysqlPass", ""),
-			                                            mysql_conf.value("MysqlDB", ""),
-														mysql_conf.value("MysqlPlayersTable", "ArkShopPlayers"));
+			ArkShop::database = std::make_unique<MySql>(
+				mysql_conf.value("MysqlHost", ""),
+				mysql_conf.value("MysqlUser", ""),
+				mysql_conf.value("MysqlPass", ""),
+				mysql_conf.value("MysqlDB", ""),
+				mysql_conf.value("MysqlPlayersTable", "ArkShopPlayers"),
+				mysql_conf.value("MysqlPort", 3306));
 		}
 		else
 		{
@@ -227,10 +229,10 @@ void Load()
 		}
 
 		ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation",
-		                           &Hook_AShooterGameMode_HandleNewPlayer,
-		                           &AShooterGameMode_HandleNewPlayer_original);
+			&Hook_AShooterGameMode_HandleNewPlayer,
+			&AShooterGameMode_HandleNewPlayer_original);
 		ArkApi::GetHooks().SetHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout,
-		                           &AShooterGameMode_Logout_original);
+			&AShooterGameMode_Logout_original);
 
 		ArkApi::GetCommands().AddConsoleCommand("ArkShop.Reload", &ReloadConfig);
 		ArkApi::GetCommands().AddRconCommand("ArkShop.Reload", &ReloadConfigRcon);
@@ -251,7 +253,7 @@ void Unload()
 	}
 
 	ArkApi::GetHooks().DisableHook("AShooterGameMode.HandleNewPlayer_Implementation",
-	                               &Hook_AShooterGameMode_HandleNewPlayer);
+		&Hook_AShooterGameMode_HandleNewPlayer);
 	ArkApi::GetHooks().DisableHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout);
 
 	ArkApi::GetCommands().RemoveConsoleCommand("ArkShop.Reload");
