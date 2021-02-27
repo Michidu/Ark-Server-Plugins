@@ -7,17 +7,12 @@ Date: 2017 Jan 22
 Author: Dao Trung Kien
 http://www.mica.edu.vn/perso/kiendt/
 
-
 Macro Flags:
 STD_OPTIONAL	: using std::optional in C++17 if defined, or std::experimental::optional otherwise
 
 */
 
-
-
-
 #pragma once
-
 
 #ifdef _MSC_VER
 //#include <winsock.h>
@@ -36,19 +31,14 @@ STD_OPTIONAL	: using std::optional in C++17 if defined, or std::experimental::op
 #include "polyfill/function_traits.h"
 #include "polyfill/datetime.h"
 
-
 #ifdef STD_OPTIONAL
 #include <optional>
 #else
 #include "polyfill/optional.hpp"
 #endif
 
-
-
 namespace daotk {
-
 	namespace mysql {
-
 		template <typename Function>
 		using function_traits = typename sqlitemysql::utility::function_traits<Function>;
 
@@ -63,7 +53,6 @@ namespace daotk {
 		class results;
 		class connection;
 
-
 		// iterator class that can be used for iterating returned result rows
 		template <typename... Values>
 		class result_iterator : std::iterator<std::random_access_iterator_tag, std::tuple<Values...>, int> {
@@ -71,7 +60,6 @@ namespace daotk {
 			results* res;
 			std::shared_ptr<std::tuple<Values...>> data;
 			unsigned long long row_index;
-
 
 			template <int I>
 			typename std::enable_if<(I > 0), void>::type
@@ -192,11 +180,9 @@ namespace daotk {
 			}
 		};
 
-
 		// container-like result class
 		template <typename... Values>
 		class result_containter {
-
 		public:
 			using tuple_type = std::tuple<Values...>;
 
@@ -214,11 +200,8 @@ namespace daotk {
 			result_iterator<Values...> end();
 		};
 
-
-
 		// result fetching
 		class results {
-
 			friend class connection;
 
 		protected:
@@ -230,7 +213,6 @@ namespace daotk {
 			results(MYSQL* _my_conn, MYSQL_RES* _res)
 				: my_conn(_my_conn), res(_res)
 			{ }
-
 
 			template <typename Function, std::size_t Index>
 			using nth_argument_type = typename function_traits<Function>::template argument<Index>;
@@ -359,9 +341,6 @@ namespace daotk {
 			result_containter<Values...> as_container() {
 				return result_containter<Values...>{this};
 			}
-
-
-
 
 			// get-value functions in different ways and types...
 
@@ -541,7 +520,6 @@ namespace daotk {
 				return std::move(v);
 			}
 
-
 		protected:
 			template <typename Value>
 			void fetch_impl(int i, Value& value) {
@@ -566,7 +544,6 @@ namespace daotk {
 			}
 		};
 
-
 		struct connect_options {
 			connect_options()
 				: timeout(0), autoreconnect(false)
@@ -580,8 +557,8 @@ namespace daotk {
 			bool autoreconnect;
 			std::string init_command;
 			std::string charset;
+			unsigned int port;
 		};
-
 
 		// database connection and query...
 		class connection : public std::enable_shared_from_this<connection> {
@@ -602,7 +579,7 @@ namespace daotk {
 				my_conn = mysql_init(nullptr);
 				if (my_conn == nullptr) return false;
 
-				if (options.autoreconnect) { 
+				if (options.autoreconnect) {
 					my_bool b = options.autoreconnect;
 					mysql_options(my_conn, MYSQL_OPT_RECONNECT, &b);
 				}
@@ -664,17 +641,16 @@ namespace daotk {
 			}
 
 			bool is_open() const {
-				if(my_conn == nullptr)
+				if (my_conn == nullptr)
 					return false;
 				std::lock_guard<std::mutex> mg(mutex);
 				return mysql_ping(my_conn) == 0;
 			}
 
 			// raw MySQL connection in case needed
-			operator MYSQL*() {
+			operator MYSQL* () {
 				return my_conn;
 			}
-
 
 			// wrapping of some functions
 
@@ -735,11 +711,6 @@ namespace daotk {
 			}
 		};
 
-
-
-
-
-
 		template <typename... Values>
 		template <int I>
 		typename std::enable_if<(I > 0), void>::type
@@ -759,9 +730,8 @@ namespace daotk {
 		void result_iterator<Values...>::fetch() {
 			res->seek(row_index);
 			data = std::make_shared<std::tuple<Values...>>();
-			fetch_impl<sizeof...(Values)-1>();
+			fetch_impl<sizeof...(Values) - 1>();
 		}
-
 
 		template <typename... Values>
 		result_iterator<Values...> result_containter<Values...>::begin() {
@@ -991,7 +961,6 @@ namespace daotk {
 				MYSQL_BIND* binds() { return (MYSQL_BIND*)_binds_mysql.data(); }
 				size_t size() { return _wrappers.size(); }
 
-
 				void pre_execute() {
 					for (auto& e : _wrappers)
 						e->pre_execute();
@@ -1017,7 +986,6 @@ namespace daotk {
 					for (auto& e : items)
 						_wrappers[e]->post_refetch();
 				}
-
 
 				template<typename T>
 				void set_variable(size_t idx, T& arg)
