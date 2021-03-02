@@ -604,6 +604,7 @@ namespace daotk {
 				options.password = password;
 				options.dbname = dbname;
 				options.timeout = timeout;
+				options.port = port;
 				return open(options);
 			}
 
