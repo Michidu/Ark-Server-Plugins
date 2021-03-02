@@ -587,7 +587,7 @@ namespace daotk {
 				if (!options.init_command.empty()) mysql_options(my_conn, MYSQL_INIT_COMMAND, options.init_command.c_str());
 				if (options.timeout > 0) mysql_options(my_conn, MYSQL_OPT_CONNECT_TIMEOUT, (char*)&options.timeout);
 
-				if (nullptr == mysql_real_connect(my_conn, options.server.c_str(), options.username.c_str(), options.password.c_str(), options.dbname.c_str(), 0, NULL, 0)) {
+				if (nullptr == mysql_real_connect(my_conn, options.server.c_str(), options.username.c_str(), options.password.c_str(), options.dbname.c_str(), options.port, NULL, 0)) {
 					mysql_close(my_conn);
 					my_conn = nullptr;
 					return false;
@@ -597,7 +597,7 @@ namespace daotk {
 			}
 
 			// open a connection (close the old one if already open), return true if successful
-			bool open(std::string server, std::string username, std::string password, std::string dbname = "", unsigned int timeout = 0) {
+			bool open(std::string server, std::string username, std::string password, std::string dbname = "", unsigned int timeout = 0, const int port = 3306) {
 				connect_options options;
 				options.server = server;
 				options.username = username;
