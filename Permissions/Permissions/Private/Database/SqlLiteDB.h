@@ -74,11 +74,16 @@ public:
 
 	bool IsPlayerExists(uint64 steam_id) override
 	{
-		std::lock_guard<std::mutex> lg(playersMutex);
-		if (permissionPlayers.find(steam_id) == permissionPlayers.end())
-			return false;
+		bool found = false;
 
-		return true;
+		playersMutex.try_lock();
+		if (permissionPlayers.find(steam_id) == permissionPlayers.end())
+			found = false;
+		else
+			found = true;
+		playersMutex.unlock();
+
+		return found;
 	}
 
 	bool AddPlayer(uint64 steam_id) override
@@ -106,11 +111,16 @@ public:
 
 	bool IsGroupExists(const FString& group) override
 	{
-		std::lock_guard<std::mutex> lg(groupsMutex);
-		if (permissionGroups.find(group.ToString()) == permissionGroups.end())
-			return false;
+		bool found = false;
 
-		return true;
+		groupsMutex.try_lock();
+		if (permissionGroups.find(group.ToString()) == permissionGroups.end())
+			found = false;
+		else
+			found = true;
+		groupsMutex.unlock();
+
+		return found;
 	}
 
 	TArray<FString> GetPlayerGroups(uint64 steam_id) override
@@ -470,11 +480,16 @@ public:
 
 	bool IsTribeExists(int tribeId) override
 	{
-		std::lock_guard<std::mutex> lg(tribesMutex);
-		if (permissionTribes.find(tribeId) == permissionTribes.end())
-			return false;
+		bool found = false;
 
-		return true;
+		tribesMutex.try_lock();
+		if (permissionTribes.find(tribeId) == permissionTribes.end())
+			found = false;
+		else
+			found = true;
+		tribesMutex.unlock();
+
+		return found;
 	}
 
 	bool AddTribe(int tribeId) override

@@ -172,9 +172,13 @@ public:
 	TArray<FString> GetAllGroups() override
 	{
 		TArray<FString> all_groups;
+		std::unordered_map<std::string, std::string> localGroups;
 
-		std::lock_guard<std::mutex> lg(groupsMutex);
-		for (auto& group : permissionGroups)
+		groupsMutex.lock();
+		localGroups = permissionGroups;
+		groupsMutex.unlock();
+
+		for (auto& group : localGroups)
 		{
 			all_groups.Add(group.first.c_str());
 		}
@@ -185,9 +189,13 @@ public:
 	TArray<uint64> GetGroupMembers(const FString& group) override
 	{
 		TArray<uint64> members;
+		std::unordered_map<uint64, CachedPermission> localPlayers;
 
-		std::lock_guard<std::mutex> lg(playersMutex);
-		for (auto& players : permissionPlayers)
+		playersMutex.lock();
+		localPlayers = permissionPlayers;
+		playersMutex.unlock();
+
+		for (auto& players : localPlayers)
 		{
 			if (Permissions::IsPlayerInGroup(players.first, group))
 				members.Add(players.first);
@@ -529,11 +537,16 @@ public:
 
 	bool IsTribeExists(int tribeId) override
 	{
-		std::lock_guard<std::mutex> lg(tribesMutex);
-		if (permissionTribes.find(tribeId) == permissionTribes.end())
-			return false;
+		bool found = false;
 
-		return true;
+		tribesMutex.try_lock();
+		if (permissionTribes.find(tribeId) == permissionTribes.end())
+			found = false;
+		else
+			found = true;
+		tribesMutex.unlock();
+
+		return found;
 	}
 
 	bool AddTribe(int tribeId) override
