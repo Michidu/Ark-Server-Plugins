@@ -28,7 +28,7 @@ namespace Permissions
 {
 	nlohmann::json config;
 	time_t lastDatabaseSyncTime = time(0);
-	int SyncFrequency = 300;
+	int SyncFrequency = 60;
 
 	FTribeData* GetTribeData(AShooterPlayerController* playerController)
 	{
@@ -943,7 +943,11 @@ namespace Permissions
 		try
 		{
 			ReadConfig();
-			SyncFrequency = config.value("ClusterSyncTime", 5) * 60; //convert to seconds
+			SyncFrequency = config.value("ClusterSyncTime", 60);
+			if (SyncFrequency < 20)
+			{
+				SyncFrequency = 20;
+			}
 		}
 		catch (const std::exception& error)
 		{
