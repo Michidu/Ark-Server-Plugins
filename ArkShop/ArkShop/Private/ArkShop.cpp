@@ -51,33 +51,28 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 		ArkShop::TimedRewards::Get().AddTask(
 			FString::Format("Points_{}", steam_id), steam_id, [steam_id]()
 			{
-				auto groups_map = ArkShop::config["General"]["TimedPointsReward"]
-					["Groups"];
+				auto groups_map = ArkShop::config["General"]["TimedPointsReward"]["Groups"];
 
-				int points_amount = groups_map["Default"].value("Amount", 0);
-
-				for (auto group_iter = groups_map.begin(); group_iter != groups_map.
-					end(); ++group_iter)
+				int high_points_amount = 0;
+				for (auto group_iter = groups_map.begin(); group_iter != groups_map.end(); ++group_iter)
 				{
 					const FString group_name(group_iter.key().c_str());
-					if (group_name == L"Default")
-					{
-						continue;
-					}
-
 					if (Permissions::IsPlayerInGroup(steam_id, group_name))
 					{
-						points_amount = group_iter.value().value("Amount", 0);
-						break;
+						int points_amount = group_iter.value().value("Amount", 0);
+						if (points_amount > high_points_amount)
+						{
+							high_points_amount = points_amount;
+						}
 					}
 				}
 
-				if (points_amount == 0)
+				if (high_points_amount == 0)
 				{
 					return;
 				}
 
-				ArkShop::Points::AddPoints(points_amount, steam_id);
+				ArkShop::Points::AddPoints(high_points_amount, steam_id);
 			},
 			interval);
 	}
@@ -252,8 +247,8 @@ void Unload()
 		ArkApi::GetCommands().RemoveChatCommand(help);
 	}
 
-	ArkApi::GetHooks().DisableHook("AShooterGameMode.HandleNewPlayer_Implementation",
-		&Hook_AShooterGameMode_HandleNewPlayer);
+	ArkApi::GetCommands().RemoveOnTimerCallback("RewardTimer");
+	ArkApi::GetHooks().DisableHook("AShooterGameMode.HandleNewPlayer_Implementation", &Hook_AShooterGameMode_HandleNewPlayer);
 	ArkApi::GetHooks().DisableHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout);
 
 	ArkApi::GetCommands().RemoveConsoleCommand("ArkShop.Reload");
@@ -264,6 +259,12 @@ void Unload()
 	ArkShop::Kits::Unload();
 
 	ArkShop::StoreSell::Unload();
+}
+
+extern "C" __declspec(dllexport) void Plugin_Unload()
+{
+	// Stop threads here
+	ArkApi::GetCommands().RemoveOnTimerCallback("RewardTimer");
 }
 
 BOOL APIENTRY DllMain(HMODULE /*hModule*/, DWORD ul_reason_for_call, LPVOID /*lpReserved*/)
