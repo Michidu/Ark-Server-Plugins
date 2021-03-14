@@ -9,11 +9,12 @@
 
 namespace ArkShop
 {
+	
 	class TimedRewards : public ITimedRewards
 	{
 	public:
 		static TimedRewards& Get();
-
+		
 		TimedRewards(const TimedRewards&) = delete;
 		TimedRewards(TimedRewards&&) = delete;
 		TimedRewards& operator=(const TimedRewards&) = delete;
@@ -47,7 +48,7 @@ namespace ArkShop
 
 		TimedRewards();
 		~TimedRewards() = default;
-
+	
 		void RewardTimer();
 
 		std::vector<std::shared_ptr<OnlinePlayersData>> online_players_;

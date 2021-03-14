@@ -17061,8 +17061,7 @@ namespace std
 @since version 1.0.0
 */
 template<>
-inline void swap(nlohmann::json& j1,
-                 nlohmann::json& j2) noexcept(
+inline void swap<nlohmann::json>(nlohmann::json& j1, nlohmann::json& j2) noexcept(
                      is_nothrow_move_constructible<nlohmann::json>::value and
                      is_nothrow_move_assignable<nlohmann::json>::value
                  )

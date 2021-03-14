@@ -60,6 +60,12 @@
     <ClInclude Include="Private\Database\MysqlDB.h">
       <Filter>Private\Database</Filter>
     </ClInclude>
+    <ClInclude Include="LootBoxes.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="RandomRewards.h">
+      <Filter>Private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Private\ArkShop.cpp">
@@ -86,5 +92,14 @@
     <ClCompile Include="Private\DBHelper.cpp">
       <Filter>Private</Filter>
     </ClCompile>
+    <ClCompile Include="LootBoxes.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="RandomRewards.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

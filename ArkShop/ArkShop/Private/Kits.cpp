@@ -1,7 +1,7 @@
 #include <Kits.h>
 
 #include <DBHelper.h>
-#include <ArkPermissions.h>
+#include <API/ARK/ArkPermissions.h>
 #include <Points.h>
 
 #include "ArkShop.h"
@@ -594,11 +594,10 @@ namespace ArkShop::Kits
 
 		commands.AddChatCommand(GetText("KitCmd"), &Kit);
 		commands.AddChatCommand(GetText("BuyKitCmd"), &BuyKit);
-
+		commands.AddRconCommand("ChangeKitAmount", &ChangeKitAmountRcon);
 		commands.AddConsoleCommand("ChangeKitAmount", &ChangeKitAmountCmd);
 		commands.AddConsoleCommand("ResetKits", &ResetKitsCmd);
 
-		commands.AddRconCommand("ChangeKitAmount", &ChangeKitAmountRcon);
 
 		ArkApi::GetHooks().SetHook("AShooterCharacter.AuthPostSpawnInit", &Hook_AShooterCharacter_AuthPostSpawnInit,
 		                           &AShooterCharacter_AuthPostSpawnInit_original);
@@ -610,11 +609,11 @@ namespace ArkShop::Kits
 
 		commands.RemoveChatCommand(GetText("KitCmd"));
 		commands.RemoveChatCommand(GetText("BuyKitCmd"));
+		commands.RemoveRconCommand("ChangeKitAmount");
 
 		commands.RemoveConsoleCommand("ChangeKitAmount");
 		commands.RemoveConsoleCommand("ResetKits");
-
-		commands.RemoveRconCommand("ChangeKitAmount");
+	
 
 		ArkApi::GetHooks().DisableHook("AShooterCharacter.AuthPostSpawnInit",
 		                               &Hook_AShooterCharacter_AuthPostSpawnInit);

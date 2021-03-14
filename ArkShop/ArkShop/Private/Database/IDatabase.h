@@ -16,6 +16,10 @@ public:
 	virtual bool UpdatePlayerKits(uint64 steam_id, const std::string& kits_data) = 0;
 	virtual bool DeleteAllKits() = 0;
 
+	// Cajas
+
+	virtual std::string GetPlayerCajas(uint64 steam_id) = 0;
+	virtual bool UpdatePlayerCajas(uint64 steam_id, const std::string& cajas_data) = 0;
 	// Points
 
 	virtual int GetPoints(uint64 steam_id) = 0;

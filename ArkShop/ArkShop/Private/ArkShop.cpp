@@ -5,7 +5,7 @@
 
 #include <fstream>
 
-#include <ArkPermissions.h>
+#include <API/ARK/ArkPermissions.h>
 #include <DBHelper.h>
 #include <Kits.h>
 #include <Points.h>
@@ -13,6 +13,7 @@
 
 #include "StoreSell.h"
 #include "TimedRewards.h"
+#include "../LootBoxes.h"
 
 #pragma comment(lib, "ArkApi.lib")
 #pragma comment(lib, "Permissions.lib")
@@ -20,16 +21,16 @@
 DECLARE_HOOK(AShooterGameMode_HandleNewPlayer, bool, AShooterGameMode*, AShooterPlayerController*, UPrimalPlayerData*,
 AShooterCharacter*, bool);
 DECLARE_HOOK(AShooterGameMode_Logout, void, AShooterGameMode*, AController*);
-DECLARE_HOOK(URCONServer_Init, bool, URCONServer*, FString, int, UShooterCheatManager*);
+DECLARE_HOOK(URCONServer_Init, bool, URCONServer *, FString, int, UShooterCheatManager *);
 DECLARE_HOOK(AShooterPlayerController_GridTravelToLocalPos, void, AShooterPlayerController*, unsigned __int16, unsigned
-__int16, FVector*);
+__int16, FVector *);
 
 FString closed_store_reason;
 bool store_enabled = true;
 
 bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlayerController* new_player,
-	UPrimalPlayerData* player_data, AShooterCharacter* player_character,
-	bool is_from_login)
+                                           UPrimalPlayerData* player_data, AShooterCharacter* player_character,
+                                           bool is_from_login)
 {
 	const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(new_player);
 
@@ -39,7 +40,7 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 		if (!is_added)
 		{
 			return AShooterGameMode_HandleNewPlayer_original(_this, new_player, player_data, player_character,
-				is_from_login);
+			                                                 is_from_login);
 		}
 	}
 
@@ -76,6 +77,7 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 			},
 			interval);
 	}
+
 	return AShooterGameMode_HandleNewPlayer_original(_this, new_player, player_data, player_character, is_from_login);
 }
 
@@ -114,7 +116,7 @@ void ArkShop::ToogleStore(bool enabled, const FString& reason)
 void ReadConfig()
 {
 	const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/config.json";
-	std::ifstream file{ config_path };
+	std::ifstream file{config_path};
 	if (!file.is_open())
 	{
 		throw std::runtime_error("Can't open config.json");
@@ -173,7 +175,7 @@ void ShowHelp(AShooterPlayerController* player_controller, FString* /*unused*/, 
 		const float display_time = ArkShop::config["General"].value("ShopDisplayTime", 15.0f);
 		const float text_size = ArkShop::config["General"].value("ShopTextSize", 1.3f);
 		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::Green, text_size, display_time, nullptr,
-			*help);
+		                                       *help);
 	}
 }
 
@@ -216,6 +218,7 @@ void Load()
 		ArkShop::Store::Init();
 		ArkShop::Kits::Init();
 		ArkShop::StoreSell::Init();
+		ArkShop::LootBoxes::Init();
 
 		const FString help = ArkShop::GetText("HelpCmd");
 		if (help != ArkApi::Tools::Utf8Decode("No message").c_str())
@@ -224,10 +227,10 @@ void Load()
 		}
 
 		ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation",
-			&Hook_AShooterGameMode_HandleNewPlayer,
-			&AShooterGameMode_HandleNewPlayer_original);
+		                           &Hook_AShooterGameMode_HandleNewPlayer,
+		                           &AShooterGameMode_HandleNewPlayer_original);
 		ArkApi::GetHooks().SetHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout,
-			&AShooterGameMode_Logout_original);
+		                           &AShooterGameMode_Logout_original);
 
 		ArkApi::GetCommands().AddConsoleCommand("ArkShop.Reload", &ReloadConfig);
 		ArkApi::GetCommands().AddRconCommand("ArkShop.Reload", &ReloadConfigRcon);

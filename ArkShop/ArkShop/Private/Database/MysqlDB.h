@@ -34,6 +34,7 @@ public:
 				"SteamId BIGINT(11) NOT NULL DEFAULT 0,"
 				"Kits VARCHAR(768) NOT NULL DEFAULT '{{}}',"
 				"Points INT DEFAULT 0,"
+				"Cajas VARCHAR(768) NOT NULL DEFAULT '{{}}',"
 				"TotalSpent INT DEFAULT 0,"
 				"PRIMARY KEY(Id),"
 				"UNIQUE INDEX SteamId_UNIQUE (SteamId ASC));", table_players_));
@@ -92,12 +93,41 @@ public:
 
 		return kits_config;
 	}
+	
+	std::string GetPlayerCajas(uint64 steam_id) override
+	{
+		std::string Cajas_config = "{}";
+
+		try
+		{
+			Cajas_config = db_.query(fmt::format("SELECT Cajas FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<std::string>();
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+		}
+
+		return Cajas_config;
+	}
 
 	bool UpdatePlayerKits(uint64 steam_id, const std::string& kits_data) override
 	{
 		try
 		{
 			return db_.query(fmt::format("UPDATE {} SET Kits = '{}' WHERE SteamId = {};", table_players_, kits_data.c_str(), steam_id));
+		}
+		catch (const std::exception& exception)
+		{
+			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
+			return false;
+		}
+	}
+
+	bool UpdatePlayerCajas(uint64 steam_id, const std::string& cajas_data) override
+	{
+		try
+		{
+			return db_.query(fmt::format("UPDATE {} SET Cajas = '{}' WHERE SteamId = {};", table_players_, cajas_data.c_str(), steam_id));
 		}
 		catch (const std::exception& exception)
 		{
@@ -154,7 +184,7 @@ public:
 			return false;
 
 		try
-		{
+		{	
 			return db_.query(fmt::format("UPDATE {} SET Points = Points + {} WHERE SteamId = {};", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)

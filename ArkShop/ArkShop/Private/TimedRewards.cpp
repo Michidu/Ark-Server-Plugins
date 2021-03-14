@@ -1,6 +1,9 @@
 #include "TimedRewards.h"
 
-#include <ArkPermissions.h>
+#include <API/ARK/ArkPermissions.h>
+#include <random>
+#include <iostream>
+#include <Points.h>
 
 namespace ArkShop
 {
@@ -14,6 +17,8 @@ namespace ArkShop
 		static TimedRewards instance;
 		return instance;
 	}
+
+
 
 	void TimedRewards::AddTask(const FString& id, uint64 steam_id, const std::function<void()>& reward_callback,
 	                           int interval)

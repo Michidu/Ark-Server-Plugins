@@ -38,15 +38,14 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;SHOP_EXPORTS;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\ArkShop\Public;..\Includes;..\..\..\ARK-Server-API\version\Core\Public;..\..\Permissions\Permissions\Public</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\kiko\Desktop\ArkShop\API\API\version\Core\Public;C:\Users\kiko\Desktop\ArkShop\API\ArkShop\ArkShop\Public;..\Includes</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -54,10 +53,11 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <DelayLoadDLLs>Permissions.dll</DelayLoadDLLs>
-      <AdditionalLibraryDirectories>..\Libs;..\..\..\ARK-Server-API\out_lib;..\..\Permissions\Permissions\Public</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\Libs;</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="LootBoxes.h" />
     <ClInclude Include="Private\ArkShop.h" />
     <ClInclude Include="Private\Database\IDatabase.h" />
     <ClInclude Include="Private\Database\MysqlDB.h" />
@@ -74,8 +74,10 @@
     <ClInclude Include="Public\Kits.h" />
     <ClInclude Include="Public\Points.h" />
     <ClInclude Include="Public\Store.h" />
+    <ClInclude Include="RandomRewards.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="LootBoxes.cpp" />
     <ClCompile Include="Private\ArkShop.cpp" />
     <ClCompile Include="Private\DBHelper.cpp" />
     <ClCompile Include="Private\Kits.cpp" />
@@ -84,6 +86,10 @@
     <ClCompile Include="Private\Store.cpp" />
     <ClCompile Include="Private\StoreSell.cpp" />
     <ClCompile Include="Private\TimedRewards.cpp" />
+    <ClCompile Include="RandomRewards.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

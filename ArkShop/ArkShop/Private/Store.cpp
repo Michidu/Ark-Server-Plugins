@@ -5,7 +5,7 @@
 #include "ArkShop.h"
 #include "DBHelper.h"
 #include "ShopLog.h"
-
+#include <API/ARK/ArkPermissions.h>
 namespace ArkShop::Store
 {
 	/**
@@ -139,6 +139,72 @@ namespace ArkShop::Store
 
 		return success;
 	}
+
+
+	bool BuyAll(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry, uint64 steam_id)
+	{
+
+		bool success = false;
+		const int price = item_entry["Price"];
+
+		const int points = Points::GetPoints(steam_id);
+
+		if (points >= price && Points::SpendPoints(price, steam_id))
+		{
+
+			// Give items
+			auto items_map = item_entry.value("Items", nlohmann::json::array());
+			for (const auto& item : items_map)
+			{
+				const int amount = item["Amount"];
+				const float quality = item["Quality"];
+				const bool force_blueprint = item["ForceBlueprint"];
+				std::string blueprint = item["Blueprint"];
+
+				FString fblueprint(blueprint.c_str());
+
+				TArray<UPrimalItem*> out_items;
+				player_controller->GiveItem(&out_items, &fblueprint, amount, quality, force_blueprint, false, 0);
+			}
+
+			// Give dinos
+			auto dinos_map = item_entry.value("Dinos", nlohmann::json::array());
+			for (const auto& dino : dinos_map)
+			{
+				const int level = dino["Level"];
+				const bool neutered = dino.value("Neutered", false);
+				std::string blueprint = dino["Blueprint"];
+
+				const FString fblueprint(blueprint.c_str());
+
+				ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
+			}
+
+			auto Commands_map = item_entry.value("Commands", nlohmann::json::array());
+			for (const auto& item : Commands_map)
+			{
+				const std::string command = item["Command"];
+
+				FString fcommand = fmt::format(command, fmt::arg("steamid", steam_id)).c_str();
+
+				FString result;
+				player_controller->ConsoleCommand(&result, &fcommand, true);
+			}
+					
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+				*GetText("BoughtItem"));
+
+			success = true;
+		}
+		else
+		{
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+				*GetText("NoPoints"));
+		}
+							
+		return success;
+	}
+
 
 	/**
 	* \brief Buy a dino from shop
@@ -274,7 +340,7 @@ namespace ArkShop::Store
 				                                      *GetText("WrongId"));
 				return false;
 			}
-
+								
 			auto item_entry = item_entry_iter.value();
 
 			const std::string type = item_entry["Type"];
@@ -292,10 +358,15 @@ namespace ArkShop::Store
 				                                      *GetText("BadLevel"), min_level, max_level);
 				return false;
 			}
-
+				
+								
 			if (type == "item")
 			{
 				success = BuyItem(player_controller, item_entry, steam_id, amount);
+			}
+			else if (type == "itemdino")
+			{
+				success = BuyAll(player_controller, item_entry, steam_id);
 			}
 			else if (type == "dino")
 			{
@@ -321,8 +392,7 @@ namespace ArkShop::Store
 			if (success)
 			{
 				const std::wstring log = fmt::format(L"{}({}) bought item \"{}\". Amount - {}",
-				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
-				                                     *item_id, amount);
+				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id, *item_id, amount);
 
 				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
 			}
