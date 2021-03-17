@@ -270,6 +270,19 @@ namespace ArkShop::Kits
 				return;
 			}
 
+			const unsigned time = kit_entry.value("Time", 0) * 3600;
+			auto currentServerTime = ArkApi::GetApiUtils().GetWorld()->TimeSecondsField();
+
+			if (time > currentServerTime)
+			{
+				Tools::Time_t timediff = Tools::GetAvailableTimeDiff(time, currentServerTime);
+
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+					*GetText("BadTimeKit"), timediff.hours, timediff.minutes);
+
+				return;
+			}
+
 			if (const int kit_amount = GetKitAmount(steam_id, kit_name);
 				kit_amount > 0 && ChangeKitAmount(kit_name, -1, steam_id))
 			{
