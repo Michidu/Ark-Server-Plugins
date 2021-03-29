@@ -53,7 +53,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <DelayLoadDLLs>Permissions.dll</DelayLoadDLLs>
-      <AdditionalLibraryDirectories>..\Libs;</AdditionalLibraryDirectories>
+       <AdditionalLibraryDirectories>..\Libs;..\..\..\ARK-Server-API\out_lib;..\..\Permissions\Permissions\Public</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
