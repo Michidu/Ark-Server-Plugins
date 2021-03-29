@@ -24,7 +24,7 @@ public:
 				"SteamId integer default 0,"
 				"Kits text default '{}',"
 				"Points integer default 0,"
-				"Cajas text default '{}',"
+				"Box text default '{}',"
 				"TotalSpent integer default 0"
 				");";
 		}
@@ -82,20 +82,20 @@ public:
 		return kits_config;
 	}
 
-	std::string GetPlayerCajas(uint64 steam_id) override
+	std::string GetPlayerBox(uint64 steam_id) override
 	{
-		std::string Cajas_config = "{}";
+		std::string Box_config = "{}";
 
 		try
 		{
-			db_ << "SELECT Cajas FROM Players WHERE SteamId = ?;" << steam_id >> Cajas_config;
+			db_ << "SELECT Box FROM Players WHERE SteamId = ?;" << steam_id >> Box_config;
 		}
 		catch (const sqlite::sqlite_exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 		}
 
-		return Cajas_config;
+		return Box_config;
 	}
 
 	bool UpdatePlayerKits(uint64 steam_id, const std::string& kits_data) override
@@ -112,11 +112,11 @@ public:
 		}
 	}
 
-	bool UpdatePlayerCajas(uint64 steam_id, const std::string& cajas_data) override
+	bool UpdatePlayerBox(uint64 steam_id, const std::string& cajas_data) override
 	{
 		try
 		{
-			db_ << "UPDATE Players SET Cajas = ? WHERE SteamId = ?;" << cajas_data << steam_id;
+			db_ << "UPDATE Players SET Cajas = ? WHERE SteamId = ?;" << Box_data << steam_id;
 			return true;
 		}
 		catch (const sqlite::sqlite_exception& exception)
