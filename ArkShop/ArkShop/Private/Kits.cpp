@@ -219,11 +219,10 @@ namespace ArkShop::Kits
 		{
 			const int level = dino["Level"];
 			const bool neutered = dino.value("Neutered", false);
+			std::string saddleblueprint = dino.value("SaddleBlueprint", "");
 			std::string blueprint = dino["Blueprint"];
 
-			const FString fblueprint(blueprint.c_str());
-
-			ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
+			bool success = ArkShop::GiveDino(player_controller, level, neutered, blueprint, saddleblueprint);
 		}
 	}
 
@@ -231,7 +230,7 @@ namespace ArkShop::Kits
 	 * \brief Redeem the kit for the specific player
 	 */
 	void RedeemKit(AShooterPlayerController* player_controller, const FString& kit_name, bool should_log,
-	               bool from_spawn)
+		bool from_spawn)
 	{
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
 		{
@@ -245,7 +244,7 @@ namespace ArkShop::Kits
 			if (!CanUseKit(player_controller, steam_id, kit_name))
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				                                      *GetText("NoPermissionsKit"));
+					*GetText("NoPermissionsKit"));
 				return;
 			}
 
@@ -257,7 +256,7 @@ namespace ArkShop::Kits
 			if (kit_entry_iter == kits_list.end())
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				                                      *GetText("WrongId"));
+					*GetText("WrongId"));
 				return;
 			}
 
@@ -266,7 +265,7 @@ namespace ArkShop::Kits
 			if (!from_spawn && kit_entry.value("OnlyFromSpawn", false))
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				                                      *GetText("OnlyOnSpawnKit"));
+					*GetText("OnlyOnSpawnKit"));
 				return;
 			}
 
@@ -276,14 +275,14 @@ namespace ArkShop::Kits
 				GiveKitFromJson(player_controller, kit_entry);
 
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				                                      *GetText("KitsLeft"), kit_amount - 1, *kit_name);
+					*GetText("KitsLeft"), kit_amount - 1, *kit_name);
 
 				// Log
 				if (should_log)
 				{
 					const std::wstring log = fmt::format(TEXT("{}({}) used kit \"{}\""),
-					                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
-					                                     *kit_name);
+						*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
+						*kit_name);
 
 					ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
 				}
@@ -291,7 +290,7 @@ namespace ArkShop::Kits
 			else if (should_log)
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				                                      *GetText("NoKitsLeft"), *kit_name);
+					*GetText("NoKitsLeft"), *kit_name);
 			}
 		}
 	}
@@ -336,10 +335,10 @@ namespace ArkShop::Kits
 		}
 
 		const FString kits_list_str = FString::Format(TEXT("{}\n{}\n{}"), *GetText("AvailableKits"), *kits_str,
-		                                              *GetText("KitUsage"));
+			*GetText("KitUsage"));
 
 		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::Green, text_size, display_time, nullptr,
-		                                       *kits_list_str);
+			*kits_list_str);
 	}
 
 	// Chat callbacks
@@ -406,7 +405,7 @@ namespace ArkShop::Kits
 				if (kit_entry_iter == kits_list.end())
 				{
 					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-					                                      *GetText("WrongId"));
+						*GetText("WrongId"));
 					return;
 				}
 
@@ -416,7 +415,7 @@ namespace ArkShop::Kits
 				if (price == 0)
 				{
 					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-					                                      *GetText("CantBuyKit"));
+						*GetText("CantBuyKit"));
 					return;
 				}
 
@@ -431,27 +430,27 @@ namespace ArkShop::Kits
 					ChangeKitAmount(kit_name, amount, steam_id);
 
 					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-					                                      *GetText("BoughtKit"), *kit_name);
+						*GetText("BoughtKit"), *kit_name);
 
 					// Log
 					const std::wstring log = fmt::format(TEXT("{}({}) bought kit \"{}\". Amount - {}"),
-					                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
-					                                     *kit_name,
-					                                     amount);
+						*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
+						*kit_name,
+						amount);
 
 					ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
 				}
 				else
 				{
 					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-					                                      *GetText("NoPoints"));
+						*GetText("NoPoints"));
 				}
 			}
 		}
 		else
 		{
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-			                                      *GetText("BuyKitUsage"));
+				*GetText("BuyKitUsage"));
 		}
 	}
 
@@ -497,7 +496,7 @@ namespace ArkShop::Kits
 		if (result)
 		{
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
-			                                        "Successfully changed kit amount");
+				"Successfully changed kit amount");
 		}
 		else
 		{
@@ -519,13 +518,13 @@ namespace ArkShop::Kits
 				database->DeleteAllKits();
 
 				ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
-				                                        "Successfully reset kits");
+					"Successfully reset kits");
 			}
 		}
 		else
 		{
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Yellow,
-			                                        "You are going to reset kits for ALL players\nType 'ResetKits confirm' in console if you want to continue");
+				"You are going to reset kits for ALL players\nType 'ResetKits confirm' in console if you want to continue");
 		}
 	}
 
@@ -601,7 +600,7 @@ namespace ArkShop::Kits
 		commands.AddRconCommand("ChangeKitAmount", &ChangeKitAmountRcon);
 
 		ArkApi::GetHooks().SetHook("AShooterCharacter.AuthPostSpawnInit", &Hook_AShooterCharacter_AuthPostSpawnInit,
-		                           &AShooterCharacter_AuthPostSpawnInit_original);
+			&AShooterCharacter_AuthPostSpawnInit_original);
 	}
 
 	void Unload()
@@ -617,6 +616,6 @@ namespace ArkShop::Kits
 		commands.RemoveRconCommand("ChangeKitAmount");
 
 		ArkApi::GetHooks().DisableHook("AShooterCharacter.AuthPostSpawnInit",
-		                               &Hook_AShooterCharacter_AuthPostSpawnInit);
+			&Hook_AShooterCharacter_AuthPostSpawnInit);
 	}
 } // namespace Kits // namespace ArkShop

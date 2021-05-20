@@ -27,6 +27,87 @@ __int16, FVector*);
 FString closed_store_reason;
 bool store_enabled = true;
 
+//Builds custom data for cryopod
+FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrimalItem* saddle)
+{
+	FCustomItemData customItemData;
+
+	FARKDinoData dinoData;
+	dino->GetDinoData(&dinoData);
+
+	customItemData.CustomDataName = FName(L"Dino", EFindName::FNAME_Add, false);
+	customItemData.CustomDataNames.Add(FName(L"MissionTemporary", EFindName::FNAME_Add, false)); //What it should be...
+	customItemData.CustomDataNames.Add(FName(L"None", EFindName::FNAME_Find, false)); //What WC has it currently set to...
+
+	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Health]);
+	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Stamina]);
+	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Torpidity]);
+	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Health]);
+	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Stamina]);
+	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Torpidity]);
+	customItemData.CustomDataFloats.Add(dino->bIsFemale()());
+
+	customItemData.CustomDataStrings.Add(dinoData.DinoNameInMap);
+	customItemData.CustomDataStrings.Add(dinoData.DinoName);
+	customItemData.CustomDataClasses.Add(dinoData.DinoClass);
+
+	FCustomItemByteArray dinoBytes, saddlebytes;
+	dinoBytes.Bytes = dinoData.DinoData;
+	customItemData.CustomDataBytes.ByteArrays.Add(dinoBytes);
+	if (saddle)
+	{
+		saddle->GetItemBytes(&saddlebytes.Bytes);
+		customItemData.CustomDataBytes.ByteArrays.Add(saddlebytes);
+	}
+
+	return customItemData;
+}
+
+//Spawns dino or gives in cryopod
+bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, bool neutered, std::string blueprint, std::string saddleblueprint)
+{
+	bool success = false;
+	const FString fblueprint(blueprint.c_str());
+	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
+	if (dino && ArkShop::config["General"].value("GiveDinosInCryopods", false))
+	{
+		FString cryo = L"Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'";
+		UClass* Class = UVictoryCore::BPLoadClass(&cryo);
+		UPrimalItem* item = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
+		if (item)
+		{
+			if (ArkShop::config["General"].value("CryoLimitedTime", false))
+				item->AddItemDurability((item->ItemDurabilityField() - 3600) * -1);
+
+			UPrimalItem* saddle = nullptr;
+			if (saddleblueprint.size() > 0)
+			{
+				FString fblueprint(saddleblueprint.c_str());
+				UClass* Class = UVictoryCore::BPLoadClass(&fblueprint);
+				saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
+			}
+
+			FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle);
+			item->SetCustomItemData(&customItemData);
+			item->UpdatedItem(true);
+
+			if (player_controller->GetPlayerInventoryComponent())
+			{
+				UPrimalItem* item2 = player_controller->GetPlayerInventoryComponent()->AddItemObject(item);
+
+				if (item2)
+					success = true;
+			}
+		}
+
+		dino->Destroy(true, false);
+	}
+	else if (dino)
+		success = true;
+
+	return success;
+}
+
 bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlayerController* new_player,
 	UPrimalPlayerData* player_data, AShooterCharacter* player_character,
 	bool is_from_login)
