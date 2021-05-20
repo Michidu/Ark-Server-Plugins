@@ -235,6 +235,9 @@
     "HelpCmd": "/shophelp",
     "ShopMessage": "Usage: /buy id amount",
     "HelpMessage": "This is shop help message",
-    "RefundError": "Points refunded due to an error"
+    "RefundError": "Points refunded due to an error",
+    "ShopFindCmd": "/shopfind",
+    "ShopFindUsage": "Usage: /shopfind searchterm",
+    "ShopFindNotFound": "No items matched your search"
   }
 }
