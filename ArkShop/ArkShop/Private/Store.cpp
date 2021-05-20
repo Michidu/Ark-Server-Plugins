@@ -462,6 +462,90 @@ namespace ArkShop::Store
 		}
 	}
 
+	bool findCaseInsensitive(std::wstring data, std::wstring toSearch, size_t pos = 0)
+	{
+		std::transform(data.begin(), data.end(), data.begin(), ::tolower);
+		std::transform(toSearch.begin(), toSearch.end(), toSearch.begin(), ::tolower);
+
+		if (data.find(toSearch, pos) != std::wstring::npos)
+			return true;
+		else
+			return false;
+	}
+
+	void FindItems(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
+	{
+		std::wstring searchTerm;
+		TArray<FString> parsed;
+		message->ParseIntoArray(parsed, L" ", true);
+
+		if (parsed.IsValidIndex(1))
+		{
+			searchTerm = ArkApi::Tools::Utf8Decode(parsed[1].ToString());
+		}
+		else
+		{
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"), *GetText("ShopFindUsage"));
+			return;
+		}
+
+		auto items_list = config["ShopItems"];
+
+		const int items_per_page = config["General"].value("ItemsPerPage", 20);
+		const float display_time = config["General"].value("ShopDisplayTime", 15.0f);
+		const float text_size = config["General"].value("ShopTextSize", 1.3f);
+
+		FString store_str = "";
+
+		for (auto iter = items_list.begin(); iter != items_list.end(); ++iter)
+		{
+			bool found = false;
+
+			const size_t i = distance(items_list.begin(), iter);
+
+			auto item = iter.value();
+			std::wstring key = ArkApi::Tools::Utf8Decode(iter.key());
+			if (findCaseInsensitive(key, searchTerm))
+				found = true;
+
+			const int price = item["Price"];
+			const std::string type = item["Type"];
+			const std::wstring description = ArkApi::Tools::Utf8Decode(item.value("Description", "No description"));
+
+			if (findCaseInsensitive(description, searchTerm))
+				found = true;
+
+			if (found)
+			{
+				if (type == "dino")
+				{
+					const int level = item["Level"];
+
+					store_str += FString::Format(*GetText("StoreListDino"), i + 1, description, level,
+						ArkApi::Tools::Utf8Decode(iter.key()), price);
+				}
+				else
+				{
+					store_str += FString::Format(*GetText("StoreListItem"), i + 1, description,
+						ArkApi::Tools::Utf8Decode(iter.key()),
+						price);
+				}
+			}
+		}
+
+		if (store_str.IsEmpty())
+		{
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"), *GetText("ShopFindNotFound"));
+		}
+		else
+		{
+			store_str = FString::Format(*GetText("StoreListFormat"), *store_str);
+
+			ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::Green, text_size, display_time, nullptr,
+				*store_str);
+		}
+	}
+
 	bool IsStoreEnabled(AShooterPlayerController* player_controller)
 	{
 		return ArkShop::IsStoreEnabled(player_controller);
@@ -478,6 +562,7 @@ namespace ArkShop::Store
 
 		commands.AddChatCommand(GetText("BuyCmd"), &ChatBuy);
 		commands.AddChatCommand(GetText("ShopCmd"), &ShowItems);
+		commands.AddChatCommand(GetText("ShopFindCmd"), &FindItems);
 	}
 
 	void Unload()
@@ -486,5 +571,6 @@ namespace ArkShop::Store
 
 		commands.RemoveChatCommand(GetText("BuyCmd"));
 		commands.RemoveChatCommand(GetText("ShopCmd"));
+		commands.RemoveChatCommand(GetText("ShopFindCmd"));
 	}
 } // namespace Store // namespace ArkShop
