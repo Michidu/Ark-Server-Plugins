@@ -85,6 +85,10 @@
     <ClCompile Include="Private\StoreSell.cpp" />
     <ClCompile Include="Private\TimedRewards.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Configs\config.json" />
+    <None Include="..\Configs\PluginInfo.json" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

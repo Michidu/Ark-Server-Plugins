@@ -19,9 +19,6 @@ namespace Permissions
 	ARK_API std::optional<std::string> AddPlayerToGroup(uint64 steam_id, const FString& group);
 	ARK_API std::optional<std::string> RemovePlayerFromGroup(uint64 steam_id, const FString& group);
 
-	ARK_API std::optional<std::string> AddPlayerToTimedGroup(uint64 steam_id, const FString& group, int secs, int delaySecs);
-	ARK_API std::optional<std::string> RemovePlayerFromTimedGroup(uint64 steam_id, const FString& group);
-
 	ARK_API std::optional<std::string> AddGroup(const FString& group);
 	ARK_API std::optional<std::string> RemoveGroup(const FString& group);
 
@@ -30,6 +27,9 @@ namespace Permissions
 
 	ARK_API std::optional<std::string> GroupGrantPermission(const FString& group, const FString& permission);
 	ARK_API std::optional<std::string> GroupRevokePermission(const FString& group, const FString& permission);
+
+	ARK_API std::optional<std::string> AddPlayerToTimedGroup(uint64 steam_id, const FString& group, int secs, int delaySecs);
+	ARK_API std::optional<std::string> RemovePlayerFromTimedGroup(uint64 steam_id, const FString& group);
 
 	ARK_API std::optional<std::string> AddTribeToGroup(int tribeId, const FString& group);
 	ARK_API std::optional<std::string> RemoveTribeFromGroup(int tribeId, const FString& group);

@@ -10,6 +10,9 @@
     <Filter Include="Private\Database">
       <UniqueIdentifier>{000d9792-63b8-4997-b1e2-7c23f45c0810}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configs">
+      <UniqueIdentifier>{03c5371d-7f79-4d62-b825-2d3f38dab422}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Public\Points.h">
@@ -86,5 +89,13 @@
     <ClCompile Include="Private\DBHelper.cpp">
       <Filter>Private</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Configs\config.json">
+      <Filter>Configs</Filter>
+    </None>
+    <None Include="..\Configs\PluginInfo.json">
+      <Filter>Configs</Filter>
+    </None>
   </ItemGroup>
 </Project>
