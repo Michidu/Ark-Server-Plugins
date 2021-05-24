@@ -134,7 +134,7 @@ void Hook_UPrimalCharacterStatusComponent_ServerApplyLevelUp(UPrimalCharacterSta
 {
 	UPrimalCharacterStatusComponent_ServerApplyLevelUp_original(_this, LevelUpValueType, ByPC);
 
-	if (ByPC != nullptr)
+	if (ByPC->GetPlayerCharacter()->MyCharacterStatusComponentField() == _this)
 	{
 		const bool use_permission = config.value("UseAutoPermission", false);
 
