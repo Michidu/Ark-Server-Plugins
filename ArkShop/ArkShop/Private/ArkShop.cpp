@@ -134,6 +134,8 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 			{
 				auto groups_map = ArkShop::config["General"]["TimedPointsReward"]["Groups"];
 
+				const bool stack_rewards = ArkShop::config["General"]["TimedPointsReward"].value("StackRewards", false);
+
 				int high_points_amount = 0;
 				for (auto group_iter = groups_map.begin(); group_iter != groups_map.end(); ++group_iter)
 				{
@@ -141,14 +143,22 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 					if (Permissions::IsPlayerInGroup(steam_id, group_name))
 					{
 						int points_amount = group_iter.value().value("Amount", 0);
-						if (points_amount > high_points_amount)
+
+						if (!stack_rewards)
 						{
-							high_points_amount = points_amount;
+							if (points_amount > high_points_amount)
+							{
+								high_points_amount = points_amount;
+							}
+						}
+						else
+						{
+							high_points_amount += points_amount;
 						}
 					}
 				}
 
-				if (high_points_amount == 0)
+				if (high_points_amount <= 0)
 				{
 					return;
 				}

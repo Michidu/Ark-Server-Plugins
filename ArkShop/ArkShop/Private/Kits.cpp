@@ -224,6 +224,31 @@ namespace ArkShop::Kits
 
 			bool success = ArkShop::GiveDino(player_controller, level, neutered, blueprint, saddleblueprint);
 		}
+
+		// Give commands
+		auto commands_map = kit_entry.value("Commands", nlohmann::json::array());
+		for (const auto& command_entry : commands_map)
+		{
+			const std::string command = command_entry["Command"];
+			const bool exec_as_admin = command_entry.value("ExecuteAsAdmin", false);
+
+			FString fcommand = fmt::format(
+				command, fmt::arg("steamid", ArkApi::GetApiUtils().GetSteamIdFromController(player_controller)),
+				fmt::arg("playerid", ArkApi::GetApiUtils().GetPlayerID(player_controller)),
+				fmt::arg("tribeid", ArkApi::GetApiUtils().GetTribeID(player_controller))
+			).c_str();
+
+			const bool was_admin = player_controller->bIsAdmin()();
+
+			if (exec_as_admin)
+				player_controller->bIsAdmin() = true;
+
+			FString result;
+			player_controller->ConsoleCommand(&result, &fcommand, true);
+
+			if (exec_as_admin)
+				player_controller->bIsAdmin() = was_admin;
+		}
 	}
 
 	/**

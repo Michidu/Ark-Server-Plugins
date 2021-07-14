@@ -11,6 +11,7 @@
     "TimedPointsReward": {
       "Enabled": true,
       "Interval": 5,
+      "StackRewards": false,
       "Groups": {
         "Default": {
           "Amount": 5
@@ -175,6 +176,17 @@
           "Command": "GiveEngrams"
         }
       ]
+    },
+    "fly": {
+      "Type": "command",
+      "Description": "Fly command",
+      "Price": 5000,
+      "Items": [
+        {
+          "Command": "fly",
+          "ExecuteAsAdmin": true
+        }
+      ]
     }
   },
   "SellItems": {
@@ -238,6 +250,7 @@
     "RefundError": "Points refunded due to an error",
     "ShopFindCmd": "/shopfind",
     "ShopFindUsage": "Usage: /shopfind searchterm",
-    "ShopFindNotFound": "No items matched your search"
+    "ShopFindNotFound": "No items matched your search",
+    "NoPermissionsStore": "<RichColor Color=\"1, 0, 0, 1\">You don't have permission to buy this {0}!</>"
   }
 }
