@@ -1,6 +1,7 @@
 #include <Store.h>
 
 #include <Points.h>
+#include <ArkPermissions.h>
 
 #include "ArkShop.h"
 #include "DBHelper.h"
@@ -119,10 +120,24 @@ namespace ArkShop::Store
 			{
 				const std::string command = item["Command"];
 
-				FString fcommand = fmt::format(command, fmt::arg("steamid", steam_id)).c_str();
+				const bool exec_as_admin = item.value("ExecuteAsAdmin", false);
+
+				FString fcommand = fmt::format(
+					command, fmt::arg("steamid", steam_id), 
+					fmt::arg("playerid", ArkApi::GetApiUtils().GetPlayerID(player_controller)),
+					fmt::arg("tribeid", ArkApi::GetApiUtils().GetTribeID(player_controller))
+				).c_str();
+
+				const bool was_admin = player_controller->bIsAdmin()();
+
+				if (exec_as_admin)
+					player_controller->bIsAdmin() = true;
 
 				FString result;
 				player_controller->ConsoleCommand(&result, &fcommand, true);
+
+				if (exec_as_admin)
+					player_controller->bIsAdmin() = was_admin;
 			}
 
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
@@ -279,6 +294,35 @@ namespace ArkShop::Store
 			auto item_entry = item_entry_iter.value();
 
 			const std::string type = item_entry["Type"];
+
+			// Check if player has permisson to buy this
+
+			const std::string permissions = item_entry.value("Permissions", "");
+			if (!permissions.empty())
+			{
+				const FString fpermissions(permissions);
+
+				TArray<FString> groups;
+				fpermissions.ParseIntoArray(groups, L",", true);
+
+				bool has_permissions = false;
+
+				for (const auto& group : groups)
+				{
+					if (Permissions::IsPlayerInGroup(steam_id, group))
+					{
+						has_permissions = true;
+						break;
+					}
+				}
+
+				if (!has_permissions)
+				{
+					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+						*GetText("NoPermissionsStore"), type);
+					return false;
+				}
+			}
 
 			const int min_level = item_entry.value("MinLevel", 1);
 			const int max_level = item_entry.value("MaxLevel", 999);
