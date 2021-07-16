@@ -27,8 +27,7 @@
     "DbPathOverride": "",
     "DefaultKit": "vip,starter",
     "GiveDinosInCryopods": true,
-    "CryoLimitedTime": false,
-    "CryoItemPath": "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"
+    "CryoLimitedTime": false
   },
   "Kits": {
     "starter": {
