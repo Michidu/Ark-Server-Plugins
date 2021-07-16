@@ -27,7 +27,8 @@
     "DbPathOverride": "",
     "DefaultKit": "vip,starter",
     "GiveDinosInCryopods": true,
-    "CryoLimitedTime": false
+    "CryoLimitedTime": false,
+    "CryoItemPath": "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"
   },
   "Kits": {
     "starter": {
@@ -80,6 +81,23 @@
           "Quality": 0,
           "ForceBlueprint": false,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponStoneClub.PrimalItem_WeaponStoneClub'"
+        }
+      ]
+    },
+    "resources": {
+      "DefaultAmount": 1,
+      "Price": 25,
+      "MinLevel": 1,
+      "MaxLevel": 20,
+      "Description": "100 stone and 100 wood",
+      "Commands": [
+        {
+          "Command": "gfi stone 100 0 0",
+          "ExecuteAsAdmin": true
+        },
+        {
+          "Command": "gfi wood 100 0 0",
+          "ExecuteAsAdmin": true
         }
       ]
     }
@@ -146,6 +164,13 @@
       "Description": "Artifact Crate 2",
       "Price": 100,
       "ClassName": "ArtifactCrate_2_C"
+    },
+    "crate3": {
+      "Type": "beacon",
+      "Description": "Artifact Crate 3",
+      "Permissions": "Admins,Premiums",
+      "Price": 100,
+      "ClassName": "ArtifactCrate_3_C"
     },
     "exp1000": {
       "Type": "experience",

@@ -71,7 +71,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
 	if (dino && ArkShop::config["General"].value("GiveDinosInCryopods", false))
 	{
-		FString cryo = L"Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'";
+		FString cryo = FString(ArkShop::config["General"].value("CryoItemPath", "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"));
 		UClass* Class = UVictoryCore::BPLoadClass(&cryo);
 		UPrimalItem* item = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
 		if (item)
