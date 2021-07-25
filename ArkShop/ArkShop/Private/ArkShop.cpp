@@ -35,9 +35,9 @@ FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrim
 	FARKDinoData dinoData;
 	dino->GetDinoData(&dinoData);
 
-	customItemData.CustomDataName = FName(L"Dino", EFindName::FNAME_Add, false);
-	customItemData.CustomDataNames.Add(FName(L"MissionTemporary", EFindName::FNAME_Add, false)); //What it should be...
-	customItemData.CustomDataNames.Add(FName(L"None", EFindName::FNAME_Find, false)); //What WC has it currently set to...
+	customItemData.CustomDataName = FName("Dino", EFindName::FNAME_Add);
+	customItemData.CustomDataNames.Add(FName("MissionTemporary", EFindName::FNAME_Add)); //What it should be...
+	customItemData.CustomDataNames.Add(FName("None", EFindName::FNAME_Find)); //What WC has it currently set to...
 
 	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Health]);
 	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Stamina]);
@@ -71,7 +71,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
 	if (dino && ArkShop::config["General"].value("GiveDinosInCryopods", false))
 	{
-		FString cryo = L"Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'";
+		FString cryo = FString(ArkShop::config["General"].value("CryoItemPath", "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"));
 		UClass* Class = UVictoryCore::BPLoadClass(&cryo);
 		UPrimalItem* item = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
 		if (item)
@@ -134,6 +134,8 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 			{
 				auto groups_map = ArkShop::config["General"]["TimedPointsReward"]["Groups"];
 
+				const bool stack_rewards = ArkShop::config["General"]["TimedPointsReward"].value("StackRewards", false);
+
 				int high_points_amount = 0;
 				for (auto group_iter = groups_map.begin(); group_iter != groups_map.end(); ++group_iter)
 				{
@@ -141,14 +143,22 @@ bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlay
 					if (Permissions::IsPlayerInGroup(steam_id, group_name))
 					{
 						int points_amount = group_iter.value().value("Amount", 0);
-						if (points_amount > high_points_amount)
+
+						if (!stack_rewards)
 						{
-							high_points_amount = points_amount;
+							if (points_amount > high_points_amount)
+							{
+								high_points_amount = points_amount;
+							}
+						}
+						else
+						{
+							high_points_amount += points_amount;
 						}
 					}
 				}
 
-				if (high_points_amount == 0)
+				if (high_points_amount <= 0)
 				{
 					return;
 				}

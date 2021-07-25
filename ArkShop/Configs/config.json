@@ -11,6 +11,7 @@
     "TimedPointsReward": {
       "Enabled": true,
       "Interval": 5,
+      "StackRewards": false,
       "Groups": {
         "Default": {
           "Amount": 5
@@ -81,6 +82,23 @@
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponStoneClub.PrimalItem_WeaponStoneClub'"
         }
       ]
+    },
+    "resources": {
+      "DefaultAmount": 1,
+      "Price": 25,
+      "MinLevel": 1,
+      "MaxLevel": 20,
+      "Description": "100 stone and 100 wood",
+      "Commands": [
+        {
+          "Command": "gfi stone 100 0 0",
+          "ExecuteAsAdmin": true
+        },
+        {
+          "Command": "gfi wood 100 0 0",
+          "ExecuteAsAdmin": true
+        }
+      ]
     }
   },
   "ShopItems": {
@@ -146,6 +164,13 @@
       "Price": 100,
       "ClassName": "ArtifactCrate_2_C"
     },
+    "crate3": {
+      "Type": "beacon",
+      "Description": "Artifact Crate 3",
+      "Permissions": "Admins,Premiums",
+      "Price": 100,
+      "ClassName": "ArtifactCrate_3_C"
+    },
     "exp1000": {
       "Type": "experience",
       "Description": "1000 points of experience",
@@ -173,6 +198,17 @@
       "Items": [
         {
           "Command": "GiveEngrams"
+        }
+      ]
+    },
+    "fly": {
+      "Type": "command",
+      "Description": "Fly command",
+      "Price": 5000,
+      "Items": [
+        {
+          "Command": "fly",
+          "ExecuteAsAdmin": true
         }
       ]
     }
@@ -238,6 +274,7 @@
     "RefundError": "Points refunded due to an error",
     "ShopFindCmd": "/shopfind",
     "ShopFindUsage": "Usage: /shopfind searchterm",
-    "ShopFindNotFound": "No items matched your search"
+    "ShopFindNotFound": "No items matched your search",
+    "NoPermissionsStore": "<RichColor Color=\"1, 0, 0, 1\">You don't have permission to buy this {0}!</>"
   }
 }
