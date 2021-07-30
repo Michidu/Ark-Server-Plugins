@@ -216,7 +216,7 @@ public:
 	{
 		try
 		{
-			return db_.query(fmt::format("UPDATE {} SET Points = 0;"));
+			return db_.query(fmt::format("UPDATE {} SET Points = 0;", table_players_));
 		}
 		catch (const std::exception& exception)
 		{
