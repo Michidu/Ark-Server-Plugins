@@ -19,7 +19,7 @@ public:
 
 			db_.exec("create table if not exists Players ("
 				"Id integer primary key autoincrement not null,"
-				"SteamId integer default 0,"
+				"SteamId integer default 0 UNIQUE,"
 				"Groups text default 'Default,' COLLATE NOCASE,"
 				"TimedGroups text default '' COLLATE NOCASE"
 				");");
