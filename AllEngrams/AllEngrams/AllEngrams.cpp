@@ -2,7 +2,7 @@
 
 #include <API/ARK/Ark.h>
 #include <API/UE/Math/ColorList.h>
-#include <Permissions.h>
+#include <ArkPermissions.h>
 
 #include "json.hpp"
 
@@ -85,21 +85,21 @@ void ReadEngrams()
 
 bool UnlockEngrams(AShooterPlayerController* player_controller)
 {
-	if (ArkApi::IApiUtils::IsPlayerDead(player_controller) || ArkApi::IApiUtils::IsRidingDino(player_controller))
+	if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
 	{
 		return false;
 	}
 
-	auto* primal_character = static_cast<APrimalCharacter*>(player_controller->CharacterField());
-	UPrimalCharacterStatusComponent* char_component = primal_character->MyCharacterStatusComponentField();
+	auto* primal_character = player_controller->GetPlayerCharacter();
+	UPrimalCharacterStatusComponent* char_component = primal_character->GetCharacterStatusComponent();
 
 	const bool auto_lvl = config.value("AutoDetectLevel", false);
 
 	const int required_lvl = config.value("RequiredLevel", 1);
-	const int level = char_component->BaseCharacterLevelField() + char_component->ExtraCharacterLevelField();
+	const int level = char_component->GetCharacterLevel();
 	if (auto_lvl || level >= required_lvl)
 	{
-		auto* player_state = static_cast<AShooterPlayerState*>(player_controller->PlayerStateField());
+		auto* player_state = player_controller->GetShooterPlayerState();
 
 		for (const auto& engram_entry : unlock_engrams)
 		{
@@ -161,9 +161,25 @@ void DumpEngrams(APlayerController* /*unused*/, FString* /*unused*/, bool /*unus
 	f.close();
 }
 
+void DumpEngrams_RCON(RCONClientConnection* conn, RCONPacket* packet, UWorld* /*unused*/)
+{
+	FString reply("");
+	try
+	{
+		DumpEngrams(nullptr, nullptr, false);
+		reply = "Engrams dumped!";
+		conn->SendMessageW(packet->Id, 0, &reply);
+	}
+	catch (const std::exception& ex)
+	{
+		reply = ex.what();
+		conn->SendMessageW(packet->Id, 0, &reply);
+	}
+}
+
 void GiveEngrams(AShooterPlayerController* player_controller, FString* /*unused*/, EChatSendMode::Type /*unused*/)
 {
-	if (ArkApi::IApiUtils::IsPlayerDead(player_controller) || ArkApi::IApiUtils::IsRidingDino(player_controller))
+	if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
 	{
 		return;
 	}
@@ -270,6 +286,34 @@ void ReloadCmd(APlayerController* player_controller, FString* /*unused*/, bool /
 	ArkApi::GetApiUtils().SendServerMessage(shooter_player, FColorList::Green, "Reloaded config");
 }
 
+void ReloadCmd_RCON(RCONClientConnection* conn, RCONPacket* packet, UWorld* /*unused*/)
+{
+	FString reply("");
+	if (!ReadIncludeEngrams() || !ReadExcludeEngrams())
+	{
+		reply = "Failed to read engrams";
+		conn->SendMessageW(packet->Id, 0, &reply);
+		return;
+	}
+
+	try
+	{
+		ReadConfig();
+	}
+	catch (const std::exception& error)
+	{
+		reply = error.what();
+		conn->SendMessageW(packet->Id, 0, &reply);
+		Log::GetLog()->error(error.what());
+		return;
+	}
+
+	ReadEngrams();
+
+	reply = "Reloaded Config";
+	conn->SendMessageW(packet->Id, 0, &reply);
+}
+
 void Load()
 {
 	Log::Get().Init("AllEngrams");
@@ -306,6 +350,14 @@ void Load()
 
 	ArkApi::GetCommands().AddConsoleCommand("DumpEngrams", &DumpEngrams);
 	ArkApi::GetCommands().AddConsoleCommand("AllEngrams.Reload", &ReloadCmd);
+
+	ArkApi::GetCommands().AddRconCommand("AllEngrams.Reload", &ReloadCmd_RCON);
+	ArkApi::GetCommands().AddRconCommand("DumpEngrams", &DumpEngrams_RCON);
+
+	if (ArkApi::GetApiUtils().GetStatus() == ArkApi::ServerStatus::Ready)
+	{
+		ReadEngrams();
+	}
 }
 
 void Unload()
@@ -317,6 +369,8 @@ void Unload()
 	ArkApi::GetCommands().RemoveChatCommand("/GiveEngrams");
 	ArkApi::GetCommands().RemoveConsoleCommand("DumpEngrams");
 	ArkApi::GetCommands().RemoveConsoleCommand("AllEngrams.Reload");
+	ArkApi::GetCommands().RemoveRconCommand("AllEngrams.Reload");
+	ArkApi::GetCommands().RemoveRconCommand("DumpEngrams");
 }
 
 BOOL APIENTRY DllMain(HMODULE /*hModule*/, DWORD ul_reason_for_call, LPVOID /*lpReserved*/)
