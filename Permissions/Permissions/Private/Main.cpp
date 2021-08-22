@@ -71,9 +71,12 @@ namespace Permissions
 			for (TWeakObjectPtr<APlayerController> player_controller : player_controllers)
 			{
 				AShooterPlayerController* pc = static_cast<AShooterPlayerController*>(player_controller.Get());
-				auto playerId = pc->GetLinkedPlayerID();
-				if (Tribemates.Contains(playerId)) {
-					tribematesOnline++;
+				if (pc)
+				{
+					auto playerId = pc->GetLinkedPlayerID();
+					if (Tribemates.Contains(playerId)) {
+						tribematesOnline++;
+					}
 				}
 			}
 			groups.Add(FString::Format("TribeSize:{}", Tribemates.Num()));
