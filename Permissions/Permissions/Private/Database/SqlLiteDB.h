@@ -19,7 +19,7 @@ public:
 
 			db_.exec("create table if not exists Players ("
 				"Id integer primary key autoincrement not null,"
-				"SteamId integer default 0,"
+				"SteamId integer default 0 UNIQUE,"
 				"Groups text default 'Default,' COLLATE NOCASE,"
 				"TimedGroups text default '' COLLATE NOCASE"
 				");");
@@ -748,7 +748,7 @@ public:
 		try
 		{
 			SQLite::Statement query(db_, "SELECT SteamId, Groups, TimedGroups FROM Players;");
-			if (query.executeStep())
+			while (query.executeStep())
 			{
 				uint64 steam_id = query.getColumn(0).getInt64();
 				FString Groups = query.getColumn(1).getText();
@@ -771,7 +771,7 @@ public:
 		try
 		{
 			SQLite::Statement query(db_, "SELECT TribeId, Groups, TimedGroups FROM Tribes;");
-			if (query.executeStep())
+			while (query.executeStep())
 			{
 				int tribeId = query.getColumn(0).getInt();
 				FString Groups = query.getColumn(1).getText();
