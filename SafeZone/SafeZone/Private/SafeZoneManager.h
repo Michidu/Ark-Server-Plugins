@@ -3,19 +3,6 @@
 #include "../Public/ISafeZoneManager.h"
 #include "Structs.h"
 
-/*struct TClassCompiledInDefer_ATriggerSphere
-{
-	static UField* Register() { return NativeCall<UField *>(nullptr, "TClassCompiledInDefer<ATriggerSphere>.Register"); }
-};
-
-struct ATriggerBase : AActor
-{
-	FieldValue<TSubobjectPtr<UShapeComponent>> CollisionComponentField()
-	{
-		return {this, "ATriggerBase.CollisionComponent"};
-	}
-};*/
-
 namespace SafeZones
 {
 	struct PlayerPos
