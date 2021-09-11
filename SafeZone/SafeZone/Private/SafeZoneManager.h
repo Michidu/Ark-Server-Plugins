@@ -43,7 +43,6 @@ namespace SafeZones
 		bool CheckActorAction(AActor* actor, int type) override;
 
 		void ReadSafeZones();
-		void UpdateOverlaps();
 
 		std::shared_ptr<SafeZone> FindZoneByName(const FString& name) override;
 
