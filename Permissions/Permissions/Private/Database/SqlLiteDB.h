@@ -199,8 +199,16 @@ public:
 
 		try
 		{
-			SQLite::Statement query(db_, "UPDATE Players SET Groups = Groups || ? || ',' WHERE SteamId = ?;");
-			query.bind(1, group.ToString());
+			auto groups = GetPlayerGroups(steam_id);
+			groups.AddUnique(group);
+
+			FString query_groups("");
+
+			for (const FString& f : groups)
+				query_groups += f + ",";
+
+			SQLite::Statement query(db_, "UPDATE Players SET Groups = ? WHERE SteamId = ?;");
+			query.bind(1, query_groups.ToString());
 			query.bind(2, static_cast<int64>(steam_id));
 			query.exec();
 
@@ -547,8 +555,16 @@ public:
 
 		try
 		{
-			SQLite::Statement query(db_, "UPDATE Tribes SET Groups = Groups || ? || ',' WHERE TribeId = ?;");
-			query.bind(1, group.ToString());
+			auto groups = GetTribeGroups(tribeId);
+			groups.AddUnique(group);
+
+			FString query_groups("");
+
+			for (const FString& f : groups)
+				query_groups += f + ",";
+
+			SQLite::Statement query(db_, "UPDATE Tribes SET Groups = ? WHERE TribeId = ?;");
+			query.bind(1, query_groups.ToString());
 			query.bind(2, static_cast<int64>(tribeId));
 			query.exec();
 

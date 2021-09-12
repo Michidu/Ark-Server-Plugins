@@ -217,9 +217,17 @@ public:
 
 		try
 		{
+			auto groups = GetPlayerGroups(steam_id);
+			groups.AddUnique(group);
+
+			FString query_groups("");
+
+			for (const FString& f : groups)
+				query_groups += f + ",";
+
 			const bool res = db_.query(fmt::format(
-				"UPDATE {} SET PermissionGroups = concat(PermissionGroups, '{},') WHERE SteamId = {};",
-				table_players_, group.ToString(), steam_id));
+				"UPDATE {} SET PermissionGroups = '{}' WHERE SteamId = {};",
+				table_players_, query_groups.ToString(), steam_id));
 			if (!res)
 			{
 				return "Unexpected DB error";
@@ -227,7 +235,7 @@ public:
 			else
 			{
 				std::lock_guard<std::mutex> lg(playersMutex);
-				permissionPlayers[steam_id].Groups.Add(group);
+				permissionPlayers[steam_id].Groups.AddUnique(group);
 			}
 		}
 		catch (const std::exception& exception)
@@ -602,9 +610,17 @@ public:
 
 		try
 		{
+			auto groups = GetTribeGroups(tribeId);
+			groups.AddUnique(group);
+
+			FString query_groups("");
+
+			for (const FString& f : groups)
+				query_groups += f + ",";
+
 			const bool res = db_.query(fmt::format(
-				"UPDATE {} SET PermissionGroups = concat(PermissionGroups, '{},') WHERE TribeId = {};",
-				table_tribes_, group.ToString(), tribeId));
+				"UPDATE {} SET PermissionGroups = '{}' WHERE TribeId = {};",
+				table_tribes_, query_groups.ToString(), tribeId));
 			if (!res)
 			{
 				return "Unexpected DB error";
