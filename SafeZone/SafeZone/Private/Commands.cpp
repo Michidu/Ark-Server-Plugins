@@ -292,6 +292,10 @@ namespace SafeZones::Commands
 				std::vector<float> pos_vec{ pos.X, pos.Y, pos.Z };
 
 				new_zone["Position"] = pos_vec;
+				FString map_name;
+				ArkApi::GetApiUtils().GetShooterGameMode()->GetMapName(&map_name);
+
+				new_zone["ForMap"] = map_name.ToString();
 
 				const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/SafeZone/config.json";
 				std::ofstream file{ config_path };
@@ -320,7 +324,7 @@ namespace SafeZones::Commands
 		auto& new_zone = default_config_zone;
 		new_zone["Name"] = "";
 		new_zone["Position"] = std::vector<float>{};
-
+		new_zone["ForMap"] = "";
 		new_zone["Radius"] = 1800;
 		new_zone["PreventPVP"] = false;
 		new_zone["PreventStructureDamage"] = false;

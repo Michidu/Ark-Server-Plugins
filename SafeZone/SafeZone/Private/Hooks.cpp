@@ -87,11 +87,6 @@ namespace SafeZones::Hooks
 			       : APrimalDinoCharacter_CanCarryCharacter_original(_this, CanCarryPawn);
 	}
 
-	void Timer()
-	{
-		SafeZoneManager::Get().UpdateOverlaps();
-	}
-
 	void TeleportPlayer(AShooterPlayerController* pc)
 	{
 		if (!pc
@@ -101,14 +96,22 @@ namespace SafeZones::Hooks
 			return;
 		}
 
-		auto spawn_points = config.value("OverrideSpawnPoint", nlohmann::json::array());
-		if (!spawn_points.empty())
+		try
 		{
-			const auto num = static_cast<size_t>(Tools::GetRandomNumber(0, static_cast<int>(spawn_points.size()) - 1));
+			auto spawn_points = config.value("OverrideSpawnPoint", nlohmann::json::array());
+			if (!spawn_points.empty())
+			{
+				const auto num = static_cast<size_t>(Tools::GetRandomNumber(0, static_cast<int>(spawn_points.size()) - 1));
 
-			auto config_position = spawn_points[num];
+				auto config_position = spawn_points[num];
 
-			pc->SetPlayerPos(config_position[0], config_position[1], config_position[2]);
+				if (config_position.size() >= 3)
+					pc->SetPlayerPos(config_position[0].get<float>(), config_position[1].get<float>(), config_position[2].get<float>());
+			}
+		}
+		catch (const std::exception& ex)
+		{
+			Log::GetLog()->error("Error: {} [{}:{}]", ex.what(), __FUNCTION__, __LINE__);
 		}
 	}
 
@@ -123,6 +126,18 @@ namespace SafeZones::Hooks
 		}
 	}
 
+	void CheckPlayerTeleport(TWeakObjectPtr<AShooterPlayerController> pcPtr)
+	{
+		if (pcPtr)
+		{
+			TeleportPlayer(pcPtr.Get());
+		}
+		else
+		{
+			SafeZones::Tools::Timer::Get().DelayExec(&CheckPlayerTeleport, 1, false, pcPtr);
+		}
+	}
+
 	void Hook_AShooterPlayerState_ServerRequestCreateNewPlayer_Impl(AShooterPlayerState* _this,
 	                                                                DWORD64 PlayerCharacterConfig)
 	{
@@ -131,7 +146,7 @@ namespace SafeZones::Hooks
 		AShooterPlayerController* pc = _this->GetShooterController();
 		if (pc)
 		{
-			SafeZones::Tools::Timer::Get().DelayExec(&TeleportPlayer, 1, false, pc);
+			SafeZones::Tools::Timer::Get().DelayExec(&CheckPlayerTeleport, 0, false, GetWeakReference(pc));
 		}
 	}
 
