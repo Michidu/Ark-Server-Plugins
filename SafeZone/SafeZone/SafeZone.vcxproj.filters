@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Private">
+      <UniqueIdentifier>{b3455fc6-e309-4c40-a1a7-c838c24bfb84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Public">
+      <UniqueIdentifier>{bf1792bc-17d8-49dc-9128-33cb2279309a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{a0e6e5df-d0a6-4ea4-8c35-355be3c23250}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Private\Hooks.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\SafeZoneManager.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\SafeZones.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\SafeZone.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\Commands.cpp">
+      <Filter>Private</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Private\SafeZoneManager.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Hooks.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\SafeZones.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\SafeZone.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\ISafeZoneManager.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Commands.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\SzTools.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Private\Structs.h">
+      <Filter>Private</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Configs\config.json">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Configs\PluginInfo.json">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>
