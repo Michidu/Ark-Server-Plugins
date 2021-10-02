@@ -99,7 +99,12 @@
       ]
     }
   ],
-  "OverrideSpawnPoint":[  
-  
-  ]
+  "OverrideSpawnPoint": {
+    "TheCenter": {
+      "Lava Island (Hard)": [
+        [ -44742, -111102, -12645 ],
+        [ -57239, -157787, -13490 ]
+      ]
+    }
+  }
 }

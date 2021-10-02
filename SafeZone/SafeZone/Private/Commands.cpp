@@ -318,6 +318,28 @@ namespace SafeZones::Commands
 		}
 	}
 
+	void SZSpawnPoints_Console(APlayerController* PC, FString* cmd, bool)
+	{
+		if (PC)
+		{
+			TArray<FString>* spawnPoints = UPrimalGameData::BPGetGameData()->GetPlayerSpawnRegions(ArkApi::GetApiUtils().GetWorld());
+
+			for (auto& zone : *spawnPoints)
+				ArkApi::GetApiUtils().SendChatMessage((AShooterPlayerController*)PC, "SafeZones", *zone);
+		}
+	}
+	void SZSpawnPoints_Rcon(RCONClientConnection* c, RCONPacket* p, UWorld*)
+	{
+		if (c
+			&& p)
+		{
+			TArray<FString>* spawnPoints = UPrimalGameData::BPGetGameData()->GetPlayerSpawnRegions(ArkApi::GetApiUtils().GetWorld());
+
+			for (auto& zone : *spawnPoints)
+				c->SendMessageW(p->Id, 0, &zone);
+		}
+	}
+
 	void Init()
 	{
 		// Default json for creating zones with command
@@ -366,6 +388,8 @@ namespace SafeZones::Commands
 		commands.AddConsoleCommand("SZReloadConfig", &SZReloadConfig);
 		commands.AddRconCommand("SZReloadConfig", &SZReloadConfig_RCON);
 		commands.AddConsoleCommand("SZCreateZone", &SZCreateZone);
+		commands.AddConsoleCommand("SZShowSpawnPoints", &SZSpawnPoints_Console);
+		commands.AddRconCommand("SZShowSpawnPoints", &SZSpawnPoints_Rcon);
 	}
 
 	void Clean()
@@ -378,5 +402,7 @@ namespace SafeZones::Commands
 		commands.RemoveConsoleCommand("SZReloadConfig");
 		commands.RemoveRconCommand("SZReloadConfig");
 		commands.RemoveConsoleCommand("SZCreateZone");
+		commands.RemoveRconCommand("SZShowSpawnPoints");
+		commands.RemoveConsoleCommand("SZShowSpawnPoints");
 	}
 }

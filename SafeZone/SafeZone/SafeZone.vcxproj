@@ -24,8 +24,8 @@
     <ClInclude Include="Public\SafeZone.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\config.json" />
-    <None Include="..\PluginInfo.json" />
+    <None Include="..\Configs\config.json" />
+    <None Include="..\Configs\PluginInfo.json" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

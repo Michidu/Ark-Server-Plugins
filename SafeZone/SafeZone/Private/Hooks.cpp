@@ -87,26 +87,35 @@ namespace SafeZones::Hooks
 			       : APrimalDinoCharacter_CanCarryCharacter_original(_this, CanCarryPawn);
 	}
 
-	void TeleportPlayer(AShooterPlayerController* pc)
+	void TeleportPlayer(AShooterPlayerController* pc, FString spawnName)
 	{
 		if (!pc
 			|| !pc->CharacterField())
 		{
-			SafeZones::Tools::Timer::Get().DelayExec(&TeleportPlayer, 1, false, pc);
+			SafeZones::Tools::Timer::Get().DelayExec(&TeleportPlayer, 1, false, pc, spawnName);
 			return;
 		}
 
 		try
 		{
-			auto spawn_points = config.value("OverrideSpawnPoint", nlohmann::json::array());
-			if (!spawn_points.empty())
+			auto spawn_points = config.value("OverrideSpawnPoint", nlohmann::json::object());
+
+			FString map_name("");
+			ArkApi::GetApiUtils().GetShooterGameMode()->GetMapName(&map_name);
+
+			auto map_spawn_points = spawn_points.value(map_name.ToString(), nlohmann::json::object());
+
+			if (!map_spawn_points.empty())
 			{
-				const auto num = static_cast<size_t>(Tools::GetRandomNumber(0, static_cast<int>(spawn_points.size()) - 1));
+				auto spawn_list = map_spawn_points.value(spawnName.ToString(), nlohmann::json::array());
+				const int idx = FMath::RandRange(0, (spawn_list.size() - 1));
 
-				auto config_position = spawn_points[num];
+				const std::vector<float> spawn = spawn_list[idx];
 
-				if (config_position.size() >= 3)
-					pc->SetPlayerPos(config_position[0].get<float>(), config_position[1].get<float>(), config_position[2].get<float>());
+				if (spawn.size() >= 3)
+				{
+					pc->SetPlayerPos(spawn[0], spawn[1], spawn[2]);
+				}
 			}
 		}
 		catch (const std::exception& ex)
@@ -120,33 +129,17 @@ namespace SafeZones::Hooks
 	{
 		AShooterPlayerController_ServerRequestRespawnAtPoint_Impl_original(_this, spawnPointID, spawnRegionIndex);
 
-		if (spawnPointID == -1)
+		if (_this)
 		{
-			TeleportPlayer(_this);
-		}
-	}
+			TArray<FString>* spawnLocations = UPrimalGameData::BPGetGameData()->GetPlayerSpawnRegions(ArkApi::GetApiUtils().GetWorld());
 
-	void CheckPlayerTeleport(TWeakObjectPtr<AShooterPlayerController> pcPtr)
-	{
-		if (pcPtr)
-		{
-			TeleportPlayer(pcPtr.Get());
-		}
-		else
-		{
-			SafeZones::Tools::Timer::Get().DelayExec(&CheckPlayerTeleport, 1, false, pcPtr);
-		}
-	}
+			if (spawnLocations
+				&& spawnLocations->IsValidIndex(spawnRegionIndex))
+			{
+				const FString str = (*spawnLocations)[spawnRegionIndex];
 
-	void Hook_AShooterPlayerState_ServerRequestCreateNewPlayer_Impl(AShooterPlayerState* _this,
-	                                                                DWORD64 PlayerCharacterConfig)
-	{
-		AShooterPlayerState_ServerRequestCreateNewPlayer_Impl_original(_this, PlayerCharacterConfig);
-
-		AShooterPlayerController* pc = _this->GetShooterController();
-		if (pc)
-		{
-			SafeZones::Tools::Timer::Get().DelayExec(&CheckPlayerTeleport, 0, false, GetWeakReference(pc));
+				TeleportPlayer(_this, str);
+			}
 		}
 	}
 
@@ -197,9 +190,6 @@ namespace SafeZones::Hooks
 		hooks.SetHook("AShooterPlayerController.ServerRequestRespawnAtPoint_Implementation",
 		              &Hook_AShooterPlayerController_ServerRequestRespawnAtPoint_Impl,
 		              &AShooterPlayerController_ServerRequestRespawnAtPoint_Impl_original);
-		hooks.SetHook("AShooterPlayerState.ServerRequestCreateNewPlayer_Implementation",
-		              &Hook_AShooterPlayerState_ServerRequestCreateNewPlayer_Impl,
-		              &AShooterPlayerState_ServerRequestCreateNewPlayer_Impl_original);
 
 		hooks.SetHook("AActor.ReceiveActorBeginOverlap", &Hook_AActor_ReceiveActorBeginOverlap, &AActor_ReceiveActorBeginOverlap_original);
 		hooks.SetHook("AActor.ReceiveActorEndOverlap", &Hook_AActor_ReceiveActorEndOverlap, &AActor_ReceiveActorEndOverlap_original);
@@ -218,8 +208,6 @@ namespace SafeZones::Hooks
 
 		hooks.DisableHook("AShooterPlayerController.ServerRequestRespawnAtPoint_Implementation",
 		                  &Hook_AShooterPlayerController_ServerRequestRespawnAtPoint_Impl);
-		hooks.DisableHook("AShooterPlayerState.ServerRequestCreateNewPlayer_Implementation",
-		                  &Hook_AShooterPlayerState_ServerRequestCreateNewPlayer_Impl);
 
 		hooks.DisableHook("AActor.ReceiveActorBeginOverlap", &Hook_AActor_ReceiveActorBeginOverlap);
 		hooks.DisableHook("AActor.ReceiveActorEndOverlap", &Hook_AActor_ReceiveActorEndOverlap);

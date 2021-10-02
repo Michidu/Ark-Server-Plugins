@@ -55,10 +55,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\config.json">
+    <None Include="..\Configs\config.json">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\PluginInfo.json">
+    <None Include="..\Configs\PluginInfo.json">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

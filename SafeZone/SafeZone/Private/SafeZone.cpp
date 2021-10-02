@@ -54,11 +54,8 @@ namespace SafeZones
 	{
 		if (other)
 		{
-			TArray<AActor*> overlapping = GetActorsInsideZone();
-
-			return overlapping.Contains(other);
+			return FVector::Distance(other->RootComponentField()->RelativeLocationField(), position) <= radius;
 		}
-
 		return false;
 	}
 
