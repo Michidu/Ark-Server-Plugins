@@ -129,7 +129,8 @@ namespace SafeZones::Hooks
 	{
 		AShooterPlayerController_ServerRequestRespawnAtPoint_Impl_original(_this, spawnPointID, spawnRegionIndex);
 
-		if (_this)
+		if (_this
+			&& spawnPointID < 0)
 		{
 			TArray<FString>* spawnLocations = UPrimalGameData::BPGetGameData()->GetPlayerSpawnRegions(ArkApi::GetApiUtils().GetWorld());
 

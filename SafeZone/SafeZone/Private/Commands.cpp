@@ -300,7 +300,7 @@ namespace SafeZones::Commands
 				const std::string config_path = ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/SafeZone/config.json";
 				std::ofstream file{ config_path };
 
-				config["SafeZones"] += new_zone;
+				config["SafeZones"].push_back(new_zone);
 
 				file << config.dump(1, '	');
 
