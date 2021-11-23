@@ -23,7 +23,6 @@ namespace SafeZones::Tools
 		{
 			if (!async)
 			{
-				std::lock_guard<std::mutex> lg(tasks_mtx_);
 				tasks_.push_back(std::make_shared<Task>(std::bind(f, std::forward<arguments>(args)...), after));
 			}
 			else
@@ -41,9 +40,7 @@ namespace SafeZones::Tools
 		void Update()
 		{
 			const time_t now = std::time(nullptr);
-
-			std::lock_guard<std::mutex> lg(tasks_mtx_);
-			for (const auto& func : tasks_)
+			for (auto& func : tasks_)
 			{
 				if (func
 					&& func->execTime <= now
@@ -51,7 +48,17 @@ namespace SafeZones::Tools
 				{
 					func->callback();
 
-					tasks_.erase(std::find(tasks_.begin(), tasks_.end(), func));
+					try
+					{
+						auto it = std::find(tasks_.begin(), tasks_.end(), func);
+
+						if (it != tasks_.end())
+							tasks_.erase(it);
+					}
+					catch (std::exception& ex)
+					{
+						Log::GetLog()->error(ex.what());
+					}
 				}
 			}
 		}
@@ -75,7 +82,6 @@ namespace SafeZones::Tools
 			time_t execTime;
 		};
 
-		std::mutex tasks_mtx_;
 		std::vector<std::shared_ptr<Task>> tasks_;
 	};
 
