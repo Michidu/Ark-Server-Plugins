@@ -13,10 +13,10 @@ namespace SafeZones::Commands
 	{
 		nlohmann::basic_json<> safezone_config;
 
-		auto safe_zones = config["SafeZones"];
+		auto safe_zones = config.value("SafeZones", nlohmann::json::array());
 		for (const auto& safe_zone : safe_zones)
 		{
-			if (safe_zone["Name"] == name)
+			if (safe_zone.value("Name", "") == name)
 			{
 				safezone_config = safe_zone;
 				break;

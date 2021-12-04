@@ -21,6 +21,13 @@ namespace SafeZones::Hooks
 	DECLARE_HOOK(AActor_ReceiveActorBeginOverlap, void, AActor*, AActor*);
 	DECLARE_HOOK(AActor_ReceiveActorEndOverlap, void, AActor*, AActor*);
 
+	DECLARE_HOOK(AShooterCharacter_CanDragCharacter, bool, AShooterCharacter*, APrimalCharacter*);
+	DECLARE_HOOK(APrimalCharacter_CanBeCarried, bool, APrimalCharacter*, APrimalCharacter*);
+	DECLARE_HOOK(AShooterCharacter_AllowGrappling_Implementation, bool, AShooterCharacter*);
+	DECLARE_HOOK(APrimalBuff_Grappled_CanPullChar_Implementation, bool, APrimalBuff_Grappled*, APrimalCharacter*, const bool);
+	DECLARE_HOOK(AShooterProjectile_OnImpact, void, AShooterProjectile*, FHitResult*, bool);
+	DECLARE_HOOK(AShooterGameMode_IsTribeWar, bool, AShooterGameMode*, int, int);
+
 	void Hook_AShooterGameMode_InitGame(AShooterGameMode* a_shooter_game_mode, FString* map_name, FString* options,
 	                                    FString* error_message)
 	{
@@ -53,20 +60,44 @@ namespace SafeZones::Hooks
 	                                       AController* EventInstigator, AActor* DamageCauser)
 	{
 		if (_this->IsA(AShooterCharacter::GetPrivateStaticClass()) &&
-			SafeZoneManager::Get().CheckActorAction(_this, 1))
+			SafeZoneManager::Get().CheckActorAction(_this, 1, DamageCauser))
 		{
 			return 0;
 		}
 		if (_this->IsA(APrimalDinoCharacter::GetPrivateStaticClass()) &&
 			_this->TargetingTeamField() > 50000 &&
-			SafeZoneManager::Get().CheckActorAction(_this, 1))
+			SafeZoneManager::Get().CheckActorAction(_this, 1, DamageCauser))
 		{
 			return 0;
 		}
 		if (EventInstigator && EventInstigator->CharacterField() &&
-			SafeZoneManager::Get().CheckActorAction(EventInstigator->CharacterField(), 1))
+			SafeZoneManager::Get().CheckActorAction(EventInstigator->CharacterField(), 1, DamageCauser))
 		{
 			return 0;
+		}
+
+		// else prevent pvp is not false, so for pve servers we proceed to implement "is tribe war"
+
+		if (SafeZoneManager::ShouldDoTribeWarCheck()
+			&& _this
+			&& DamageCauser)
+		{
+			const int& thisTeamId = _this->TargetingTeamField();
+			const int& thatTeamId = DamageCauser->TargetingTeamField();
+
+			auto& playerPos = _this->RootComponentField()->RelativeLocationField();
+			std::shared_ptr<SafeZone> nearestZone = SafeZoneManager::Get().GetNearestZone(playerPos);
+
+			if (nearestZone
+				&& nearestZone->IsOverlappingActor(_this)
+				&& thisTeamId > 50000
+				&& thatTeamId > 50000)
+			{
+				nearestZone->AddTribesPairForTribeWarCheck(thisTeamId, thatTeamId);
+				const float res = APrimalCharacter_TakeDamage_original(_this, Damage, DamageEvent, EventInstigator, DamageCauser);
+				nearestZone->RemoveTribesFromTribeWarPair(thisTeamId, thatTeamId);
+				return res;
+			}
 		}
 
 		return APrimalCharacter_TakeDamage_original(_this, Damage, DamageEvent, EventInstigator, DamageCauser);
@@ -75,16 +106,83 @@ namespace SafeZones::Hooks
 	float Hook_APrimalStructure_TakeDamage(APrimalStructure* _this, float Damage, FDamageEvent* DamageEvent,
 	                                       AController* EventInstigator, AActor* DamageCauser)
 	{
-		return SafeZoneManager::Get().CheckActorAction(_this, 2)
-			       ? 0
-			       : APrimalStructure_TakeDamage_original(_this, Damage, DamageEvent, EventInstigator, DamageCauser);
+		if (SafeZoneManager::ShouldDoTribeWarCheck()
+			&& _this
+			&& DamageCauser)
+		{
+			const int& thisTeamId = _this->TargetingTeamField();
+			const int& thatTeamId = DamageCauser->TargetingTeamField();
+
+			auto& Pos = _this->RootComponentField()->RelativeLocationField();
+			std::shared_ptr<SafeZone> nearestZone = SafeZoneManager::Get().GetNearestZone(Pos);
+
+			if (nearestZone
+				&& nearestZone->IsOverlappingActor(_this)
+				&& thisTeamId > 50000
+				&& thatTeamId > 50000)
+			{
+				nearestZone->AddTribesPairForTribeWarCheck(thisTeamId, thatTeamId);
+				const float res = APrimalStructure_TakeDamage_original(_this, Damage, DamageEvent, EventInstigator, DamageCauser);
+				nearestZone->RemoveTribesFromTribeWarPair(thisTeamId, thatTeamId);
+				return res;
+			}
+		}
+		return APrimalStructure_TakeDamage_original(_this, Damage, DamageEvent, EventInstigator, DamageCauser);
 	}
 
 	bool Hook_APrimalDinoCharacter_CanCarryCharacter(APrimalDinoCharacter* _this, APrimalCharacter* CanCarryPawn)
 	{
-		return SafeZoneManager::Get().CheckActorAction(_this, 1)
+		return SafeZoneManager::Get().CheckActorAction(CanCarryPawn, 1, _this)
 			       ? false
 			       : APrimalDinoCharacter_CanCarryCharacter_original(_this, CanCarryPawn);
+	}
+
+	bool  Hook_APrimalCharacter_CanBeCarried(APrimalCharacter* _this, APrimalCharacter* ByCarrier)
+	{
+		return SafeZoneManager::Get().CheckActorAction(_this, 1, ByCarrier) 
+			? false 
+			: APrimalCharacter_CanBeCarried_original(_this, ByCarrier);
+	}
+
+	bool  Hook_AShooterCharacter_CanDragCharacter(AShooterCharacter* _this, APrimalCharacter* Character)
+	{
+		return SafeZoneManager::Get().CheckActorAction(Character, 1, _this)
+			? false
+			: AShooterCharacter_CanDragCharacter_original(_this, Character);
+	}
+
+	bool  Hook_AShooterCharacter_AllowGrappling_Implementation(AShooterCharacter* _this)
+	{
+		return SafeZoneManager::Get().CheckActorAction(_this, 1)
+			? false
+			: AShooterCharacter_AllowGrappling_Implementation_original(_this);
+	}
+
+	bool Hook_APrimalBuff_Grappled_CanPullChar_Implementation(APrimalBuff_Grappled* _this, APrimalCharacter* ForChar, const bool bForStart)
+	{
+		return SafeZoneManager::Get().CheckActorAction(ForChar, 1, _this->OwnerField())
+			? false
+			: APrimalBuff_Grappled_CanPullChar_Implementation_original(_this, ForChar, bForStart);
+	}
+
+	void Hook_AShooterProjectile_OnImpact(AShooterProjectile* _this, FHitResult* HitResult, bool bFromReplication)
+	{
+		if (_this
+			&& HitResult
+			&& _this->IsA(APrimalProjectileGrapplingHook::GetPrivateStaticClass()))
+		{
+			AActor* hitActor = HitResult->GetActor();
+			if (hitActor
+				&& hitActor->IsA(APrimalCharacter::GetPrivateStaticClass()))
+			{
+				if (SafeZoneManager::Get().CheckActorAction(hitActor, 1, _this->DamageCauserField()))
+				{
+					_this->Destroy(false, false);
+					return;
+				}
+			}
+		}
+		AShooterProjectile_OnImpact_original(_this, HitResult, bFromReplication);
 	}
 
 	void TeleportPlayer(AShooterPlayerController* pc, FString spawnName)
@@ -172,6 +270,14 @@ namespace SafeZones::Hooks
 		AActor_ReceiveActorEndOverlap_original(_this, OtherActor);
 	}
 
+	bool  Hook_AShooterGameMode_IsTribeWar(AShooterGameMode* _this, int TribeID1, int TribeID2)
+	{
+		if (SafeZoneManager::Get().CheckIfTribesAreInTribeWar(TribeID1, TribeID2))
+			return true;
+
+		return AShooterGameMode_IsTribeWar_original(_this, TribeID1, TribeID2);
+	}
+
 	void InitHooks()
 	{
 		auto& hooks = ArkApi::GetHooks();
@@ -194,6 +300,13 @@ namespace SafeZones::Hooks
 
 		hooks.SetHook("AActor.ReceiveActorBeginOverlap", &Hook_AActor_ReceiveActorBeginOverlap, &AActor_ReceiveActorBeginOverlap_original);
 		hooks.SetHook("AActor.ReceiveActorEndOverlap", &Hook_AActor_ReceiveActorEndOverlap, &AActor_ReceiveActorEndOverlap_original);
+
+		hooks.SetHook("AShooterCharacter.CanDragCharacter", &Hook_AShooterCharacter_CanDragCharacter, &AShooterCharacter_CanDragCharacter_original);
+		hooks.SetHook("APrimalCharacter.CanBeCarried", &Hook_APrimalCharacter_CanBeCarried, &APrimalCharacter_CanBeCarried_original);
+		hooks.SetHook("AShooterCharacter.AllowGrappling_Implementation", &Hook_AShooterCharacter_AllowGrappling_Implementation, &AShooterCharacter_AllowGrappling_Implementation_original);
+		hooks.SetHook("APrimalBuff_Grappled.CanPullChar_Implementation", &Hook_APrimalBuff_Grappled_CanPullChar_Implementation, &APrimalBuff_Grappled_CanPullChar_Implementation_original);
+		hooks.SetHook("AShooterProjectile.OnImpact", &Hook_AShooterProjectile_OnImpact, &AShooterProjectile_OnImpact_original);
+		hooks.SetHook("AShooterGameMode.IsTribeWar", &Hook_AShooterGameMode_IsTribeWar, &AShooterGameMode_IsTribeWar_original);
 	}
 
 	void RemoveHooks()
@@ -212,5 +325,12 @@ namespace SafeZones::Hooks
 
 		hooks.DisableHook("AActor.ReceiveActorBeginOverlap", &Hook_AActor_ReceiveActorBeginOverlap);
 		hooks.DisableHook("AActor.ReceiveActorEndOverlap", &Hook_AActor_ReceiveActorEndOverlap);
+
+		hooks.DisableHook("AShooterCharacter.CanDragCharacter", &Hook_AShooterCharacter_CanDragCharacter);
+		hooks.DisableHook("APrimalCharacter.CanBeCarried", &Hook_APrimalCharacter_CanBeCarried);
+		hooks.DisableHook("AShooterCharacter.AllowGrappling_Implementation", &Hook_AShooterCharacter_AllowGrappling_Implementation);
+		hooks.DisableHook("APrimalBuff_Grappled.CanPullChar_Implementation", &Hook_APrimalBuff_Grappled_CanPullChar_Implementation);
+		hooks.DisableHook("AShooterProjectile.OnImpact", &Hook_AShooterProjectile_OnImpact);
+		hooks.DisableHook("AShooterGameMode.IsTribeWar", &Hook_AShooterGameMode_IsTribeWar);
 	}
 }

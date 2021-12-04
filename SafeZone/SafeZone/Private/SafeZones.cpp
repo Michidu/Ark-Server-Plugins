@@ -15,7 +15,7 @@ namespace SafeZones
 {
 	FString GetText(const std::string& str)
 	{
-		return FString(ArkApi::Tools::Utf8Decode(config["Messages"].value(str, "No message")).c_str());
+		return FString(ArkApi::Tools::Utf8Decode(config.value("Messages", nlohmann::json::object()).value(str, "No message")).c_str());
 	}
 
 	void ReadConfig()
