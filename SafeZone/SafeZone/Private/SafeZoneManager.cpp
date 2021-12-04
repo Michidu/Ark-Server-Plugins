@@ -215,6 +215,7 @@ namespace SafeZones
 			}
 		}
 
+		Log::GetLog()->info("Action {}. Protected: {}", type, is_protected);
 		return is_protected;
 	}
 
