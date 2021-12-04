@@ -547,12 +547,11 @@ public:
 	{
 		bool found = false;
 
-		tribesMutex.try_lock();
+		std::lock_guard<std::mutex> lg(tribesMutex);
 		if (permissionTribes.find(tribeId) == permissionTribes.end())
 			found = false;
 		else
 			found = true;
-		tribesMutex.unlock();
 
 		return found;
 	}
