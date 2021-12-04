@@ -27,7 +27,7 @@ namespace SafeZones
 		bool RemoveSafeZone(const FString& name) override;
 
 		bool CanBuild(APlayerController* player, const FVector& location, bool notification) override;
-		bool CheckActorAction(AActor* actor, int type) override;
+		bool CheckActorAction(AActor* actor, int type, AActor* CausedByActor = nullptr) override;
 
 		void ReadSafeZones();
 
@@ -41,6 +41,12 @@ namespace SafeZones
 		std::shared_ptr<SafeZone> CheckActorOverlap(AActor* _this);
 
 		void ClearAllTriggerSpheres();
+
+		std::shared_ptr<SafeZone> GetNearestZone(const FVector& pos);
+
+		static bool ShouldDoTribeWarCheck();
+		
+		bool CheckIfTribesAreInTribeWar(const int Id1, const int Id2);
 
 	private:
 		SafeZoneManager() = default;

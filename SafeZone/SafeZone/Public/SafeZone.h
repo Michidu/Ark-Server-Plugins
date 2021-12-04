@@ -16,7 +16,8 @@ namespace SafeZones
 		SafeZone(FString name, const FVector& position, int radius, bool prevent_pvp, bool prevent_structure_damage,
 			bool prevent_building, bool kill_wild_dinos, bool prevent_leaving, bool prevent_entering, bool enable_events,
 			bool screen_notifications, bool chat_notifications, const FLinearColor& success_color,
-			const FLinearColor& fail_color, std::vector<FString> messages, bool cryopod_dinos, bool show_bubble, std::vector<float> bubble_colors);
+			const FLinearColor& fail_color, std::vector<FString> messages, bool cryopod_dinos, bool show_bubble, std::vector<float> bubble_colors,
+			bool bEnableTeleport, const std::vector<float>& teleport_destination);
 
 		/**
 		 * \brief Safe zone name
@@ -78,6 +79,10 @@ namespace SafeZones
 		TArray<std::function<void(AActor*)>> on_actor_end_overlap;
 		TArray<std::function<bool(AShooterPlayerController*)>> can_join_zone;
 
+		TArray<TPair<int, int>> tribe_war_checks;
+
+		bool bEnableOnEnterTeleport;
+		FVector teleport_destination_on_enter;
 
 		// Functions
 
@@ -91,6 +96,14 @@ namespace SafeZones
 		void DoPawnPush(APrimalCharacter* Pawn, bool bIsLeavePrevention);
 
 		void SpawnBubble();
+
+		// Functions to enable PvP zones in PvE servers
+		void AddTribesPairForTribeWarCheck(const int Id1, const int Id2);
+		void RemoveTribesFromTribeWarPair(const int Id1, const int Id2);
+		bool AreTribesInTribeWarCheck(const int Id1, const int Id2);
+
+		// On enter teleport functions
+		void CheckTeleportForCharacter(APrimalCharacter* character);
 
 		/**
 		 * \brief Actors that are currently in safe zone

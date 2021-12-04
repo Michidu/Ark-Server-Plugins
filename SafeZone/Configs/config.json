@@ -24,6 +24,10 @@
       "GiveDinosInCryopod": true,
       "ShowBubble": true,
       "BubbleColor": [ 255, 0, 0 ],
+      "TeleportOnEnterZone":{
+        "Enabled": false,
+        "TeleportToDestination": [ 35232.5, -13253.1, -15230 ]
+      },
       "SuccessNotificationColor": [
         0,
         1,

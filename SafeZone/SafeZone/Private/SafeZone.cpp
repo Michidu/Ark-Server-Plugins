@@ -12,7 +12,8 @@ namespace SafeZones
 	SafeZone::SafeZone(FString name, const FVector& position, int radius, bool prevent_pvp, bool prevent_structure_damage,
 		bool prevent_building, bool kill_wild_dinos, bool prevent_leaving, bool prevent_entering, bool enable_events,
 		bool screen_notifications, bool chat_notifications, const FLinearColor& success_color,
-		const FLinearColor& fail_color, std::vector<FString> messages, bool cryopod_dinos, bool show_bubble, std::vector<float> bubble_colors)
+		const FLinearColor& fail_color, std::vector<FString> messages, bool cryopod_dinos, bool show_bubble, std::vector<float> bubble_colors,
+		bool bEnableTeleport, const std::vector<float>& teleport_destination)
 		: name(std::move(name)),
 		position(position),
 		radius(radius),
@@ -30,7 +31,9 @@ namespace SafeZones
 		messages(std::move(messages)),
 		cryopod_dinos(cryopod_dinos),
 		show_bubble(show_bubble),
-		bubble_color(bubble_colors[0], bubble_colors[1], bubble_colors[2])
+		bubble_color(bubble_colors[0], bubble_colors[1], bubble_colors[2]),
+		bEnableOnEnterTeleport(bEnableTeleport),
+		teleport_destination_on_enter(teleport_destination[0], teleport_destination[1], teleport_destination[2])
 	{
 
 		ATriggerSphere* sphere = SafeZoneManager::Get().SpawnSphere(this->position, this->radius);
@@ -64,8 +67,8 @@ namespace SafeZones
 	{
 		if (screen_notifications)
 		{
-			const float display_scale = config["NotificationScale"];
-			const float display_time = config["NotificationDisplayTime"];
+			const float display_scale = config.value("NotificationScale", 1.0f);
+			const float display_time = config.value("NotificationDisplayTime", 5.0f);
 
 			ArkApi::GetApiUtils().SendNotification(player, color, display_scale, display_time,
 			                                       nullptr, *message);
@@ -121,6 +124,8 @@ namespace SafeZones
 			if (SafeZones::Tools::ShouldSendNotification(other_actor, position, radius))
 				SendNotification(player, FString::Format(*messages[0], *name),
 					success_color);
+
+			CheckTeleportForCharacter((APrimalCharacter*)other_actor);
 		}
 
 		// Execute callbacks
@@ -268,7 +273,6 @@ namespace SafeZones
 	void SafeZone::SpawnBubble()
 	{
 		static FString path("Blueprint'/Game/Extinction/CoreBlueprints/HordeCrates/StorageBox_HordeShield.StorageBox_HordeShield'");
-
 		static UClass* bubble_class = UVictoryCore::BPLoadClass(&path);
 
 		if (!bubble_class)
@@ -320,5 +324,53 @@ namespace SafeZones
 
 		actor->TargetingTeamField() = SAFEZONES_TEAM;
 		actor->ForceReplicateNow(false, false);
+	}
+
+	void SafeZone::AddTribesPairForTribeWarCheck(const int Id1, const int Id2)
+	{
+		tribe_war_checks.Add(TPair<int, int>{Id1, Id2});
+	}
+
+	void SafeZone::RemoveTribesFromTribeWarPair(const int Id1, const int Id2)
+	{
+		tribe_war_checks.RemoveAll(
+			[&](const TPair<int, int>& pair) -> bool
+			{
+				const int pair1 = pair.Get<0>();
+				const int pair2 = pair.Get<1>();
+
+				return (Id1 == pair1 && Id2 == pair2)
+					|| (Id1 == pair2 && Id2 == pair1);
+			}
+		);
+	}
+
+	bool SafeZone::AreTribesInTribeWarCheck(const int Id1, const int Id2)
+	{
+		return tribe_war_checks.ContainsByPredicate(
+			[&](const TPair<int, int>& pair) -> bool
+			{
+				const int pair1 = pair.Get<0>();
+				const int pair2 = pair.Get<1>();
+
+				return (Id1 == pair1 && Id2 == pair2)
+					|| (Id1 == pair2 && Id2 == pair1);
+			}
+		);
+	}
+
+	void SafeZone::CheckTeleportForCharacter(APrimalCharacter* character)
+	{
+		if (bEnableOnEnterTeleport
+			&& character)
+		{
+			if (character->IsA(APrimalDinoCharacter::GetPrivateStaticClass()))
+			{
+				static_cast<APrimalDinoCharacter*>(character)->SetFlight(false, true);
+			}
+
+			character->StopJumping();
+			character->TeleportTo(&teleport_destination_on_enter, &character->RootComponentField()->RelativeRotationField(), false, true);
+		}
 	}
 }
