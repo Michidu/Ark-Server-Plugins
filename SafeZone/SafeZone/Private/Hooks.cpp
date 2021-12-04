@@ -104,29 +104,37 @@ namespace SafeZones::Hooks
 	}
 
 	float Hook_APrimalStructure_TakeDamage(APrimalStructure* _this, float Damage, FDamageEvent* DamageEvent,
-	                                       AController* EventInstigator, AActor* DamageCauser)
+		AController* EventInstigator, AActor* DamageCauser)
 	{
-		if (SafeZoneManager::ShouldDoTribeWarCheck()
-			&& _this
-			&& DamageCauser)
+		if (SafeZoneManager::Get().CheckActorAction(_this, 2, DamageCauser))
 		{
-			const int& thisTeamId = _this->TargetingTeamField();
-			const int& thatTeamId = DamageCauser->TargetingTeamField();
-
-			auto& Pos = _this->RootComponentField()->RelativeLocationField();
-			std::shared_ptr<SafeZone> nearestZone = SafeZoneManager::Get().GetNearestZone(Pos);
-
-			if (nearestZone
-				&& nearestZone->IsOverlappingActor(_this)
-				&& thisTeamId > 50000
-				&& thatTeamId > 50000)
+			return 0.f;
+		}
+		else
+		{
+			if (SafeZoneManager::ShouldDoTribeWarCheck()
+				&& _this
+				&& DamageCauser)
 			{
-				nearestZone->AddTribesPairForTribeWarCheck(thisTeamId, thatTeamId);
-				const float res = APrimalStructure_TakeDamage_original(_this, Damage, DamageEvent, EventInstigator, DamageCauser);
-				nearestZone->RemoveTribesFromTribeWarPair(thisTeamId, thatTeamId);
-				return res;
+				const int& thisTeamId = _this->TargetingTeamField();
+				const int& thatTeamId = DamageCauser->TargetingTeamField();
+
+				auto& Pos = _this->RootComponentField()->RelativeLocationField();
+				std::shared_ptr<SafeZone> nearestZone = SafeZoneManager::Get().GetNearestZone(Pos);
+
+				if (nearestZone
+					&& nearestZone->IsOverlappingActor(_this)
+					&& thisTeamId > 50000
+					&& thatTeamId > 50000)
+				{
+					nearestZone->AddTribesPairForTribeWarCheck(thisTeamId, thatTeamId);
+					const float res = APrimalStructure_TakeDamage_original(_this, Damage, DamageEvent, EventInstigator, DamageCauser);
+					nearestZone->RemoveTribesFromTribeWarPair(thisTeamId, thatTeamId);
+					return res;
+				}
 			}
 		}
+
 		return APrimalStructure_TakeDamage_original(_this, Damage, DamageEvent, EventInstigator, DamageCauser);
 	}
 
