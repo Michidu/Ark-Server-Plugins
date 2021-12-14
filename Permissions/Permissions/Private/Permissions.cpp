@@ -107,21 +107,26 @@ namespace Permissions
 			if (tribeData) {
 				tribeId = tribeData->TribeIDField();
 				auto tribeGroups = GetTribeGroups(tribeId);
-				for (auto tribeGroup : tribeGroups) {
-					if (!groups.Contains(tribeGroup)) {
+				for (auto tribeGroup : tribeGroups)
+				{
+					if (!groups.Contains(tribeGroup)) 
+					{
 						groups.Add(tribeGroup);
 					}
 				}
 				auto defaultTribeGroups = GetTribeDefaultGroups(tribeData);
-				for (auto tribeGroup : defaultTribeGroups) {
-					if (!groups.Contains(tribeGroup)) {
+				for (auto tribeGroup : defaultTribeGroups) 
+				{
+					if (!groups.Contains(tribeGroup)) 
+					{
 						groups.Add(tribeGroup);
 					}
 				}
 			}
 		}
 		auto callbackGroups = GetCallbackGroups(steam_id, tribeId, isOnline);
-		for (auto group : callbackGroups) {
+		for (auto group : callbackGroups)
+		{
 			if (!groups.Contains(group))
 				groups.Add(group);
 		}

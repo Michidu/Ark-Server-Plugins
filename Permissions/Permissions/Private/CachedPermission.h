@@ -39,7 +39,7 @@ public:
 
 	TArray<FString> getGroups(long long now) 
 	{
-		TArray<FString> result;
+		TArray<FString> result{ "Default" };
 		for (auto group : Groups) result.AddUnique(group);
 		for (auto group : TimedGroups) {
 			if (group.DelayUntilTime > 0 && now < group.DelayUntilTime) {

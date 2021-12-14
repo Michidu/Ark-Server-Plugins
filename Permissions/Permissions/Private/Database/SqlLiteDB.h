@@ -76,12 +76,11 @@ public:
 	{
 		bool found = false;
 
-		playersMutex.try_lock();
+		std::lock_guard<std::mutex> lg(playersMutex);
 		if (permissionPlayers.find(steam_id) == permissionPlayers.end())
 			found = false;
 		else
 			found = true;
-		playersMutex.unlock();
 
 		return found;
 	}
@@ -113,12 +112,11 @@ public:
 	{
 		bool found = false;
 
-		groupsMutex.try_lock();
+		std::lock_guard<std::mutex> lg(groupsMutex);
 		if (permissionGroups.find(group.ToString()) == permissionGroups.end())
 			found = false;
 		else
 			found = true;
-		groupsMutex.unlock();
 
 		return found;
 	}
@@ -213,7 +211,7 @@ public:
 			query.exec();
 
 			std::lock_guard<std::mutex> lg(playersMutex);
-			permissionPlayers[steam_id].Groups.Add(group);
+			permissionPlayers[steam_id].Groups.AddUnique(group);
 		}
 		catch (const std::exception& exception)
 		{
@@ -490,12 +488,11 @@ public:
 	{
 		bool found = false;
 
-		tribesMutex.try_lock();
+		std::lock_guard<std::mutex> lg(tribesMutex);
 		if (permissionTribes.find(tribeId) == permissionTribes.end())
 			found = false;
 		else
 			found = true;
-		tribesMutex.unlock();
 
 		return found;
 	}
