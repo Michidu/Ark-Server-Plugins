@@ -1022,6 +1022,8 @@ namespace Permissions
 		ArkApi::GetCommands().AddChatCommand("/groups", &ShowMyGroupsChat);
 
 		ArkApi::GetCommands().AddOnTimerCallback("DatabaseSync", &DatabaseSync);
+
+		pool.sleep_duration = 20000; // "if not set, default is 1ms which is overkill and will increase cpu usage a lot" - @Lethal 2021
 	}
 }
 
