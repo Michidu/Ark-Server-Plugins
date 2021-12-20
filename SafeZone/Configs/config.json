@@ -1,0 +1,114 @@
+{  
+  "ServerName":"ServerNameHere",
+  "NotificationScale":1.0,
+  "NotificationDisplayTime":5.0,
+  "AdminsIgnoreRestrictions":false,
+  "SafeZones":[
+    {
+      "Name": "Zone1",
+      "Position": [
+        -111820,
+        233874,
+        -14259.6
+      ],
+      "Radius": 1800,
+      "PreventPVP": true,
+      "PreventStructureDamage": true,
+      "PreventBuilding": true,
+      "KillWildDinos": true,
+      "PreventLeaving": false,
+      "PreventEntering": false,
+      "EnableEvents": true,
+      "ScreenNotifications": true,
+      "ChatNotifications": true,
+      "GiveDinosInCryopod": true,
+      "ShowBubble": true,
+      "BubbleColor": [ 255, 0, 0 ],
+      "TeleportOnEnterZone":{
+        "Enabled": false,
+        "TeleportToDestination": [ 35232.5, -13253.1, -15230 ]
+      },
+      "SuccessNotificationColor": [
+        0,
+        1,
+        0,
+        1
+      ],
+      "FailNotificationColor": [
+        1,
+        0,
+        0,
+        1
+      ],
+      "Messages": [
+        "You have entered {0}",
+        "You have left {0}",
+        "This is a Community trade center you can not build here",
+        "You are not allowed to enter",
+        "You are not allowed to leave"
+      ],
+      "ItemsConfig": {
+        "Items": [
+          {
+            "Amount": 1,
+            "Quality": 0,
+            "ForceBlueprint": false,
+            "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_CarnoSaddle.PrimalItemArmor_CarnoSaddle'"
+          }
+        ],
+        "Dinos": [
+          {
+            "Level": 10,
+            "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'",
+            "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_CarnoSaddle.PrimalItemArmor_CarnoSaddle'"
+          }
+        ]
+      }
+    },
+    {  
+      "Name":"Zone2",
+      "Position":[  
+        -107117,
+        231616,
+        -13854.6
+      ],
+      "Radius":900,
+      "PreventPVP":true,
+      "PreventStructureDamage":false,
+      "PreventBuilding":false,
+      "KillWildDinos":true,
+      "PreventLeaving":false,
+      "PreventEntering":true,
+      "EnableEvents":true,
+      "ScreenNotifications":true,
+      "ChatNotifications":true,
+      "SuccessNotificationColor":[  
+        0,
+        1,
+        0,
+        1
+      ],
+      "FailNotificationColor":[  
+        1,
+        0,
+        0,
+        1
+      ],
+      "Messages":[  
+        "You have entered {0}",
+        "You have left {0}",
+        "This is a Community trade center you can not build here",
+        "You are not allowed to enter",
+        "You are not allowed to leave"
+      ]
+    }
+  ],
+  "OverrideSpawnPoint": {
+    "TheCenter": {
+      "Lava Island (Hard)": [
+        [ -44742, -111102, -12645 ],
+        [ -57239, -157787, -13490 ]
+      ]
+    }
+  }
+}

@@ -37,22 +37,24 @@ public:
 	TArray<FString> CallbackGroups;
 	bool hasCheckedCallbacks;
 
-	TArray<FString> getGroups(long long now) {
-		TArray<FString> result;
-		for (auto group : Groups) result.Add(group);
+	TArray<FString> getGroups(long long now) 
+	{
+		TArray<FString> result{ "Default" };
+		for (auto group : Groups) result.AddUnique(group);
 		for (auto group : TimedGroups) {
 			if (group.DelayUntilTime > 0 && now < group.DelayUntilTime) {
 				continue;
 			}
 			if (group.ExpireAtTime > 0 && now < group.ExpireAtTime) {
-				result.Add(group.GroupName);
+				result.AddUnique(group.GroupName);
 			}
 		}
 
 		return result;
 	}
 
-	FString getGroupsStr(long long now) {
+	FString getGroupsStr(long long now) 
+	{
 		FString result;
 		auto groups = getGroups(now);
 		for (auto group : groups) {

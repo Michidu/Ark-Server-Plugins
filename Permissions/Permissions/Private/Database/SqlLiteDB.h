@@ -76,12 +76,11 @@ public:
 	{
 		bool found = false;
 
-		playersMutex.try_lock();
+		std::lock_guard<std::mutex> lg(playersMutex);
 		if (permissionPlayers.find(steam_id) == permissionPlayers.end())
 			found = false;
 		else
 			found = true;
-		playersMutex.unlock();
 
 		return found;
 	}
@@ -113,12 +112,11 @@ public:
 	{
 		bool found = false;
 
-		groupsMutex.try_lock();
+		std::lock_guard<std::mutex> lg(groupsMutex);
 		if (permissionGroups.find(group.ToString()) == permissionGroups.end())
 			found = false;
 		else
 			found = true;
-		groupsMutex.unlock();
 
 		return found;
 	}
@@ -199,13 +197,21 @@ public:
 
 		try
 		{
-			SQLite::Statement query(db_, "UPDATE Players SET Groups = Groups || ? || ',' WHERE SteamId = ?;");
-			query.bind(1, group.ToString());
+			auto groups = GetPlayerGroups(steam_id);
+			groups.AddUnique(group);
+
+			FString query_groups("");
+
+			for (const FString& f : groups)
+				query_groups += f + ",";
+
+			SQLite::Statement query(db_, "UPDATE Players SET Groups = ? WHERE SteamId = ?;");
+			query.bind(1, query_groups.ToString());
 			query.bind(2, static_cast<int64>(steam_id));
 			query.exec();
 
 			std::lock_guard<std::mutex> lg(playersMutex);
-			permissionPlayers[steam_id].Groups.Add(group);
+			permissionPlayers[steam_id].Groups.AddUnique(group);
 		}
 		catch (const std::exception& exception)
 		{
@@ -482,12 +488,11 @@ public:
 	{
 		bool found = false;
 
-		tribesMutex.try_lock();
+		std::lock_guard<std::mutex> lg(tribesMutex);
 		if (permissionTribes.find(tribeId) == permissionTribes.end())
 			found = false;
 		else
 			found = true;
-		tribesMutex.unlock();
 
 		return found;
 	}
@@ -547,8 +552,16 @@ public:
 
 		try
 		{
-			SQLite::Statement query(db_, "UPDATE Tribes SET Groups = Groups || ? || ',' WHERE TribeId = ?;");
-			query.bind(1, group.ToString());
+			auto groups = GetTribeGroups(tribeId);
+			groups.AddUnique(group);
+
+			FString query_groups("");
+
+			for (const FString& f : groups)
+				query_groups += f + ",";
+
+			SQLite::Statement query(db_, "UPDATE Tribes SET Groups = ? WHERE TribeId = ?;");
+			query.bind(1, query_groups.ToString());
 			query.bind(2, static_cast<int64>(tribeId));
 			query.exec();
 

@@ -4,6 +4,7 @@
 
 #include "Database/SqlLiteDB.h"
 #include "Database/MysqlDB.h"
+#include "thread_pool.hpp"
 
 #include "Main.h"
 
@@ -23,6 +24,9 @@
 #else
 #pragma comment(lib, "AtlasApi.lib")
 #endif
+
+// Manage all async calls
+thread_pool pool;
 
 namespace Permissions
 {
@@ -918,12 +922,11 @@ namespace Permissions
 	{
 		if (difftime(time(0), lastDatabaseSyncTime) >= SyncFrequency)
 		{
-			std::thread([]
-				{
-					database->Init();
-				}).detach();
+			pool.push_task(
+				[]() { database->Init(); }
+			);
 
-				lastDatabaseSyncTime = time(0);
+			lastDatabaseSyncTime = time(0);
 		}
 	}
 
@@ -1019,6 +1022,8 @@ namespace Permissions
 		ArkApi::GetCommands().AddChatCommand("/groups", &ShowMyGroupsChat);
 
 		ArkApi::GetCommands().AddOnTimerCallback("DatabaseSync", &DatabaseSync);
+
+		pool.sleep_duration = 20000; // "if not set, default is 1ms which is overkill and will increase cpu usage a lot" - @Lethal 2021
 	}
 }
 
