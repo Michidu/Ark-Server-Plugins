@@ -6,6 +6,7 @@
 
 #include "ArkShop.h"
 #include "ShopLog.h"
+#include "Discord.h"
 
 namespace ArkShop::Kits
 {
@@ -305,11 +306,20 @@ namespace ArkShop::Kits
 				// Log
 				if (should_log)
 				{
-					const std::wstring log = fmt::format(TEXT("{}({}) used kit \"{}\""),
+					const std::wstring log = fmt::format(TEXT("{}({}) Used kit \"{}\""),
 						*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
 						*kit_name);
 
 					ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
+					if (ArkShop::discord_enabled)
+					{
+						const std::wstring log = fmt::format(TEXT("{}({}) Used kit: {}"),
+							*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
+							*kit_name);
+
+						PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
+							log, ArkShop::discord_sender_name);
+					}
 				}
 			}
 			else if (should_log)
@@ -464,6 +474,16 @@ namespace ArkShop::Kits
 						amount);
 
 					ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
+					if (ArkShop::discord_enabled)
+					{
+						const std::wstring log = fmt::format(TEXT("{}({}) Bought kit: {} Amount: {}"),
+							*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
+							*kit_name,
+							amount);
+
+						PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
+							log, ArkShop::discord_sender_name);
+					}
 				}
 				else
 				{

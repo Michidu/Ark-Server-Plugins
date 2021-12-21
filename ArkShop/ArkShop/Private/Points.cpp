@@ -3,6 +3,7 @@
 #include <DBHelper.h>
 
 #include "ArkShop.h"
+#include "Discord.h"
 
 namespace ArkShop::Points
 {
@@ -144,6 +145,17 @@ namespace ArkShop::Points
 
 					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
 					                                      *GetText("GotPoints"), amount, *sender_name);
+
+					if (ArkShop::discord_enabled)
+					{
+						const std::wstring log = fmt::format(TEXT("{}({}) Traded points with: {}({}) Amount: {}"),
+							*ArkApi::IApiUtils::GetSteamName(player_controller), sender_steam_id,
+							*ArkApi::IApiUtils::GetSteamName(receiver_player), receiver_steam_id,
+							amount);
+
+						PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
+							log, ArkShop::discord_sender_name);
+					}
 				}
 			}
 			else

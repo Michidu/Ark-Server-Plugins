@@ -6,9 +6,25 @@
 #include "ArkShop.h"
 #include "DBHelper.h"
 #include "ShopLog.h"
+#include "Discord.h"
 
 namespace ArkShop::Store
 {
+	bool HasBuff(AShooterPlayerController* player_controller)
+	{
+		auto buffs = player_controller->GetPlayerCharacter()->BuffsField();
+
+		for (const auto& buff : buffs)
+		{
+			const FString bpBuff = ArkApi::GetApiUtils().GetBlueprint(buff);
+			const FString bpMindControl = "Blueprint'/Game/Genesis2/Dinos/BrainSlug/Buff_BrainSlugPostProccess.Buff_BrainSlugPostProccess'";
+			if (bpMindControl == bpBuff) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * \brief Buy an item from shop
 	 */
@@ -365,11 +381,27 @@ namespace ArkShop::Store
 
 			if (success)
 			{
-				const std::wstring log = fmt::format(L"{}({}) bought item \"{}\". Amount - {}",
-					*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
-					*item_id, amount);
+				const unsigned price = item_entry["Price"];
+				const int final_price = price * amount;
+
+				const std::wstring log = fmt::format(L"{}({}) Bought item: \"{}\" Amount: {} Total Spent Points: {}",
+					*ArkApi::IApiUtils::GetSteamName(player_controller),
+					steam_id,
+					*item_id, amount,
+					final_price);
 
 				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
+				if (ArkShop::discord_enabled)
+				{
+					const std::wstring log = fmt::format(L"{}({}) Bought item: {} Amount: {} Total Spent Points: {}",
+						*ArkApi::IApiUtils::GetSteamName(player_controller),
+						steam_id,
+						*item_id, amount,
+						final_price);
+
+					PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
+						log, ArkShop::discord_sender_name);
+				}
 			}
 		}
 
@@ -381,6 +413,11 @@ namespace ArkShop::Store
 	void ChatBuy(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		if (!IsStoreEnabled(player_controller))
+		{
+			return;
+		}
+
+		if (HasBuff(player_controller))
 		{
 			return;
 		}
