@@ -28,7 +28,7 @@ FString closed_store_reason;
 bool store_enabled = true;
 
 //Builds custom data for cryopod
-FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrimalItem* saddle)
+FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrimalItem* saddle, FString cryo)
 {
 	FCustomItemData customItemData;
 
@@ -50,6 +50,12 @@ FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrim
 	customItemData.CustomDataStrings.Add(dinoData.DinoNameInMap);
 	customItemData.CustomDataStrings.Add(dinoData.DinoName);
 	customItemData.CustomDataClasses.Add(dinoData.DinoClass);
+	if (cryo.Contains(FString("SoulTrap_DS_C")))
+	{
+		Log::GetLog()->warn("Server is using Dino Storage. Need to use \"Special\" logic");
+		customItemData.CustomDataStrings.Add(ArkApi::GetApiUtils().GetClassBlueprint(dinoData.DinoClass));
+		//customItemData.CustomDataStrings.Insert(ArkApi::GetApiUtils().GetClassBlueprint(dinoData.DinoClass), 10);
+	}
 
 	FCustomItemByteArray dinoBytes, saddlebytes;
 	dinoBytes.Bytes = dinoData.DinoData;
@@ -72,6 +78,8 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 	if (dino && ArkShop::config["General"].value("GiveDinosInCryopods", false))
 	{
 		FString cryo = FString(ArkShop::config["General"].value("CryoItemPath", "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"));
+		if (cryo.IsEmpty()) cryo = "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"; // 2.9.1 Foppa: fix for having the param in the config but empty.
+
 		UClass* Class = UVictoryCore::BPLoadClass(&cryo);
 		UPrimalItem* item = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
 		if (item)
@@ -87,7 +95,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 				saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
 			}
 
-			FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle);
+			FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle, cryo);
 			item->SetCustomItemData(&customItemData);
 			item->UpdatedItem(true);
 
@@ -308,6 +316,13 @@ void Load()
 		ArkShop::Kits::Init();
 		ArkShop::StoreSell::Init();
 
+		//Discord Functions
+		const auto& discord_config = ArkShop::config["General"].value("Discord", nlohmann::json::object());
+
+		ArkShop::discord_enabled = discord_config.value("Enabled", false);
+		ArkShop::discord_sender_name = discord_config.value("SenderName", "");
+		ArkShop::discord_webhook_url = discord_config.value("URL", "").c_str();
+
 		const FString help = ArkShop::GetText("HelpCmd");
 		if (help != ArkApi::Tools::Utf8Decode("No message").c_str())
 		{
@@ -338,7 +353,6 @@ void Unload()
 		ArkApi::GetCommands().RemoveChatCommand(help);
 	}
 
-	ArkApi::GetCommands().RemoveOnTimerCallback("RewardTimer");
 	ArkApi::GetHooks().DisableHook("AShooterGameMode.HandleNewPlayer_Implementation", &Hook_AShooterGameMode_HandleNewPlayer);
 	ArkApi::GetHooks().DisableHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout);
 
@@ -367,6 +381,7 @@ BOOL APIENTRY DllMain(HMODULE /*hModule*/, DWORD ul_reason_for_call, LPVOID /*lp
 		break;
 	case DLL_PROCESS_DETACH:
 		Unload();
+		Plugin_Unload();
 		break;
 	}
 	return TRUE;
