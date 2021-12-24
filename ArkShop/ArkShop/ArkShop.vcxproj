@@ -56,12 +56,28 @@
       <DelayLoadDLLs>Permissions.dll</DelayLoadDLLs>
       <AdditionalLibraryDirectories>..\Libs;..\..\..\ARK-Server-API\out_lib;..\..\Permissions\Permissions\Public</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\$(ProjectName).dll" "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\$(ProjectName).dll.ArkApi" /y
+
+if not exist "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" mkdir "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\"
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.ArkApi" "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.pdb" "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
+
+if not exist "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" mkdir "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\"
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.ArkApi" "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.pdb" "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
+
+if not exist "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" mkdir "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\"
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.ArkApi" "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.pdb" "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Private\ArkShop.h" />
     <ClInclude Include="Private\Database\IDatabase.h" />
     <ClInclude Include="Private\Database\MysqlDB.h" />
     <ClInclude Include="Private\Database\SqlLiteDB.h" />
+    <ClInclude Include="Private\Discord.h" />
     <ClInclude Include="Private\json.hpp" />
     <ClInclude Include="Private\ShopLog.h" />
     <ClInclude Include="Private\Database\sqlite3.h" />
@@ -86,6 +102,7 @@
     <ClCompile Include="Private\TimedRewards.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Configs\Commented.json" />
     <None Include="..\Configs\config.json" />
     <None Include="..\Configs\PluginInfo.json" />
   </ItemGroup>

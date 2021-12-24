@@ -63,6 +63,9 @@
     <ClInclude Include="Private\Database\MysqlDB.h">
       <Filter>Private\Database</Filter>
     </ClInclude>
+    <ClInclude Include="Private\Discord.h">
+      <Filter>Private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Private\ArkShop.cpp">
@@ -95,6 +98,9 @@
       <Filter>Configs</Filter>
     </None>
     <None Include="..\Configs\PluginInfo.json">
+      <Filter>Configs</Filter>
+    </None>
+    <None Include="..\Configs\Commented.json">
       <Filter>Configs</Filter>
     </None>
   </ItemGroup>
