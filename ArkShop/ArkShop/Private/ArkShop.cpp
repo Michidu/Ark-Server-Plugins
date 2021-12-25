@@ -13,51 +13,194 @@
 
 #include "StoreSell.h"
 #include "TimedRewards.h"
+#include <ArkShopUIHelper.h>
 
 #pragma comment(lib, "ArkApi.lib")
 #pragma comment(lib, "Permissions.lib")
 
-DECLARE_HOOK(AShooterGameMode_HandleNewPlayer, bool, AShooterGameMode*, AShooterPlayerController*, UPrimalPlayerData*,
-AShooterCharacter*, bool);
+DECLARE_HOOK(AShooterGameMode_HandleNewPlayer, bool, AShooterGameMode*, AShooterPlayerController*, UPrimalPlayerData*, AShooterCharacter*, bool);
 DECLARE_HOOK(AShooterGameMode_Logout, void, AShooterGameMode*, AController*);
 DECLARE_HOOK(URCONServer_Init, bool, URCONServer*, FString, int, UShooterCheatManager*);
-DECLARE_HOOK(AShooterPlayerController_GridTravelToLocalPos, void, AShooterPlayerController*, unsigned __int16, unsigned
-__int16, FVector*);
+DECLARE_HOOK(AShooterPlayerController_GridTravelToLocalPos, void, AShooterPlayerController*, unsigned __int16, unsigned __int16, FVector*);
 
 FString closed_store_reason;
 bool store_enabled = true;
 
+float ArkShop::getStatValue(float StatModifier, float InitialValueConstant, float RandomizerRangeMultiplier, float StateModifierScale, bool bDisplayAsPercent)
+{
+	float ItemStatValue;
+
+	if (bDisplayAsPercent)
+		InitialValueConstant += 100;
+
+	if (InitialValueConstant > StatModifier)
+		StatModifier = InitialValueConstant;
+
+	ItemStatValue = (StatModifier - InitialValueConstant) / (InitialValueConstant * RandomizerRangeMultiplier * StateModifierScale);
+
+	return ItemStatValue;
+}
+
+void ArkShop::ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durability, int damage)
+{
+	if (armor > 0 || durability > 0 || damage > 0)
+	{
+		for (UPrimalItem* item : items)
+		{
+			bool updated = false;
+
+			if (armor > 0 && item->ItemStatInfosField()()[EPrimalItemStat::Armor].bUsed)
+			{
+				float newStat = 0.f;
+				bool used = item->ItemStatInfosField()()[EPrimalItemStat::Armor].bUsed;
+				bool percent = item->ItemStatInfosField()()[EPrimalItemStat::Armor].bDisplayAsPercent;
+
+				newStat = getStatValue(armor, item->ItemStatInfosField()()[EPrimalItemStat::Armor].InitialValueConstant, item->ItemStatInfosField()()[EPrimalItemStat::Armor].RandomizerRangeMultiplier, item->ItemStatInfosField()()[EPrimalItemStat::Armor].StateModifierScale, percent);
+
+				if (newStat >= 65536.f)
+					newStat = 65535;
+
+				item->ItemStatValuesField()()[EPrimalItemStat::Armor] = newStat;
+				updated = true;
+			}
+			else if (durability > 0 && item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].bUsed)
+			{
+				float newStat = 0.f;
+				bool used = item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].bUsed;
+				bool percent = item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].bDisplayAsPercent;
+
+				newStat = getStatValue(durability, item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].InitialValueConstant, item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].RandomizerRangeMultiplier, item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].StateModifierScale, percent);
+
+				if (newStat >= 65536.f)
+					newStat = 65535;
+
+				item->ItemStatValuesField()()[EPrimalItemStat::MaxDurability] = newStat;
+				item->ItemDurabilityField() = item->GetItemStatModifier(EPrimalItemStat::MaxDurability);
+				updated = true;
+			}
+			else if (damage > 0 && item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].bUsed)
+			{
+				float newStat = 0.f;
+				bool used = item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].bUsed;
+				bool percent = item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].bDisplayAsPercent;
+
+				newStat = getStatValue(damage, item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].InitialValueConstant, item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].RandomizerRangeMultiplier, item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].StateModifierScale, percent);
+
+				if (newStat >= 65536.f)
+					newStat = 65535;
+
+				item->SetItemStatValues(EPrimalItemStat::WeaponDamagePercent, newStat);
+				updated = true;
+			}
+
+			if (updated)
+				item->UpdatedItem(false);
+		}
+	}
+}
+
+FString ArkShop::GetBlueprintShort(UObjectBase* object)
+{
+	if (object != nullptr && object->ClassField() != nullptr)
+	{
+		FString path_name;
+		object->ClassField()->GetDefaultObject(true)->GetFullName(&path_name, nullptr);
+
+		if (int find_index = 0; path_name.FindChar(' ', find_index))
+		{
+			path_name = path_name.Mid(find_index + 1,
+				path_name.Len() - (find_index + (path_name.EndsWith(
+					"_C", ESearchCase::
+					CaseSensitive)
+					? 3
+					: 1)));
+			path_name = path_name.Replace(L"Default__", L"", ESearchCase::CaseSensitive);
+			return path_name;
+		}
+	}
+
+	return FString("");
+}
+
 //Builds custom data for cryopod
-FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrimalItem* saddle)
+FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrimalItem* saddle, bool Modded)
 {
 	FCustomItemData customItemData;
 
-	FARKDinoData dinoData;
-	dino->GetDinoData(&dinoData);
-
-	customItemData.CustomDataName = FName("Dino", EFindName::FNAME_Add);
-	customItemData.CustomDataNames.Add(FName("MissionTemporary", EFindName::FNAME_Add)); //What it should be...
-	customItemData.CustomDataNames.Add(FName("None", EFindName::FNAME_Find)); //What WC has it currently set to...
-
-	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Health]);
-	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Stamina]);
-	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Torpidity]);
-	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Health]);
-	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Stamina]);
-	customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Torpidity]);
-	customItemData.CustomDataFloats.Add(dino->bIsFemale()());
-
-	customItemData.CustomDataStrings.Add(dinoData.DinoNameInMap);
-	customItemData.CustomDataStrings.Add(dinoData.DinoName);
-	customItemData.CustomDataClasses.Add(dinoData.DinoClass);
-
-	FCustomItemByteArray dinoBytes, saddlebytes;
-	dinoBytes.Bytes = dinoData.DinoData;
-	customItemData.CustomDataBytes.ByteArrays.Add(dinoBytes);
-	if (saddle)
+	if (!Modded)
 	{
-		saddle->GetItemBytes(&saddlebytes.Bytes);
-		customItemData.CustomDataBytes.ByteArrays.Add(saddlebytes);
+		FARKDinoData dinoData;
+		dino->GetDinoData(&dinoData);
+
+		customItemData.CustomDataName = FName("Dino", EFindName::FNAME_Add);
+		customItemData.CustomDataNames.Add(FName("MissionTemporary", EFindName::FNAME_Add));
+		customItemData.CustomDataNames.Add(FName("None", EFindName::FNAME_Find));
+
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Health]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Stamina]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Torpidity]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Health]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Stamina]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Torpidity]);
+		customItemData.CustomDataFloats.Add(dino->bIsFemale()());
+
+		customItemData.CustomDataStrings.Add(dinoData.DinoNameInMap);
+		customItemData.CustomDataStrings.Add(dinoData.DinoName);
+		customItemData.CustomDataClasses.Add(dinoData.DinoClass);
+
+		FCustomItemByteArray dinoBytes;
+		dinoBytes.Bytes = dinoData.DinoData;
+		customItemData.CustomDataBytes.ByteArrays.Add(dinoBytes);
+
+		if (saddle)
+		{
+			FCustomItemByteArray saddlebytes;
+			saddle->GetItemBytes(&saddlebytes.Bytes);
+			customItemData.CustomDataBytes.ByteArrays.Add(saddlebytes);
+		}
+	}
+	else
+	{
+		FARKDinoData dinoData;
+		dino->GetDinoData(&dinoData);
+
+		customItemData.CustomDataName = FName("Dino", EFindName::FNAME_Add);
+
+		customItemData.CustomDataFloats.Add(1800.0f);
+		customItemData.CustomDataFloats.Add(1.0f);
+
+		customItemData.CustomDataStrings.Add(dinoData.DinoNameInMap); //0
+		customItemData.CustomDataStrings.Add(dinoData.DinoName); //1
+		customItemData.CustomDataStrings.Add(L"0"); //2
+		customItemData.CustomDataStrings.Add(L"0"); //3
+		customItemData.CustomDataStrings.Add(FString(std::to_string(dino->bIsFemale()()))); //4
+		customItemData.CustomDataStrings.Add(L""); //5
+		customItemData.CustomDataStrings.Add(L""); //6
+		customItemData.CustomDataStrings.Add(L"SDOTU"); //7
+		customItemData.CustomDataStrings.Add(FString(std::to_string(dino->bUsesGender()()))); //8
+		customItemData.CustomDataStrings.Add(L"0"); //9
+		customItemData.CustomDataStrings.Add(GetBlueprintShort(dino)); //10
+		customItemData.CustomDataStrings.Add(L""); //11
+		customItemData.CustomDataStrings.Add(FString(std::to_string(dino->bPreventMating()()))); //12
+		customItemData.CustomDataStrings.Add(FString(std::to_string(dino->bUseBabyGestation()()))); //13
+		customItemData.CustomDataStrings.Add(FString(std::to_string(dino->bDebugBaby()()))); //14
+		customItemData.CustomDataStrings.Add("0"); //15
+		customItemData.CustomDataStrings.Add(dino->DescriptiveNameField()); //16
+
+		customItemData.CustomDataDoubles.Doubles.Add(ArkApi::GetApiUtils().GetWorld()->TimeSecondsField() * -1);
+		customItemData.CustomDataDoubles.Doubles.Add(0);
+
+		FCustomItemByteArray dinoBytes;
+		dinoBytes.Bytes = dinoData.DinoData;
+		customItemData.CustomDataBytes.ByteArrays.Add(dinoBytes); //0
+
+		if (saddle)
+		{
+			FCustomItemByteArray saddlebytes, emptyBytes;
+			saddle->GetItemBytes(&saddlebytes.Bytes);
+			customItemData.CustomDataBytes.ByteArrays.Add(emptyBytes); //1
+			customItemData.CustomDataBytes.ByteArrays.Add(saddlebytes); //2
+		}
 	}
 
 	return customItemData;
@@ -71,13 +214,23 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
 	if (dino && ArkShop::config["General"].value("GiveDinosInCryopods", false))
 	{
+		bool Modded = config["General"].value("UseSoulTraps", false);
+
 		FString cryo = FString(ArkShop::config["General"].value("CryoItemPath", "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"));
+		if (Modded)
+			cryo = FString("Blueprint'/Game/Mods/DinoStorage2/SoulTrap_DS.SoulTrap_DS'");
+		if (cryo.IsEmpty())
+			cryo = FString("Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'");
+
 		UClass* Class = UVictoryCore::BPLoadClass(&cryo);
 		UPrimalItem* item = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
 		if (item)
 		{
-			if (ArkShop::config["General"].value("CryoLimitedTime", false))
+			if (ArkShop::config["General"].value("CryoLimitedTime", false) && !Modded)
 				item->AddItemDurability((item->ItemDurabilityField() - 3600) * -1);
+
+			if (Modded)
+				item->ItemDurabilityField() = 0.001;
 
 			UPrimalItem* saddle = nullptr;
 			if (saddleblueprint.size() > 0)
@@ -87,7 +240,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 				saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
 			}
 
-			FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle);
+			FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle, Modded);
 			item->SetCustomItemData(&customItemData);
 			item->UpdatedItem(true);
 
@@ -223,6 +376,9 @@ void ReloadConfig(APlayerController* player_controller, FString* /*unused*/, boo
 	try
 	{
 		ReadConfig();
+
+		if (ArkApi::Tools::IsPluginLoaded("ArkShopUI"))
+			ArkShopUI::Reload();
 	}
 	catch (const std::exception& error)
 	{
@@ -242,6 +398,9 @@ void ReloadConfigRcon(RCONClientConnection* rcon_connection, RCONPacket* rcon_pa
 	try
 	{
 		ReadConfig();
+
+		if (ArkApi::Tools::IsPluginLoaded("ArkShopUI"))
+			ArkShopUI::Reload();
 	}
 	catch (const std::exception& error)
 	{
@@ -308,17 +467,21 @@ void Load()
 		ArkShop::Kits::Init();
 		ArkShop::StoreSell::Init();
 
+		//Discord Functions
+		const auto& discord_config = ArkShop::config["General"].value("Discord", nlohmann::json::object());
+
+		ArkShop::discord_enabled = discord_config.value("Enabled", false);
+		ArkShop::discord_sender_name = discord_config.value("SenderName", "");
+		ArkShop::discord_webhook_url = discord_config.value("URL", "").c_str();
+
 		const FString help = ArkShop::GetText("HelpCmd");
 		if (help != ArkApi::Tools::Utf8Decode("No message").c_str())
 		{
 			ArkApi::GetCommands().AddChatCommand(help, &ShowHelp);
 		}
 
-		ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation",
-			&Hook_AShooterGameMode_HandleNewPlayer,
-			&AShooterGameMode_HandleNewPlayer_original);
-		ArkApi::GetHooks().SetHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout,
-			&AShooterGameMode_Logout_original);
+		ArkApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer_Implementation", &Hook_AShooterGameMode_HandleNewPlayer, &AShooterGameMode_HandleNewPlayer_original);
+		ArkApi::GetHooks().SetHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout, &AShooterGameMode_Logout_original);
 
 		ArkApi::GetCommands().AddConsoleCommand("ArkShop.Reload", &ReloadConfig);
 		ArkApi::GetCommands().AddRconCommand("ArkShop.Reload", &ReloadConfigRcon);
@@ -338,7 +501,6 @@ void Unload()
 		ArkApi::GetCommands().RemoveChatCommand(help);
 	}
 
-	ArkApi::GetCommands().RemoveOnTimerCallback("RewardTimer");
 	ArkApi::GetHooks().DisableHook("AShooterGameMode.HandleNewPlayer_Implementation", &Hook_AShooterGameMode_HandleNewPlayer);
 	ArkApi::GetHooks().DisableHook("AShooterGameMode.Logout", &Hook_AShooterGameMode_Logout);
 

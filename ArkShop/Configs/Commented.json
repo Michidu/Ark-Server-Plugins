@@ -4,31 +4,45 @@
     "MysqlHost": "localhost",
     "MysqlUser": "apitest",
     "MysqlPass": "12345",
-    "MysqlDB": "apitest",
-    "MysqlPort": 3306
+    "MysqlDB": "apitest"
   },
   "General": {
+    "Discord": { //Used for discord Logging
+      "Enabled": false,
+      "SenderName": "ArkShop",
+      "URL": "" //Webhook for discord channel
+    },
     "TimedPointsReward": {
-      "Enabled": true,
-      "Interval": 5,
-      "StackRewards": false,
+      "Enabled": true, //If true player will receive points based on how much time they play for
+      "StackRewards": false, //If true player will receive the sum of all the rewards of the groups he's in.
+      "Interval": 30,
       "Groups": {
-        "Default": {
-          "Amount": 5
+        "Donator-Diamond": { //Permission group name
+          "Amount": 40
         },
-        "Premiums": {
-          "Amount": 15
+        "Donator-Platinum": { //Permission group name
+          "Amount": 40
+        },
+        "Donator-Gold": { //Permission group name
+          "Amount": 40
+        },
+        "Verified": { //Permission group name
+          "Amount": 30
+        },
+        "Default": { //Permission group name
+          "Amount": 20
         }
       }
     },
-    "ItemsPerPage": 15,
-    "ShopDisplayTime": 15.0,
-    "ShopTextSize": 1.3,
+    "GiveDinosInCryopods": true, //provides dinos from the /buy command in cryopods
+    "UseSoulTraps": false, //Use Dino Storage V2 Mod Soul Traps instead of Vanilla Cyropods
+    "CryoLimitedTime": false, //Sets a 60 minute expire time
+    "CryoItemPath": "", //ONLY USE IF YOU ARE USING CUSTOM VANILLA CRYOPODS (data structure the mod uses must be identical)
+    "ItemsPerPage": 25,
+    "ShopDisplayTime": 5,
+    "ShopTextSize": 1,
     "DbPathOverride": "",
-    "DefaultKit": "vip,starter",
-    "GiveDinosInCryopods": true,
-    "UseSoulTraps": false,
-    "CryoLimitedTime": false
+    "DefaultKit": ""
   },
   "Kits": {
     "starter": {
@@ -37,13 +51,18 @@
       "Description": "Starter kit (carno with saddle)",
       "OnlyFromSpawn": true,
       "Items": [
-
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Armor": 80, //This will force the saddle to have 80 Armor value
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_CarnoSaddle.PrimalItemArmor_CarnoSaddle'"
+        }
       ],
       "Dinos": [
         {
           "Level": 10,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'",
-          "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_CarnoSaddle.PrimalItemArmor_CarnoSaddle'"
+          "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
         }
       ]
     },
@@ -57,6 +76,12 @@
           "Neutered": true,
           "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Ptero/Ptero_Character_BP.Ptero_Character_BP'"
         }
+      ],
+      "Commands": [
+        {
+          "Command": "GiveEngrams",
+          "DisplayAs": "Gives you all engram unlocks" //Only used in the Shop UI to display instead of the command itself
+        }
       ]
     },
     "tools": {
@@ -69,31 +94,16 @@
         {
           "Amount": 1,
           "Quality": 0,
+          "Damage": 300, //this will force the pike to have 300% damage
           "ForceBlueprint": false,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponPike.PrimalItem_WeaponPike'"
         },
         {
           "Amount": 1,
           "Quality": 0,
+          "Durability": 300, //this will force the Club to have 300 durability
           "ForceBlueprint": false,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponStoneClub.PrimalItem_WeaponStoneClub'"
-        }
-      ]
-    },
-    "resources": {
-      "DefaultAmount": 1,
-      "Price": 25,
-      "MinLevel": 1,
-      "MaxLevel": 20,
-      "Description": "100 stone and 100 wood",
-      "Commands": [
-        {
-          "Command": "gfi stone 100 0 0",
-          "ExecuteAsAdmin": true
-        },
-        {
-          "Command": "gfi wood 100 0 0",
-          "ExecuteAsAdmin": true
         }
       ]
     }
@@ -124,67 +134,7 @@
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalHatchet.PrimalItem_WeaponMetalHatchet'"
         },
         {
-          "Quality": 1,
-          "ForceBlueprint": false,
-          "Amount": 1,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalPick.PrimalItem_WeaponMetalPick'"
-        },
-        {
-          "Quality": 2,
-          "ForceBlueprint": false,
-          "Amount": 1,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalHatchet.PrimalItem_WeaponMetalHatchet'"
-        },
-        {
-          "Quality": 3,
-          "ForceBlueprint": false,
-          "Amount": 1,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalPick.PrimalItem_WeaponMetalPick'"
-        },
-        {
-          "Quality": 4,
-          "ForceBlueprint": false,
-          "Amount": 1,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalHatchet.PrimalItem_WeaponMetalHatchet'"
-        },
-        {
-          "Quality": 5,
-          "ForceBlueprint": false,
-          "Amount": 1,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalPick.PrimalItem_WeaponMetalPick'"
-        },
-        {
-          "Quality": 6,
-          "ForceBlueprint": false,
-          "Amount": 1,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalHatchet.PrimalItem_WeaponMetalHatchet'"
-        },
-        {
-          "Quality": 7,
-          "ForceBlueprint": false,
-          "Amount": 1,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalPick.PrimalItem_WeaponMetalPick'"
-        },
-        {
-          "Quality": 8,
-          "ForceBlueprint": false,
-          "Amount": 1,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalHatchet.PrimalItem_WeaponMetalHatchet'"
-        },
-        {
-          "Quality": 9,
-          "ForceBlueprint": false,
-          "Amount": 1,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalPick.PrimalItem_WeaponMetalPick'"
-        },
-        {
-          "Quality": 10,
-          "ForceBlueprint": false,
-          "Amount": 1,
-          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalHatchet.PrimalItem_WeaponMetalHatchet'"
-        },
-        {
-          "Quality": 11,
+          "Quality": 0,
           "ForceBlueprint": false,
           "Amount": 1,
           "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponMetalPick.PrimalItem_WeaponMetalPick'"
@@ -206,7 +156,6 @@
       "Level": 15,
       "Price": 50,
       "Neutered": true,
-      "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_CarnoSaddle.PrimalItemArmor_CarnoSaddle'",
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
     },
     "crate25": {
@@ -220,13 +169,6 @@
       "Description": "Artifact Crate 2",
       "Price": 100,
       "ClassName": "ArtifactCrate_2_C"
-    },
-    "crate3": {
-      "Type": "beacon",
-      "Description": "Artifact Crate 3",
-      "Permissions": "Admins,Premiums",
-      "Price": 100,
-      "ClassName": "ArtifactCrate_3_C"
     },
     "exp1000": {
       "Type": "experience",
@@ -255,18 +197,7 @@
       "Items": [
         {
           "Command": "GiveEngrams",
-          "DisplayAs": "Give All Engrams"
-        }
-      ]
-    },
-    "fly": {
-      "Type": "command",
-      "Description": "Fly command",
-      "Price": 5000,
-      "Items": [
-        {
-          "Command": "fly",
-          "ExecuteAsAdmin": true
+          "DisplayAs": "Gives you all engram unlocks" //Only used in the Shop UI to display instead of the command itself
         }
       ]
     }
@@ -312,6 +243,7 @@
     "TradeCmd": "/trade",
     "BuyCmd": "/buy",
     "ShopCmd": "/shop",
+    "ShopFindCmd": "/shopfind",
     "KitCmd": "/kit",
     "BuyKitCmd": "/buykit",
     "SellCmd": "/sell",
@@ -326,14 +258,10 @@
     "StoreListItem": "{0}) {1}. Id: {2}. Price: {3}\n",
     "StoreListFormat": "{0}",
     "OnlyOnSpawnKit": "This kit can be used only on spawn",
+    "ShopFindUsage": "Usage: /shopfind searchterm",
     "HelpCmd": "/shophelp",
     "ShopMessage": "Usage: /buy id amount",
     "HelpMessage": "This is shop help message",
-    "RefundError": "Points refunded due to an error",
-    "ShopFindCmd": "/shopfind",
-    "ShopFindUsage": "Usage: /shopfind searchterm",
-    "ShopFindNotFound": "No items matched your search",
-    "ShopFindTooManyResults": "Too many results to display refine your search term",
-    "NoPermissionsStore": "<RichColor Color=\"1, 0, 0, 1\">You don't have permission to buy this {0}!</>"
+    "RefundError": "Points refunded due to an error"
   }
 }

@@ -1,8 +1,8 @@
 #include <Points.h>
-
 #include <DBHelper.h>
-
 #include "ArkShop.h"
+#include "Discord.h"
+#include "ArkShopUIHelper.h"
 
 namespace ArkShop::Points
 {
@@ -11,22 +11,18 @@ namespace ArkShop::Points
 	bool AddPoints(int amount, uint64 steam_id)
 	{
 		if (amount <= 0)
-		{
 			return false;
-		}
 
 		const bool is_added = database->AddPoints(steam_id, amount);
 		if (!is_added)
-		{
 			return false;
-		}
+
+		int points = GetPoints(steam_id);
+		ArkShopUI::UpdatePoints(steam_id, points);
 
 		AShooterPlayerController* player = ArkApi::GetApiUtils().FindPlayerFromSteamId(steam_id);
 		if (player != nullptr)
-		{
-			ArkApi::GetApiUtils().SendChatMessage(player, GetText("Sender"), *GetText("ReceivedPoints"), amount,
-			                                      GetPoints(steam_id));
-		}
+			ArkApi::GetApiUtils().SendChatMessage(player, GetText("Sender"), *GetText("ReceivedPoints"), amount, GetPoints(steam_id));
 
 		return true;
 	}
@@ -34,17 +30,14 @@ namespace ArkShop::Points
 	bool SpendPoints(int amount, uint64 steam_id)
 	{
 		if (amount <= 0)
-		{
 			return false;
-		}
 
 		const bool is_spend = database->SpendPoints(steam_id, amount);
 		if (!is_spend)
-		{
 			return false;
-		}
 
-		//database->AddTotalSpent(steam_id, amount);
+		int points = GetPoints(steam_id);
+		ArkShopUI::UpdatePoints(steam_id, points);
 
 		return true;
 	}
@@ -62,7 +55,13 @@ namespace ArkShop::Points
 	bool SetPoints(uint64 steam_id, int new_amount)
 	{
 		const bool is_spend = database->SetPoints(steam_id, new_amount);
-		return is_spend;
+		if (!is_spend)
+			return false;
+
+		int points = GetPoints(steam_id);
+		ArkShopUI::UpdatePoints(steam_id, points);
+
+		return true;
 	}
 
 	// Chat callbacks
@@ -103,7 +102,7 @@ namespace ArkShop::Points
 				if (GetPoints(sender_steam_id) < amount)
 				{
 					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-					                                      *GetText("NoPoints"));
+						*GetText("NoPoints"));
 					return;
 				}
 
@@ -113,14 +112,14 @@ namespace ArkShop::Points
 				if (receiver_players.Num() > 1)
 				{
 					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-					                                      *GetText("FoundMorePlayers"));
+						*GetText("FoundMorePlayers"));
 					return;
 				}
 
 				if (receiver_players.Num() < 1)
 				{
 					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-					                                      *GetText("NoPlayer"));
+						*GetText("NoPlayer"));
 					return;
 				}
 
@@ -130,7 +129,7 @@ namespace ArkShop::Points
 				if (receiver_steam_id == sender_steam_id)
 				{
 					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-					                                      *GetText("CantGivePoints"));
+						*GetText("CantGivePoints"));
 					return;
 				}
 
@@ -138,18 +137,29 @@ namespace ArkShop::Points
 					amount, receiver_steam_id))
 				{
 					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-					                                      *GetText("SentPoints"), amount, *receiver_name);
+						*GetText("SentPoints"), amount, *receiver_name);
 
 					const FString sender_name = ArkApi::IApiUtils::GetCharacterName(player_controller);
 
 					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
 					                                      *GetText("GotPoints"), amount, *sender_name);
+
+					if (ArkShop::discord_enabled)
+					{
+						const std::wstring log = fmt::format(TEXT("{}({}) Traded points with: {}({}) Amount: {}"),
+							*ArkApi::IApiUtils::GetSteamName(player_controller), sender_steam_id,
+							*ArkApi::IApiUtils::GetSteamName(receiver_player), receiver_steam_id,
+							amount);
+
+						PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
+							log, ArkShop::discord_sender_name);
+					}
 				}
 			}
 			else
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				                                      *GetText("TradeUsage"));
+					*GetText("TradeUsage"));
 			}
 		}
 	}
@@ -161,6 +171,12 @@ namespace ArkShop::Points
 		if (DBHelper::IsPlayerExists(steam_id))
 		{
 			int points = GetPoints(steam_id);
+
+			if (ArkApi::Tools::IsPluginLoaded("ArkShopUI"))
+			{
+				ArkShopUI::UpdatePoints(steam_id, points);
+				return;
+			}
 
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"), *GetText("HavePoints"), points);
 		}
@@ -246,8 +262,8 @@ namespace ArkShop::Points
 			if (DBHelper::IsPlayerExists(steam_id))
 			{
 				return amount >= 0
-					       ? AddPoints(amount, steam_id)
-					       : SpendPoints(std::abs(amount), steam_id);
+					? AddPoints(amount, steam_id)
+					: SpendPoints(std::abs(amount), steam_id);
 			}
 		}
 
@@ -346,13 +362,13 @@ namespace ArkShop::Points
 				database->DeleteAllPoints();
 
 				ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green,
-				                                        "Successfully reset points");
+					"Successfully reset points");
 			}
 		}
 		else
 		{
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Yellow,
-			                                        "You are going to reset points for ALL players\nType 'ResetPoints confirm' in console if you want to continue");
+				"You are going to reset points for ALL players\nType 'ResetPoints confirm' in console if you want to continue");
 		}
 	}
 
@@ -364,7 +380,7 @@ namespace ArkShop::Points
 		if (points != -1)
 		{
 			ArkApi::GetApiUtils().SendServerMessage(shooter_controller, FColorList::Green, "Player has {} points",
-			                                        points);
+				points);
 		}
 		else
 		{

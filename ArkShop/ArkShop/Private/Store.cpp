@@ -6,9 +6,33 @@
 #include "ArkShop.h"
 #include "DBHelper.h"
 #include "ShopLog.h"
+#include "ArkShopUIHelper.h"
+#include "Kits.h"
+#include "Discord.h"
 
 namespace ArkShop::Store
 {
+	bool HasBuff(AShooterPlayerController* player_controller)
+	{
+		if (!NoglinBuffClass)
+		{
+			try
+			{
+				FString buffClassString = "Blueprint'/Game/Genesis2/Dinos/BrainSlug/Buff_BrainSlugPostProccess.Buff_BrainSlugPostProccess'";
+				NoglinBuffClass = UVictoryCore::BPLoadClass(&buffClassString);
+			}
+			catch (const std::exception& error)
+			{
+				Log::GetLog()->error(error.what());
+			}
+		}
+
+		if (player_controller && player_controller->GetPlayerCharacter())
+			return player_controller->GetPlayerCharacter()->HasBuff(NoglinBuffClass, true);
+		else
+			return false;
+	}
+
 	/**
 	 * \brief Buy an item from shop
 	 */
@@ -36,18 +60,21 @@ namespace ArkShop::Store
 			auto items_map = item_entry["Items"];
 			for (const auto& item : items_map)
 			{
-				const float quality = item["Quality"];
-				const bool force_blueprint = item["ForceBlueprint"];
-				const int default_amount = item["Amount"];
-				std::string blueprint = item["Blueprint"];
+				const float quality = item.value("Quality", 0);
+				const bool force_blueprint = item.value("ForceBlueprint", false);
+				const int default_amount = item.value("Amount", 1);
+				std::string blueprint = item.value("Blueprint", "");
+				int armor = item.value("Armor", 0);
+				int durability = item.value("Durability", 0);
+				int damage = item.value("Damage", 0);
 
 				FString fblueprint(blueprint.c_str());
 
 				for (int i = 0; i < amount; ++i)
 				{
 					TArray<UPrimalItem*> out_items;
-					player_controller->GiveItem(&out_items, &fblueprint, default_amount, quality, force_blueprint,
-						false, 0);
+					player_controller->GiveItem(&out_items, &fblueprint, default_amount, quality, force_blueprint, false, quality);
+					ApplyItemStats(out_items, armor, durability, damage);
 				}
 			}
 
@@ -81,7 +108,7 @@ namespace ArkShop::Store
 			auto items_map = item_entry["Items"];
 			for (const auto& item : items_map)
 			{
-				const std::string blueprint = item["Blueprint"];
+				const std::string blueprint = item.value("Blueprint", "");
 				FString fblueprint(blueprint);
 
 				auto* cheat_manager = static_cast<UShooterCheatManager*>(player_controller->CheatManagerField());
@@ -118,12 +145,12 @@ namespace ArkShop::Store
 			auto items_map = item_entry["Items"];
 			for (const auto& item : items_map)
 			{
-				const std::string command = item["Command"];
+				const std::string command = item.value("Command", "");
 
 				const bool exec_as_admin = item.value("ExecuteAsAdmin", false);
 
 				FString fcommand = fmt::format(
-					command, fmt::arg("steamid", steam_id), 
+					command, fmt::arg("steamid", steam_id),
 					fmt::arg("playerid", ArkApi::GetApiUtils().GetPlayerID(player_controller)),
 					fmt::arg("tribeid", ArkApi::GetApiUtils().GetTribeID(player_controller))
 				).c_str();
@@ -134,7 +161,7 @@ namespace ArkShop::Store
 					player_controller->bIsAdmin() = true;
 
 				FString result;
-				player_controller->ConsoleCommand(&result, &fcommand, true);
+				((APlayerController*)player_controller)->ConsoleCommand(&result, &fcommand, false);
 
 				if (exec_as_admin)
 					player_controller->bIsAdmin() = was_admin;
@@ -161,11 +188,11 @@ namespace ArkShop::Store
 	{
 		bool success = false;
 
-		const int price = item_entry["Price"];
-		const int level = item_entry["Level"];
+		const int price = item_entry.value("Price", 0);
+		const int level = item_entry.value("Level", 1);
 		const bool neutered = item_entry.value("Neutered", false);
 		std::string saddleblueprint = item_entry.value("SaddleBlueprint", "");
-		std::string blueprint = item_entry["Blueprint"];
+		std::string blueprint = item_entry.value("Blueprint", "");
 
 		const int points = Points::GetPoints(steam_id);
 
@@ -198,8 +225,8 @@ namespace ArkShop::Store
 	{
 		bool success = false;
 
-		const int price = item_entry["Price"];
-		std::string class_name = item_entry["ClassName"];
+		const int price = item_entry.value("Price", 0);
+		std::string class_name = item_entry.value("ClassName", "");
 
 		const int points = Points::GetPoints(steam_id);
 
@@ -232,9 +259,9 @@ namespace ArkShop::Store
 	{
 		bool success = false;
 
-		const int price = item_entry["Price"];
-		const float amount = item_entry["Amount"];
-		const bool give_to_dino = item_entry["GiveToDino"];
+		const int price = item_entry.value("Price", 0);
+		const float amount = item_entry.value("Amount", 1);
+		const bool give_to_dino = item_entry.value("GiveToDino", false);
 
 		if (!give_to_dino && ArkApi::IApiUtils::IsRidingDino(player_controller))
 		{
@@ -365,11 +392,27 @@ namespace ArkShop::Store
 
 			if (success)
 			{
-				const std::wstring log = fmt::format(L"{}({}) bought item \"{}\". Amount - {}",
-					*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
-					*item_id, amount);
+				const unsigned price = item_entry["Price"];
+				const int final_price = price * amount;
+
+				const std::wstring log = fmt::format(L"{}({}) Bought item: \"{}\" Amount: {} Total Spent Points: {}",
+					*ArkApi::IApiUtils::GetSteamName(player_controller),
+					steam_id,
+					*item_id, amount,
+					final_price);
 
 				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
+				if (ArkShop::discord_enabled)
+				{
+					const std::wstring log = fmt::format(L"{}({}) Bought item: {} Amount: {} Total Spent Points: {}",
+						*ArkApi::IApiUtils::GetSteamName(player_controller),
+						steam_id,
+						*item_id, amount,
+						final_price);
+
+					PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
+						log, ArkShop::discord_sender_name);
+				}
 			}
 		}
 
@@ -381,6 +424,11 @@ namespace ArkShop::Store
 	void ChatBuy(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		if (!IsStoreEnabled(player_controller))
+		{
+			return;
+		}
+
+		if (HasBuff(player_controller))
 		{
 			return;
 		}
@@ -415,6 +463,22 @@ namespace ArkShop::Store
 
 	void ShowItems(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
+		if (ArkApi::Tools::IsPluginLoaded("ArkShopUI"))
+		{
+			if (ArkShopUI::RequestUI(player_controller))
+			{
+				uint64 steam_id = ArkApi::GetApiUtils().GetSteamIdFromController(player_controller);
+				if (steam_id > 0)
+				{
+					int points = Points::GetPoints(steam_id);
+					ArkShopUI::UpdatePoints(steam_id, points);
+
+					ArkShop::Kits::InitKitData(steam_id);
+				}
+				return;
+			}
+		}
+
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);
 
@@ -541,6 +605,7 @@ namespace ArkShop::Store
 
 		FString store_str = "";
 
+		int count = 0;
 		for (auto iter = items_list.begin(); iter != items_list.end(); ++iter)
 		{
 			bool found = false;
@@ -556,11 +621,16 @@ namespace ArkShop::Store
 			const std::string type = item["Type"];
 			const std::wstring description = ArkApi::Tools::Utf8Decode(item.value("Description", "No description"));
 
-			if (findCaseInsensitive(description, searchTerm))
+			if (!found && findCaseInsensitive(description, searchTerm))
 				found = true;
 
 			if (found)
 			{
+				if (count >= items_per_page)
+				{
+					store_str += FString::Format(*GetText("ShopFindTooManyResults"));
+					break;
+				}
 				if (type == "dino")
 				{
 					const int level = item["Level"];
@@ -574,6 +644,8 @@ namespace ArkShop::Store
 						ArkApi::Tools::Utf8Decode(iter.key()),
 						price);
 				}
+
+				count++;
 			}
 		}
 
