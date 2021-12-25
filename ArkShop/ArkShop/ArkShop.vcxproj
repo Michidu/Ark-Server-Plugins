@@ -57,19 +57,8 @@
       <AdditionalLibraryDirectories>..\Libs;..\..\..\ARK-Server-API\out_lib;..\..\Permissions\Permissions\Public</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\$(ProjectName).dll" "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\$(ProjectName).dll.ArkApi" /y
-
-if not exist "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" mkdir "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\"
-copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.ArkApi" "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
-copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.pdb" "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
-
-if not exist "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" mkdir "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\"
-copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.ArkApi" "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
-copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.pdb" "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
-
-if not exist "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" mkdir "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\"
-copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.ArkApi" "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
-copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.pdb" "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
