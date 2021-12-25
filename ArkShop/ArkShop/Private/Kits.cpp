@@ -6,6 +6,8 @@
 
 #include "ArkShop.h"
 #include "ShopLog.h"
+#include "Discord.h"
+#include "ArkShopUIHelper.h"
 
 namespace ArkShop::Kits
 {
@@ -22,7 +24,10 @@ namespace ArkShop::Kits
 
 		try
 		{
-			conf = nlohmann::json::parse(kits_config);
+			if (kits_config.length() >= 2 && (kits_config.substr(0, 1) == "{" || kits_config.substr(kits_config.length() - 1, 1) == "}"))
+				conf = nlohmann::json::parse(kits_config);
+			else
+				conf = nlohmann::json::parse("{}");
 		}
 		catch (const std::exception& exception)
 		{
@@ -100,7 +105,15 @@ namespace ArkShop::Kits
 
 		player_kit_json[kit_name_str]["Amount"] = new_amount >= 0 ? new_amount : 0;
 
-		return SaveConfig(player_kit_json.dump(), steam_id);
+		bool returnValue = SaveConfig(player_kit_json.dump(), steam_id);
+
+		if (returnValue && ArkApi::Tools::IsPluginLoaded("ArkShopUI"))
+		{
+			FString kitData(database->GetPlayerKits(steam_id));
+			ArkShopUI::PlayerKits(steam_id, kitData);
+		}
+
+		return returnValue;
 	}
 
 	/**
@@ -202,25 +215,29 @@ namespace ArkShop::Kits
 		auto items_map = kit_entry.value("Items", nlohmann::json::array());
 		for (const auto& item : items_map)
 		{
-			const int amount = item["Amount"];
-			const float quality = item["Quality"];
-			const bool force_blueprint = item["ForceBlueprint"];
-			std::string blueprint = item["Blueprint"];
+			const float quality = item.value("Quality", 0);
+			const bool force_blueprint = item.value("ForceBlueprint", false);
+			const int amount = item.value("Amount", 1);
+			std::string blueprint = item.value("Blueprint", "");
+			int armor = item.value("Armor", 0);
+			int durability = item.value("Durability", 0);
+			int damage = item.value("Damage", 0);
 
 			FString fblueprint(blueprint.c_str());
 
 			TArray<UPrimalItem*> out_items;
 			player_controller->GiveItem(&out_items, &fblueprint, amount, quality, force_blueprint, false, 0);
+			ApplyItemStats(out_items, armor, durability, damage);
 		}
 
 		// Give dinos
 		auto dinos_map = kit_entry.value("Dinos", nlohmann::json::array());
 		for (const auto& dino : dinos_map)
 		{
-			const int level = dino["Level"];
+			const int level = dino.value("Level", 1);
 			const bool neutered = dino.value("Neutered", false);
 			std::string saddleblueprint = dino.value("SaddleBlueprint", "");
-			std::string blueprint = dino["Blueprint"];
+			std::string blueprint = dino.value("Blueprint", "");
 
 			bool success = ArkShop::GiveDino(player_controller, level, neutered, blueprint, saddleblueprint);
 		}
@@ -254,8 +271,7 @@ namespace ArkShop::Kits
 	/**
 	 * \brief Redeem the kit for the specific player
 	 */
-	void RedeemKit(AShooterPlayerController* player_controller, const FString& kit_name, bool should_log,
-		bool from_spawn)
+	void RedeemKit(AShooterPlayerController* player_controller, const FString& kit_name, bool should_log, bool from_spawn)
 	{
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
 		{
@@ -305,11 +321,20 @@ namespace ArkShop::Kits
 				// Log
 				if (should_log)
 				{
-					const std::wstring log = fmt::format(TEXT("{}({}) used kit \"{}\""),
+					const std::wstring log = fmt::format(TEXT("{}({}) Used kit \"{}\""),
 						*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
 						*kit_name);
 
 					ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
+					if (ArkShop::discord_enabled)
+					{
+						const std::wstring log = fmt::format(TEXT("{}({}) Used kit: {}"),
+							*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
+							*kit_name);
+
+						PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
+							log, ArkShop::discord_sender_name);
+					}
 				}
 			}
 			else if (should_log)
@@ -366,6 +391,55 @@ namespace ArkShop::Kits
 			*kits_list_str);
 	}
 
+	void InitKitData(uint64 steam_id)
+	{
+		//Kits json config
+		auto player_kit_json = GetPlayerKitsConfig(steam_id);
+
+		auto kits_map = config["Kits"];
+		for (auto iter = kits_map.begin(); iter != kits_map.end(); ++iter)
+		{
+			const std::string kit_name_str = iter.key();
+			int new_amount;
+
+			auto kit_json_iter = player_kit_json.find(kit_name_str);
+			if (kit_json_iter == player_kit_json.end()) // If kit doesn't exists in player's config
+			{
+				auto kits_list = config["Kits"];
+
+				auto kit_entry_iter = kits_list.find(kit_name_str);
+				if (kit_entry_iter == kits_list.end())
+				{
+					continue;
+				}
+
+				auto kit_entry = kit_entry_iter.value();
+
+				const int default_amount = kit_entry.value("DefaultAmount", 0);
+
+				new_amount = default_amount;
+			}
+			else
+			{
+				auto kit_json_entry = kit_json_iter.value();
+
+				const int current_amount = kit_json_entry.value("Amount", 0);
+
+				new_amount = current_amount;
+			}
+
+			player_kit_json[kit_name_str]["Amount"] = new_amount >= 0 ? new_amount : 0;
+		}
+
+		bool returnValue = SaveConfig(player_kit_json.dump(), steam_id);
+
+		if (returnValue && ArkApi::Tools::IsPluginLoaded("ArkShopUI"))
+		{
+			FString kitData(database->GetPlayerKits(steam_id));
+			ArkShopUI::PlayerKits(steam_id, kitData);
+		}
+	}
+
 	// Chat callbacks
 
 	void Kit(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
@@ -384,7 +458,18 @@ namespace ArkShop::Kits
 		}
 		else
 		{
-			ListKits(player_controller);
+			if (ArkApi::Tools::IsPluginLoaded("ArkShopUI"))
+			{
+				uint64 steam_id = ArkApi::GetApiUtils().GetSteamIdFromController(player_controller);
+				if (steam_id > 0)
+				{
+					FString kitData(database->GetPlayerKits(steam_id));
+					ArkShopUI::PlayerKits(steam_id, kitData);
+				}
+				return;
+			}
+			else
+				ListKits(player_controller);
 		}
 	}
 
@@ -464,6 +549,16 @@ namespace ArkShop::Kits
 						amount);
 
 					ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
+					if (ArkShop::discord_enabled)
+					{
+						const std::wstring log = fmt::format(TEXT("{}({}) Bought kit: {} Amount: {}"),
+							*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
+							*kit_name,
+							amount);
+
+						PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
+							log, ArkShop::discord_sender_name);
+					}
 				}
 				else
 				{

@@ -21,4 +21,6 @@ namespace ArkShop::Kits
 	* \brief Checks if kit exists in server config
 	*/
 	SHOP_API bool IsKitExists(const FString& kit_name);
+
+	void InitKitData(uint64 steam_id);
 } // namespace Kits // namespace ArkShop
