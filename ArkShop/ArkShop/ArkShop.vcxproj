@@ -56,12 +56,17 @@
       <DelayLoadDLLs>Permissions.dll</DelayLoadDLLs>
       <AdditionalLibraryDirectories>..\Libs;..\..\..\ARK-Server-API\out_lib;..\..\Permissions\Permissions\Public</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Private\ArkShop.h" />
     <ClInclude Include="Private\Database\IDatabase.h" />
     <ClInclude Include="Private\Database\MysqlDB.h" />
     <ClInclude Include="Private\Database\SqlLiteDB.h" />
+    <ClInclude Include="Private\Discord.h" />
     <ClInclude Include="Private\json.hpp" />
     <ClInclude Include="Private\ShopLog.h" />
     <ClInclude Include="Private\Database\sqlite3.h" />
@@ -86,6 +91,7 @@
     <ClCompile Include="Private\TimedRewards.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Configs\Commented.json" />
     <None Include="..\Configs\config.json" />
     <None Include="..\Configs\PluginInfo.json" />
   </ItemGroup>
