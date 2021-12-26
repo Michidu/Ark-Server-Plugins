@@ -8,6 +8,11 @@
     "MysqlPort": 3306
   },
   "General": {
+    "Discord": {
+      "Enabled": false,
+      "SenderName": "ArkShop",
+      "URL": ""
+    },
     "TimedPointsReward": {
       "Enabled": true,
       "Interval": 5,
@@ -25,7 +30,7 @@
     "ShopDisplayTime": 15.0,
     "ShopTextSize": 1.3,
     "DbPathOverride": "",
-    "DefaultKit": "vip,starter",
+    "DefaultKit": "",
     "GiveDinosInCryopods": true,
     "UseSoulTraps": false,
     "CryoLimitedTime": false

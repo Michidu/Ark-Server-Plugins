@@ -4,7 +4,8 @@
     "MysqlHost": "localhost",
     "MysqlUser": "apitest",
     "MysqlPass": "12345",
-    "MysqlDB": "apitest"
+    "MysqlDB": "apitest",
+    "MysqlPort": 3306
   },
   "General": {
     "Discord": { //Used for discord Logging
@@ -34,10 +35,10 @@
         }
       }
     },
-    "GiveDinosInCryopods": true, //provides dinos from the /buy command in cryopods
+    "GiveDinosInCryopods": true, //provides dinos from the /buy command in cryopods or soul traps (if UseSoulTraps is true)
     "UseSoulTraps": false, //Use Dino Storage V2 Mod Soul Traps instead of Vanilla Cyropods
     "CryoLimitedTime": false, //Sets a 60 minute expire time
-    "CryoItemPath": "", //ONLY USE IF YOU ARE USING CUSTOM VANILLA CRYOPODS (data structure the mod uses must be identical)
+    "CryoItemPath": "", //ONLY USE IF YOU ARE USING CUSTOM VANILLA CRYOPODS Leave blank otherwise (data structure the mod uses must be identical)
     "ItemsPerPage": 25,
     "ShopDisplayTime": 5,
     "ShopTextSize": 1,
@@ -243,7 +244,6 @@
     "TradeCmd": "/trade",
     "BuyCmd": "/buy",
     "ShopCmd": "/shop",
-    "ShopFindCmd": "/shopfind",
     "KitCmd": "/kit",
     "BuyKitCmd": "/buykit",
     "SellCmd": "/sell",
@@ -258,10 +258,14 @@
     "StoreListItem": "{0}) {1}. Id: {2}. Price: {3}\n",
     "StoreListFormat": "{0}",
     "OnlyOnSpawnKit": "This kit can be used only on spawn",
-    "ShopFindUsage": "Usage: /shopfind searchterm",
     "HelpCmd": "/shophelp",
     "ShopMessage": "Usage: /buy id amount",
     "HelpMessage": "This is shop help message",
-    "RefundError": "Points refunded due to an error"
+    "RefundError": "Points refunded due to an error",
+    "ShopFindCmd": "/shopfind",
+    "ShopFindUsage": "Usage: /shopfind searchterm",
+    "ShopFindNotFound": "No items matched your search",
+    "ShopFindTooManyResults": "Too many results to display refine your search term",
+    "NoPermissionsStore": "<RichColor Color=\"1, 0, 0, 1\">You don't have permission to buy this {0}!</>"
   }
 }
