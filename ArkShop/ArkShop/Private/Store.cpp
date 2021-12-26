@@ -70,11 +70,33 @@ namespace ArkShop::Store
 
 				FString fblueprint(blueprint.c_str());
 
-				for (int i = 0; i < amount; ++i)
+				UClass* itemClass = UVictoryCore::BPLoadClass(&fblueprint);
+				bool stacksInOne = false;
+				if (itemClass)
 				{
-					TArray<UPrimalItem*> out_items;
-					player_controller->GiveItem(&out_items, &fblueprint, default_amount, quality, force_blueprint, false, quality);
-					ApplyItemStats(out_items, armor, durability, damage);
+					UPrimalItem* itemCDO = static_cast<UPrimalItem*>(itemClass->GetDefaultObject(true));
+					if (itemCDO)
+					{
+						stacksInOne = itemCDO->GetMaxItemQuantity(ArkApi::GetApiUtils().GetWorld()) <= 1;
+					}
+				}
+
+				if (stacksInOne)
+				{
+					for (int i = 0; i < amount; ++i)
+					{
+						TArray<UPrimalItem*> out_items;
+						player_controller->GiveItem(&out_items, &fblueprint, default_amount, quality, force_blueprint, false, quality);
+						ApplyItemStats(out_items, armor, durability, damage);
+					}
+				}
+				else
+				{
+					UPrimalInventoryComponent* playerInventory = player_controller->GetPlayerInventoryComponent();
+					if (playerInventory)
+					{
+						playerInventory->IncrementItemTemplateQuantity(itemClass, amount, true, force_blueprint, nullptr, nullptr, false, false, false, false, true, false, true);
+					}
 				}
 			}
 
