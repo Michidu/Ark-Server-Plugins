@@ -83,7 +83,7 @@ void ArkShop::ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durabili
 					float newStat = 0.f;
 					bool percent = itemstat->bDisplayAsPercent()();
 
-					newStat = getStatValue(durability, itemstat->InitialValueConstantField(), itemstat->RandomizerRangeMultiplierField(), itemstat->StateModifierScaleField(), percent);
+					newStat = getStatValue(durability, itemstat->InitialValueConstantField(), itemstat->RandomizerRangeMultiplierField(), itemstat->StateModifierScaleField(), percent) + 1;
 
 					if (newStat >= 65536.f)
 						newStat = 65535;
