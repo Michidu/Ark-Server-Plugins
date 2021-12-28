@@ -19,11 +19,11 @@ namespace ArkShop::StoreSell
 			if (int find_index = 0; path_name.FindChar(' ', find_index))
 			{
 				path_name = "Blueprint'" + path_name.Mid(find_index + 1,
-				                                         path_name.Len() - (find_index + (path_name.EndsWith(
-					                                                                          "_C", ESearchCase::
-					                                                                          CaseSensitive)
-					                                                                          ? 3
-					                                                                          : 1))) + "'";
+					path_name.Len() - (find_index + (path_name.EndsWith(
+						"_C", ESearchCase::
+						CaseSensitive)
+						? 3
+						: 1))) + "'";
 				return path_name.Replace(L"Default__", L"", ESearchCase::CaseSensitive);
 			}
 		}
@@ -32,8 +32,8 @@ namespace ArkShop::StoreSell
 	}
 
 	bool SellItem(AShooterPlayerController* player_controller, const nlohmann::basic_json<>& item_entry,
-	              uint64 steam_id,
-	              int amount)
+		uint64 steam_id,
+		int amount)
 	{
 		bool success = false;
 
@@ -95,7 +95,7 @@ namespace ArkShop::StoreSell
 				{
 					item->SetQuantity(item_count - needed_amount, true);
 					inventory->NotifyClientsItemStatus(item, false, false, true, false, false, nullptr, nullptr, false,
-					                                   false, true);
+						false, true);
 				}
 				else
 				{
@@ -116,8 +116,8 @@ namespace ArkShop::StoreSell
 		else
 		{
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"), *GetText("NotEnoughItems"),
-			                                      item_count,
-			                                      needed_amount);
+				item_count,
+				needed_amount);
 		}
 
 		return success;
@@ -147,7 +147,7 @@ namespace ArkShop::StoreSell
 			if (item_entry_iter == items_list.end())
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-				                                      *GetText("WrongId"));
+					*GetText("WrongId"));
 				return false;
 			}
 
@@ -163,9 +163,9 @@ namespace ArkShop::StoreSell
 			if (success)
 			{
 				const std::wstring log = fmt::format(TEXT("{}({}) sold item \"{}\". Amount - {}"),
-				                                     *ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
-				                                     *item_id,
-				                                     amount);
+					*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
+					*item_id,
+					amount);
 
 				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
 				if (ArkShop::discord_enabled)
@@ -213,12 +213,15 @@ namespace ArkShop::StoreSell
 		else
 		{
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-			                                      *GetText("SellUsage"));
+				*GetText("SellUsage"));
 		}
 	}
 
 	void ShowItems(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
+		if (ArkApi::Tools::IsPluginLoaded("ArkShopUI"))
+			return;
+
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);
 
@@ -273,12 +276,12 @@ namespace ArkShop::StoreSell
 			const std::string description = item.value("Description", "No description");
 
 			store_str += FString::Format(*GetText("StoreListItem"), i + 1, description,
-			                             ArkApi::Tools::Utf8Decode(iter.key()),
-			                             price);
+				ArkApi::Tools::Utf8Decode(iter.key()),
+				price);
 		}
 
 		ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::White, text_size, display_time, nullptr,
-		                                       *store_str);
+			*store_str);
 	}
 
 	// Console callbacks

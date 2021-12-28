@@ -320,7 +320,7 @@ namespace ArkShop::Store
 
 			auto item_entry = item_entry_iter.value();
 
-			const std::string type = item_entry["Type"];
+			const std::string type = item_entry.value("Type", "");
 
 			// Check if player has permisson to buy this
 

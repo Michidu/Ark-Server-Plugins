@@ -76,90 +76,159 @@ namespace ArkShop::Points
 		if (DBHelper::IsPlayerExists(sender_steam_id))
 		{
 			TArray<FString> parsed;
-			message->ParseIntoArray(parsed, L"'", true);
-
-			if (parsed.IsValidIndex(2))
+			if (ArkApi::Tools::IsPluginLoaded("ArkShopUI"))
 			{
-				const FString receiver_name = parsed[1];
+				message->ParseIntoArray(parsed, L" ", true);
 
-				int amount;
-
-				try
+				if (parsed.IsValidIndex(2))
 				{
-					amount = std::stoi(*parsed[2]);
-				}
-				catch (const std::exception& exception)
-				{
-					Log::GetLog()->error("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
-					return;
-				}
+					uint64 receiver_steam_id;
+					int amount;
 
-				if (amount <= 0)
-				{
-					return;
-				}
-
-				if (GetPoints(sender_steam_id) < amount)
-				{
-					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-						*GetText("NoPoints"));
-					return;
-				}
-
-				TArray<AShooterPlayerController*> receiver_players = ArkApi::GetApiUtils().
-					FindPlayerFromCharacterName(receiver_name, ESearchCase::IgnoreCase, false);
-
-				if (receiver_players.Num() > 1)
-				{
-					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-						*GetText("FoundMorePlayers"));
-					return;
-				}
-
-				if (receiver_players.Num() < 1)
-				{
-					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-						*GetText("NoPlayer"));
-					return;
-				}
-
-				AShooterPlayerController* receiver_player = receiver_players[0];
-
-				const uint64 receiver_steam_id = ArkApi::IApiUtils::GetSteamIdFromController(receiver_player);
-				if (receiver_steam_id == sender_steam_id)
-				{
-					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-						*GetText("CantGivePoints"));
-					return;
-				}
-
-				if (DBHelper::IsPlayerExists(receiver_steam_id) && SpendPoints(amount, sender_steam_id) && AddPoints(
-					amount, receiver_steam_id))
-				{
-					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-						*GetText("SentPoints"), amount, *receiver_name);
-
-					const FString sender_name = ArkApi::IApiUtils::GetCharacterName(player_controller);
-
-					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-					                                      *GetText("GotPoints"), amount, *sender_name);
-
-					if (ArkShop::discord_enabled)
+					try
 					{
-						const std::wstring log = fmt::format(TEXT("{}({}) Traded points with: {}({}) Amount: {}"),
-							*ArkApi::IApiUtils::GetSteamName(player_controller), sender_steam_id,
-							*ArkApi::IApiUtils::GetSteamName(receiver_player), receiver_steam_id,
-							amount);
+						receiver_steam_id = std::stoull(*parsed[1]);
+						amount = std::stoi(*parsed[2]);
+					}
+					catch (const std::exception& exception)
+					{
+						Log::GetLog()->error("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
+						return;
+					}
 
-						PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
-							log, ArkShop::discord_sender_name);
+					if (amount <= 0)
+					{
+						return;
+					}
+
+					if (GetPoints(sender_steam_id) < amount)
+					{
+						ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+							*GetText("NoPoints"));
+						return;
+					}
+
+					if (receiver_steam_id == sender_steam_id)
+					{
+						ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+							*GetText("CantGivePoints"));
+						return;
+					}
+
+					if (DBHelper::IsPlayerExists(receiver_steam_id) && SpendPoints(amount, sender_steam_id) && AddPoints(
+						amount, receiver_steam_id))
+					{
+						AShooterPlayerController* receiver_player = ArkApi::GetApiUtils().FindPlayerFromSteamId(receiver_steam_id);
+						FString receiver_name = ArkApi::GetApiUtils().GetCharacterName(receiver_player);
+
+						ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+							*GetText("SentPoints"), amount, *receiver_name);
+
+						const FString sender_name = ArkApi::IApiUtils::GetCharacterName(player_controller);
+
+						ArkApi::GetApiUtils().SendChatMessage(receiver_player, GetText("Sender"),
+							*GetText("GotPoints"), amount, *sender_name);
+
+						if (ArkShop::discord_enabled)
+						{
+							const std::wstring log = fmt::format(TEXT("{}({}) Traded points with: {}({}) Amount: {}"),
+								*ArkApi::IApiUtils::GetSteamName(player_controller), sender_steam_id,
+								*ArkApi::IApiUtils::GetSteamName(receiver_player), receiver_steam_id,
+								amount);
+
+							PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
+								log, ArkShop::discord_sender_name);
+						}
 					}
 				}
 			}
 			else
 			{
-				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
-					*GetText("TradeUsage"));
+				message->ParseIntoArray(parsed, L"'", true);
+
+				if (parsed.IsValidIndex(2))
+				{
+					const FString receiver_name = parsed[1];
+
+					int amount;
+
+					try
+					{
+						amount = std::stoi(*parsed[2]);
+					}
+					catch (const std::exception& exception)
+					{
+						Log::GetLog()->error("({} {}) Parsing error {}", __FILE__, __FUNCTION__, exception.what());
+						return;
+					}
+
+					if (amount <= 0)
+					{
+						return;
+					}
+
+					if (GetPoints(sender_steam_id) < amount)
+					{
+						ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+							*GetText("NoPoints"));
+						return;
+					}
+
+					TArray<AShooterPlayerController*> receiver_players = ArkApi::GetApiUtils().
+						FindPlayerFromCharacterName(receiver_name, ESearchCase::IgnoreCase, false);
+
+					if (receiver_players.Num() > 1)
+					{
+						ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+							*GetText("FoundMorePlayers"));
+						return;
+					}
+
+					if (receiver_players.Num() < 1)
+					{
+						ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+							*GetText("NoPlayer"));
+						return;
+					}
+
+					AShooterPlayerController* receiver_player = receiver_players[0];
+
+					const uint64 receiver_steam_id = ArkApi::IApiUtils::GetSteamIdFromController(receiver_player);
+					if (receiver_steam_id == sender_steam_id)
+					{
+						ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+							*GetText("CantGivePoints"));
+						return;
+					}
+
+					if (DBHelper::IsPlayerExists(receiver_steam_id) && SpendPoints(amount, sender_steam_id) && AddPoints(
+						amount, receiver_steam_id))
+					{
+						ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+							*GetText("SentPoints"), amount, *receiver_name);
+
+						const FString sender_name = ArkApi::IApiUtils::GetCharacterName(player_controller);
+
+						ArkApi::GetApiUtils().SendChatMessage(receiver_player, GetText("Sender"),
+							*GetText("GotPoints"), amount, *sender_name);
+
+						if (ArkShop::discord_enabled)
+						{
+							const std::wstring log = fmt::format(TEXT("{}({}) Traded points with: {}({}) Amount: {}"),
+								*ArkApi::IApiUtils::GetSteamName(player_controller), sender_steam_id,
+								*ArkApi::IApiUtils::GetSteamName(receiver_player), receiver_steam_id,
+								amount);
+
+							PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
+								log, ArkShop::discord_sender_name);
+						}
+					}
+				}
+				else
+				{
+					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+						*GetText("TradeUsage"));
+				}
 			}
 		}
 	}
