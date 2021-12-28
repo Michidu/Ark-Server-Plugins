@@ -49,48 +49,74 @@ void ArkShop::ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durabili
 		{
 			bool updated = false;
 
-			if (armor > 0 && item->ItemStatInfosField()()[EPrimalItemStat::Armor].bUsed)
+			if (armor > 0)
 			{
-				float newStat = 0.f;
-				bool used = item->ItemStatInfosField()()[EPrimalItemStat::Armor].bUsed;
-				bool percent = item->ItemStatInfosField()()[EPrimalItemStat::Armor].bDisplayAsPercent;
+				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0024));
+				RtlSecureZeroMemory(itemstat, 0x0024);
+				item->GetItemStatInfo(itemstat, EPrimalItemStat::Armor);
 
-				newStat = getStatValue(armor, item->ItemStatInfosField()()[EPrimalItemStat::Armor].InitialValueConstant, item->ItemStatInfosField()()[EPrimalItemStat::Armor].RandomizerRangeMultiplier, item->ItemStatInfosField()()[EPrimalItemStat::Armor].StateModifierScale, percent);
+				if (itemstat->bUsed()())
+				{
+					float newStat = 0.f;
+					bool percent = itemstat->bDisplayAsPercent()();
 
-				if (newStat >= 65536.f)
-					newStat = 65535;
+					newStat = getStatValue(armor, itemstat->InitialValueConstantField(), itemstat->RandomizerRangeMultiplierField(), itemstat->StateModifierScaleField(), percent);
 
-				item->ItemStatValuesField()()[EPrimalItemStat::Armor] = newStat;
-				updated = true;
+					if (newStat >= 65536.f)
+						newStat = 65535;
+
+					item->ItemStatValuesField()()[EPrimalItemStat::Armor] = newStat;
+					updated = true;
+				}
+
+				FMemory::Free(itemstat);
 			}
-			else if (durability > 0 && item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].bUsed)
+
+			if (durability > 0)
 			{
-				float newStat = 0.f;
-				bool used = item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].bUsed;
-				bool percent = item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].bDisplayAsPercent;
+				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0024));
+				RtlSecureZeroMemory(itemstat, 0x0024);
+				item->GetItemStatInfo(itemstat, EPrimalItemStat::MaxDurability);
 
-				newStat = getStatValue(durability, item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].InitialValueConstant, item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].RandomizerRangeMultiplier, item->ItemStatInfosField()()[EPrimalItemStat::MaxDurability].StateModifierScale, percent);
+				if (itemstat->bUsed()())
+				{
+					float newStat = 0.f;
+					bool percent = itemstat->bDisplayAsPercent()();
 
-				if (newStat >= 65536.f)
-					newStat = 65535;
+					newStat = getStatValue(durability, itemstat->InitialValueConstantField(), itemstat->RandomizerRangeMultiplierField(), itemstat->StateModifierScaleField(), percent) + 1;
 
-				item->ItemStatValuesField()()[EPrimalItemStat::MaxDurability] = newStat;
-				item->ItemDurabilityField() = item->GetItemStatModifier(EPrimalItemStat::MaxDurability);
-				updated = true;
+					if (newStat >= 65536.f)
+						newStat = 65535;
+
+					item->ItemStatValuesField()()[EPrimalItemStat::MaxDurability] = newStat;
+					item->ItemDurabilityField() = item->GetItemStatModifier(EPrimalItemStat::MaxDurability);
+					updated = true;
+				}
+
+				FMemory::Free(itemstat);
 			}
-			else if (damage > 0 && item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].bUsed)
+
+			if (damage > 0)
 			{
-				float newStat = 0.f;
-				bool used = item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].bUsed;
-				bool percent = item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].bDisplayAsPercent;
+				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0024));
+				RtlSecureZeroMemory(itemstat, 0x0024);
+				item->GetItemStatInfo(itemstat, EPrimalItemStat::WeaponDamagePercent);
 
-				newStat = getStatValue(damage, item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].InitialValueConstant, item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].RandomizerRangeMultiplier, item->ItemStatInfosField()()[EPrimalItemStat::WeaponDamagePercent].StateModifierScale, percent);
+				if (itemstat->bUsed()())
+				{
+					float newStat = 0.f;
+					bool percent = itemstat->bDisplayAsPercent()();
 
-				if (newStat >= 65536.f)
-					newStat = 65535;
+					newStat = getStatValue(damage, itemstat->InitialValueConstantField(), itemstat->RandomizerRangeMultiplierField(), itemstat->StateModifierScaleField(), percent);
 
-				item->SetItemStatValues(EPrimalItemStat::WeaponDamagePercent, newStat);
-				updated = true;
+					if (newStat >= 65536.f)
+						newStat = 65535;
+
+					item->SetItemStatValues(EPrimalItemStat::WeaponDamagePercent, newStat);
+					updated = true;
+				}
+
+				FMemory::Free(itemstat);
 			}
 
 			if (updated)
