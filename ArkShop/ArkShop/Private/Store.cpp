@@ -70,11 +70,34 @@ namespace ArkShop::Store
 
 				FString fblueprint(blueprint.c_str());
 
-				for (int i = 0; i < amount; ++i)
+				UClass* itemClass = UVictoryCore::BPLoadClass(&fblueprint);
+				bool stacksInOne = false;
+				if (itemClass)
 				{
-					TArray<UPrimalItem*> out_items;
-					player_controller->GiveItem(&out_items, &fblueprint, default_amount, quality, force_blueprint, false, quality);
-					ApplyItemStats(out_items, armor, durability, damage);
+					UPrimalItem* itemCDO = static_cast<UPrimalItem*>(itemClass->GetDefaultObject(true));
+					if (itemCDO)
+					{
+						stacksInOne = itemCDO->GetMaxItemQuantity(ArkApi::GetApiUtils().GetWorld()) <= 1;
+					}
+				}
+
+				if (stacksInOne)
+				{
+					for (int i = 0; i < amount; ++i)
+					{
+						TArray<UPrimalItem*> out_items;
+						player_controller->GiveItem(&out_items, &fblueprint, default_amount, quality, force_blueprint, false, quality);
+						ApplyItemStats(out_items, armor, durability, damage);
+					}
+				}
+				else
+				{
+					UPrimalInventoryComponent* playerInventory = player_controller->GetPlayerInventoryComponent();
+					if (playerInventory)
+					{
+						int totalamount = amount * default_amount;
+						playerInventory->IncrementItemTemplateQuantity(itemClass, totalamount, true, force_blueprint, nullptr, nullptr, false, false, false, false, true, false, true);
+					}
 				}
 			}
 
@@ -157,14 +180,14 @@ namespace ArkShop::Store
 
 				const bool was_admin = player_controller->bIsAdmin()();
 
-				if (exec_as_admin)
+				if (!was_admin && exec_as_admin)
 					player_controller->bIsAdmin() = true;
 
 				FString result;
 				((APlayerController*)player_controller)->ConsoleCommand(&result, &fcommand, false);
 
-				if (exec_as_admin)
-					player_controller->bIsAdmin() = was_admin;
+				if (!was_admin && exec_as_admin)
+					player_controller->bIsAdmin() = false;
 			}
 
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
@@ -191,6 +214,7 @@ namespace ArkShop::Store
 		const int price = item_entry.value("Price", 0);
 		const int level = item_entry.value("Level", 1);
 		const bool neutered = item_entry.value("Neutered", false);
+		std::string gender = item_entry.value("Gender", "random");
 		std::string saddleblueprint = item_entry.value("SaddleBlueprint", "");
 		std::string blueprint = item_entry.value("Blueprint", "");
 
@@ -198,7 +222,7 @@ namespace ArkShop::Store
 
 		if (points >= price && Points::SpendPoints(price, steam_id))
 		{
-			success = ArkShop::GiveDino(player_controller, level, neutered, blueprint, saddleblueprint);
+			success = ArkShop::GiveDino(player_controller, level, neutered, gender, blueprint, saddleblueprint);
 		}
 		else
 		{

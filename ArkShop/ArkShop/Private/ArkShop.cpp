@@ -51,8 +51,8 @@ void ArkShop::ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durabili
 
 			if (armor > 0)
 			{
-				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0024));
-				RtlSecureZeroMemory(itemstat, 0x0024);
+				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0026));
+				RtlSecureZeroMemory(itemstat, 0x0026);
 				item->GetItemStatInfo(itemstat, EPrimalItemStat::Armor);
 
 				if (itemstat->bUsed()())
@@ -74,8 +74,8 @@ void ArkShop::ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durabili
 
 			if (durability > 0)
 			{
-				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0024));
-				RtlSecureZeroMemory(itemstat, 0x0024);
+				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0026));
+				RtlSecureZeroMemory(itemstat, 0x0026);
 				item->GetItemStatInfo(itemstat, EPrimalItemStat::MaxDurability);
 
 				if (itemstat->bUsed()())
@@ -98,8 +98,8 @@ void ArkShop::ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durabili
 
 			if (damage > 0)
 			{
-				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0024));
-				RtlSecureZeroMemory(itemstat, 0x0024);
+				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0026));
+				RtlSecureZeroMemory(itemstat, 0x0026);
 				item->GetItemStatInfo(itemstat, EPrimalItemStat::WeaponDamagePercent);
 
 				if (itemstat->bUsed()())
@@ -233,13 +233,21 @@ FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrim
 }
 
 //Spawns dino or gives in cryopod
-bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, bool neutered, std::string blueprint, std::string saddleblueprint)
+bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, bool neutered, std::string gender, std::string blueprint, std::string saddleblueprint)
 {
 	bool success = false;
 	const FString fblueprint(blueprint.c_str());
 	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
 	if (dino && ArkShop::config["General"].value("GiveDinosInCryopods", false))
 	{
+		if (dino->bUsesGender()())
+		{
+			if (gender.c_str() == "male")
+				dino->bIsFemale() = false;
+			else if (gender.c_str() == "female")
+				dino->bIsFemale() = true;
+		}
+
 		bool Modded = config["General"].value("UseSoulTraps", false);
 
 		FString cryo = FString(ArkShop::config["General"].value("CryoItemPath", "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"));
