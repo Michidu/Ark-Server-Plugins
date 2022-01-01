@@ -153,10 +153,32 @@
     },
     "carno": {
       "Type": "dino",
-      "Description": "Carnotaurus",
+      "Description": "Male Carnotaurus",
       "Level": 15,
       "Price": 50,
       "Neutered": true,
+      "Gender": "male", //Give male dino
+      "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_CarnoSaddle.PrimalItemArmor_CarnoSaddle'",
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
+    },
+    "carno2": {
+      "Type": "dino",
+      "Description": "Female Carnotaurus",
+      "Level": 15,
+      "Price": 50,
+      "Neutered": true,
+      "Gender": "female", //Give female dino
+      "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_CarnoSaddle.PrimalItemArmor_CarnoSaddle'",
+      "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
+    },
+    "carno3": {
+      "Type": "dino",
+      "Description": "Random Gender Carnotaurus",
+      "Level": 15,
+      "Price": 50,
+      "Neutered": true,
+      "Gender": "random", //Give random gender dino (this can be removed to also produce a random gender)
+      "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_CarnoSaddle.PrimalItemArmor_CarnoSaddle'",
       "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'"
     },
     "crate25": {
@@ -266,6 +288,7 @@
     "ShopFindUsage": "Usage: /shopfind searchterm",
     "ShopFindNotFound": "No items matched your search",
     "ShopFindTooManyResults": "Too many results to display refine your search term",
-    "NoPermissionsStore": "<RichColor Color=\"1, 0, 0, 1\">You don't have permission to buy this {0}!</>"
+    "NoPermissionsStore": "<RichColor Color=\"1, 0, 0, 1\">You don't have permission to buy this {0}!</>",
+	"InventoryIsFull": "<RichColor Color=\"1, 0, 0, 1\">Unable to redeem your kit, inventory full!</>"
   }
 }

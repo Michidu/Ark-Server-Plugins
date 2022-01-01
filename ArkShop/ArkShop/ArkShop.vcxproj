@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="LethalTestBuild|x64">
+      <Configuration>LethalTestBuild</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
@@ -21,6 +25,14 @@
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='LethalTestBuild|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <SpectreMitigation>false</SpectreMitigation>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -29,8 +41,16 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='LethalTestBuild|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <LibraryPath>d:\Projects;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(MSBuildStartupDirectory)\..\Permissions\Permissions\Public;$(MSBuildStartupDirectory)\..\..\ARK-Server-API\version\Core\Public;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='LethalTestBuild|x64'">
     <LinkIncremental>false</LinkIncremental>
     <LibraryPath>d:\Projects;$(LibraryPath)</LibraryPath>
     <IncludePath>$(MSBuildStartupDirectory)\..\Permissions\Permissions\Public;$(MSBuildStartupDirectory)\..\..\ARK-Server-API\version\Core\Public;$(IncludePath)</IncludePath>
@@ -59,6 +79,43 @@
     <PostBuildEvent>
       <Command>
       </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='LethalTestBuild|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;SHOP_EXPORTS;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\ArkShop\Public;..\Includes;..\..\..\ARK-Server-API\version\Core\Public;..\..\Permissions\Permissions\Public</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <DelayLoadDLLs>Permissions.dll</DelayLoadDLLs>
+      <AdditionalLibraryDirectories>..\Libs;..\..\..\ARK-Server-API\out_lib;..\..\Permissions\Permissions\Public</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\$(ProjectName).dll" "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\$(ProjectName).dll.ArkApi" /y
+
+if not exist "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" mkdir "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\"
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.ArkApi" "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.pdb" "E:\ArkManager\ArkManager\Servers\ValgueroCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
+
+if not exist "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" mkdir "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\"
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.ArkApi" "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.pdb" "E:\ArkManager\ArkManager\Servers\GenesisCluster\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
+
+if not exist "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" mkdir "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\"
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.ArkApi" "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y
+copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.pdb" "E:\ArkManager\ArkData\servers\Server1\ShooterGame\Binaries\Win64\ArkApi\Plugins\$(ProjectName)\" /y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

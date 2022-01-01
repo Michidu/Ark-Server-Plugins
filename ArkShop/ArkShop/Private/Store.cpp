@@ -95,7 +95,8 @@ namespace ArkShop::Store
 					UPrimalInventoryComponent* playerInventory = player_controller->GetPlayerInventoryComponent();
 					if (playerInventory)
 					{
-						playerInventory->IncrementItemTemplateQuantity(itemClass, amount, true, force_blueprint, nullptr, nullptr, false, false, false, false, true, false, true);
+						int totalamount = amount * default_amount;
+						playerInventory->IncrementItemTemplateQuantity(itemClass, totalamount, true, force_blueprint, nullptr, nullptr, false, false, false, false, true, false, true);
 					}
 				}
 			}
@@ -179,14 +180,14 @@ namespace ArkShop::Store
 
 				const bool was_admin = player_controller->bIsAdmin()();
 
-				if (exec_as_admin)
+				if (!was_admin && exec_as_admin)
 					player_controller->bIsAdmin() = true;
 
 				FString result;
 				((APlayerController*)player_controller)->ConsoleCommand(&result, &fcommand, false);
 
-				if (exec_as_admin)
-					player_controller->bIsAdmin() = was_admin;
+				if (!was_admin && exec_as_admin)
+					player_controller->bIsAdmin() = false;
 			}
 
 			ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
@@ -213,6 +214,7 @@ namespace ArkShop::Store
 		const int price = item_entry.value("Price", 0);
 		const int level = item_entry.value("Level", 1);
 		const bool neutered = item_entry.value("Neutered", false);
+		std::string gender = item_entry.value("Gender", "random");
 		std::string saddleblueprint = item_entry.value("SaddleBlueprint", "");
 		std::string blueprint = item_entry.value("Blueprint", "");
 
@@ -220,7 +222,7 @@ namespace ArkShop::Store
 
 		if (points >= price && Points::SpendPoints(price, steam_id))
 		{
-			success = ArkShop::GiveDino(player_controller, level, neutered, blueprint, saddleblueprint);
+			success = ArkShop::GiveDino(player_controller, level, neutered, gender, blueprint, saddleblueprint);
 		}
 		else
 		{
@@ -342,7 +344,7 @@ namespace ArkShop::Store
 
 			auto item_entry = item_entry_iter.value();
 
-			const std::string type = item_entry["Type"];
+			const std::string type = item_entry.value("Type", "");
 
 			// Check if player has permisson to buy this
 

@@ -236,10 +236,11 @@ namespace ArkShop::Kits
 		{
 			const int level = dino.value("Level", 1);
 			const bool neutered = dino.value("Neutered", false);
+			std::string gender = dino.value("Gender", "random");
 			std::string saddleblueprint = dino.value("SaddleBlueprint", "");
 			std::string blueprint = dino.value("Blueprint", "");
 
-			bool success = ArkShop::GiveDino(player_controller, level, neutered, blueprint, saddleblueprint);
+			bool success = ArkShop::GiveDino(player_controller, level, neutered, gender, blueprint, saddleblueprint);
 		}
 
 		// Give commands
@@ -257,14 +258,14 @@ namespace ArkShop::Kits
 
 			const bool was_admin = player_controller->bIsAdmin()();
 
-			if (exec_as_admin)
+			if (!was_admin && exec_as_admin)
 				player_controller->bIsAdmin() = true;
 
 			FString result;
-			player_controller->ConsoleCommand(&result, &fcommand, true);
+			((APlayerController*)player_controller)->ConsoleCommand(&result, &fcommand, false);
 
-			if (exec_as_admin)
-				player_controller->bIsAdmin() = was_admin;
+			if (!was_admin && exec_as_admin)
+				player_controller->bIsAdmin() = false;
 		}
 	}
 
@@ -286,6 +287,13 @@ namespace ArkShop::Kits
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
 					*GetText("NoPermissionsKit"));
+				return;
+			}
+
+			if (player_controller->GetPlayerInventoryComponent() && player_controller->GetPlayerInventoryComponent()->IsAtMaxInventoryItems())
+			{
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+					*GetText("InventoryIsFull"));
 				return;
 			}
 
