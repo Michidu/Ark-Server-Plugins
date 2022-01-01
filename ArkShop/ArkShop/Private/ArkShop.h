@@ -14,7 +14,7 @@ namespace ArkShop
 	void ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durability, int damage);
 	FString GetBlueprintShort(UObjectBase* object);
 	FCustomItemData GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrimalItem* saddle, bool Modded);
-	bool GiveDino(AShooterPlayerController* player_controller, int level, bool neutered, std::string blueprint, std::string saddleblueprint);
+	bool GiveDino(AShooterPlayerController* player_controller, int level, bool neutered, std::string gender, std::string blueprint, std::string saddleblueprint);
 	FString GetText(const std::string& str);
 	bool IsStoreEnabled(AShooterPlayerController* player_controller);
 	void ToogleStore(bool enabled, const FString& reason = "");
