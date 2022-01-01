@@ -19,8 +19,22 @@ namespace ArkShop
 	bool IsStoreEnabled(AShooterPlayerController* player_controller);
 	void ToogleStore(bool enabled, const FString& reason = "");
 
+	enum RemapType
+	{
+		Engram,
+		Item,
+		NPC
+	};
+	UClass* GetRemappedClass(FString& objectBp, RemapType remapType);
+
 	//Discord Functions
 	inline bool discord_enabled;
 	inline std::string discord_sender_name;
 	inline FString discord_webhook_url;
 } // namespace ArkShop
+
+struct FClassRemapping
+{
+	TSubclassOf<UObject> FromClass;
+	TSubclassOf<UObject> ToClass;
+};

@@ -49,10 +49,13 @@ void ArkShop::ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durabili
 		{
 			bool updated = false;
 
+			static int statInfoStructSize = USizeOf<FItemStatInfo>();
+			Log::GetLog()->info("statstruct: {}", statInfoStructSize);
+
 			if (armor > 0)
 			{
-				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0024));
-				RtlSecureZeroMemory(itemstat, 0x0024);
+				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(statInfoStructSize));
+				RtlSecureZeroMemory(itemstat, statInfoStructSize);
 				item->GetItemStatInfo(itemstat, EPrimalItemStat::Armor);
 
 				if (itemstat->bUsed()())
@@ -74,8 +77,8 @@ void ArkShop::ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durabili
 
 			if (durability > 0)
 			{
-				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0024));
-				RtlSecureZeroMemory(itemstat, 0x0024);
+				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(statInfoStructSize));
+				RtlSecureZeroMemory(itemstat, statInfoStructSize);
 				item->GetItemStatInfo(itemstat, EPrimalItemStat::MaxDurability);
 
 				if (itemstat->bUsed()())
@@ -98,8 +101,8 @@ void ArkShop::ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durabili
 
 			if (damage > 0)
 			{
-				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(0x0024));
-				RtlSecureZeroMemory(itemstat, 0x0024);
+				FItemStatInfo* itemstat = static_cast<FItemStatInfo*>(FMemory::Malloc(statInfoStructSize));
+				RtlSecureZeroMemory(itemstat, statInfoStructSize);
 				item->GetItemStatInfo(itemstat, EPrimalItemStat::WeaponDamagePercent);
 
 				if (itemstat->bUsed()())
@@ -379,6 +382,37 @@ void ArkShop::ToogleStore(bool enabled, const FString& reason)
 {
 	store_enabled = enabled;
 	closed_store_reason = reason;
+}
+
+UClass* ArkShop::GetRemappedClass(FString& objectBp, RemapType remapType)
+{
+	UClass* remap = nullptr;
+	TArray<FClassRemapping> remaps{};
+	UPrimalGameData* PGD = UPrimalGameData::BPGetGameData();
+
+	switch (remapType)
+	{
+	case Engram:
+		remaps = PGD->Remap_EngramsField();
+		break;
+	case Item:
+		remaps = PGD->Remap_ItemsField();
+		break;
+	case NPC:
+		remaps = PGD->Remap_EngramsField();
+		break;
+	}
+
+	if (remaps.Num() > 0)
+	{
+		TSubclassOf<UObject> remappedClass;
+		PGD->GetRemappedClass(&remappedClass, &remaps, UVictoryCore::BPLoadClass(&objectBp));
+		return remappedClass.uClass;
+	}
+	else
+	{
+		return UVictoryCore::BPLoadClass(&objectBp);
+	}
 }
 
 void ReadConfig()
