@@ -244,14 +244,16 @@ namespace ArkShop::Kits
 		}
 
 		// Give commands
+		uint64 steam_id = ArkApi::GetApiUtils().GetSteamIdFromController(player_controller);
 		auto commands_map = kit_entry.value("Commands", nlohmann::json::array());
 		for (const auto& command_entry : commands_map)
 		{
-			const std::string command = command_entry["Command"];
+			const std::string command = command_entry.value("Command", "");
+
 			const bool exec_as_admin = command_entry.value("ExecuteAsAdmin", false);
 
 			FString fcommand = fmt::format(
-				command, fmt::arg("steamid", ArkApi::GetApiUtils().GetSteamIdFromController(player_controller)),
+				command, fmt::arg("steamid", steam_id),
 				fmt::arg("playerid", ArkApi::GetApiUtils().GetPlayerID(player_controller)),
 				fmt::arg("tribeid", ArkApi::GetApiUtils().GetTribeID(player_controller))
 			).c_str();
