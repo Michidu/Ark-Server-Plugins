@@ -242,9 +242,9 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 	{
 		if (dino->bUsesGender()())
 		{
-			if (gender.c_str() == "male")
+			if (strcmp(gender.c_str(), "male") == 0)
 				dino->bIsFemale() = false;
-			else if (gender.c_str() == "female")
+			else if (strcmp(gender.c_str(), "female") == 0)
 				dino->bIsFemale() = true;
 		}
 

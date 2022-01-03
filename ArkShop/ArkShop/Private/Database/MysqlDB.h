@@ -32,15 +32,24 @@ public:
 			result = db_.query(fmt::format("CREATE TABLE IF NOT EXISTS {} ("
 				"Id INT NOT NULL AUTO_INCREMENT,"
 				"SteamId BIGINT(11) NOT NULL DEFAULT 0,"
-				"Kits VARCHAR(768) NOT NULL DEFAULT '{{}}',"
+				"Kits LONGTEXT NOT NULL,"
 				"Points INT DEFAULT 0,"
 				"TotalSpent INT DEFAULT 0,"
 				"PRIMARY KEY(Id),"
 				"UNIQUE INDEX SteamId_UNIQUE (SteamId ASC));", table_players_));
-
 			if (!result)
 			{
 				Log::GetLog()->critical("({} {}) Failed to create table!", __FILE__, __FUNCTION__);
+			}
+
+			std::string columnType = db_.query(fmt::format("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema = '{}' AND TABLE_NAME = '{}' AND COLUMN_NAME = 'Kits';", options.dbname, table_players_)).get_value<std::string>();
+			if (columnType.c_str() != "longtext")
+				result = db_.query(fmt::format("ALTER TABLE `{}` CHANGE COLUMN `Kits` `Kits` LONGTEXT NOT NULL AFTER `SteamId`;", table_players_));
+			else
+				result = true;
+			if (!result)
+			{
+				Log::GetLog()->critical("({} {}) Failed to update column type!", __FILE__, __FUNCTION__);
 			}
 		}
 		catch (const std::exception& exception)
@@ -53,7 +62,7 @@ public:
 	{
 		try
 		{
-			return db_.query(fmt::format("INSERT INTO {} (SteamId) VALUES ({});", table_players_, steam_id));
+			return db_.query(fmt::format("INSERT INTO {} (SteamId, Kits) VALUES ({}, '\{\}'); ", table_players_, steam_id));
 		}
 		catch (const std::exception& exception)
 		{
