@@ -198,7 +198,7 @@ FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrim
 		customItemData.CustomDataStrings.Add(dinoData.DinoNameInMap); //0
 		customItemData.CustomDataStrings.Add(dinoData.DinoName); //1
 		customItemData.CustomDataStrings.Add(L"0"); //2
-		customItemData.CustomDataStrings.Add(L"0"); //3
+		customItemData.CustomDataStrings.Add(FString(std::to_string(dino->bNeutered()()))); //3
 		customItemData.CustomDataStrings.Add(FString(std::to_string(dino->bIsFemale()()))); //4
 		customItemData.CustomDataStrings.Add(L""); //5
 		customItemData.CustomDataStrings.Add(L""); //6
