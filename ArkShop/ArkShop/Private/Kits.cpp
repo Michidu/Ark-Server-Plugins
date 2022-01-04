@@ -502,6 +502,13 @@ namespace ArkShop::Kits
 				FString kit_name = parsed[1];
 				std::string kit_name_str = kit_name.ToString();
 
+				if (!CanUseKit(player_controller, steam_id, kit_name))
+				{
+					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+						*GetText("CantBuyKit"));
+					return;
+				}
+
 				int amount;
 
 				try
