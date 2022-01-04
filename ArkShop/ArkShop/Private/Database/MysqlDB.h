@@ -62,7 +62,7 @@ public:
 	{
 		try
 		{
-			return db_.query(fmt::format("INSERT INTO {} (SteamId, Kits) VALUES ({}, '\{\}'); ", table_players_, steam_id));
+			return db_.query(fmt::format("INSERT INTO {} (SteamId, Kits) VALUES ({}, '{}'); ", table_players_, steam_id, "{}"));
 		}
 		catch (const std::exception& exception)
 		{
