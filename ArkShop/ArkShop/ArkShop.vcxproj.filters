@@ -63,9 +63,6 @@
     <ClInclude Include="Private\Database\MysqlDB.h">
       <Filter>Private\Database</Filter>
     </ClInclude>
-    <ClInclude Include="Private\Discord.h">
-      <Filter>Private</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Private\ArkShop.cpp">

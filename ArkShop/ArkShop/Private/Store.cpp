@@ -8,7 +8,6 @@
 #include "ShopLog.h"
 #include "ArkShopUIHelper.h"
 #include "Kits.h"
-#include "Discord.h"
 
 namespace ArkShop::Store
 {
@@ -419,24 +418,15 @@ namespace ArkShop::Store
 				const unsigned price = item_entry["Price"];
 				const int final_price = price * amount;
 
-				const std::wstring log = fmt::format(L"{}({}) Bought item: \"{}\" Amount: {} Total Spent Points: {}",
+				const std::wstring log = fmt::format(TEXT("[{}] {}({}) Bought item: '{}' Amount: {} Total Spent Points: {}"),
+					*ArkShop::SetMapName(),
 					*ArkApi::IApiUtils::GetSteamName(player_controller),
 					steam_id,
 					*item_id, amount,
 					final_price);
 
 				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
-				if (ArkShop::discord_enabled)
-				{
-					const std::wstring log = fmt::format(L"{}({}) Bought item: {} Amount: {} Total Spent Points: {}",
-						*ArkApi::IApiUtils::GetSteamName(player_controller),
-						steam_id,
-						*item_id, amount,
-						final_price);
-
-					PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
-						log, ArkShop::discord_sender_name);
-				}
+				ArkShop::PostToDiscord(log);
 			}
 		}
 

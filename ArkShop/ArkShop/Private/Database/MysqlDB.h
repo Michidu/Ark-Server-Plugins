@@ -180,6 +180,7 @@ public:
 
 		try
 		{
+			AddTotalSpent(steam_id, amount);
 			return db_.query(fmt::format("UPDATE {} SET Points = Points - {} WHERE SteamId = {};", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)
@@ -196,7 +197,7 @@ public:
 
 		try
 		{
-			return db_.query(fmt::format("UPDATE {} SET TotalSpent = {} WHERE SteamId = {}", table_players_, amount, steam_id));
+			return db_.query(fmt::format("UPDATE {} SET TotalSpent = TotalSpent+{} WHERE SteamId = {}", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)
 		{

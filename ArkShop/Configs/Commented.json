@@ -35,6 +35,7 @@
         }
       }
     },
+    "UseOriginalTradeCommandWithUI": false, //You must disable the UI Trade Button in the GUS.ini if chaning to true. Setting to `true` will make the /trade work like there was no UI installed
     "GiveDinosInCryopods": true, //provides dinos from the /buy command in cryopods or soul traps (if UseSoulTraps is true)
     "UseSoulTraps": false, //Use Dino Storage V2 Mod Soul Traps instead of Vanilla Cyropods
     "CryoLimitedTime": false, //Sets a 60 minute expire time
@@ -289,6 +290,6 @@
     "ShopFindNotFound": "No items matched your search",
     "ShopFindTooManyResults": "Too many results to display refine your search term",
     "NoPermissionsStore": "<RichColor Color=\"1, 0, 0, 1\">You don't have permission to buy this {0}!</>",
-	"InventoryIsFull": "<RichColor Color=\"1, 0, 0, 1\">Unable to redeem your kit, inventory full!</>"
+    "InventoryIsFull": "<RichColor Color=\"1, 0, 0, 1\">Unable to redeem your kit, inventory full!</>"
   }
 }
