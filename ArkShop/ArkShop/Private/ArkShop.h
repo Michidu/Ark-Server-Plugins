@@ -9,7 +9,9 @@ namespace ArkShop
 	inline nlohmann::json config;
 	inline std::unique_ptr<IDatabase> database;
 	inline UClass* NoglinBuffClass = nullptr;
+	inline FString MapName;
 
+	FString SetMapName();
 	float getStatValue(float StatModifier, float InitialValueConstant, float RandomizerRangeMultiplier, float StateModifierScale, bool bDisplayAsPercent);
 	void ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durability, int damage);
 	FString GetBlueprintShort(UObjectBase* object);
@@ -23,4 +25,5 @@ namespace ArkShop
 	inline bool discord_enabled;
 	inline std::string discord_sender_name;
 	inline FString discord_webhook_url;
+	void PostToDiscord(const std::wstring log);
 } // namespace ArkShop

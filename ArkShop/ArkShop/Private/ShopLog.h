@@ -24,44 +24,11 @@ public:
 	}
 
 private:
-	FString SetMapName()
-	{
-		LPWSTR* argv;
-		int argc;
-		int i;
-		FString param(L"-serverkey=");
-		FString LocalMapName;
-
-		ArkApi::GetApiUtils().GetShooterGameMode()->GetMapName(&LocalMapName);
-
-		argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-		if (NULL != argv)
-		{
-			for (i = 0; i < argc; i++)
-			{
-				FString arg(argv[i]);
-				if (arg.Contains(param))
-				{
-					if (arg.RemoveFromStart(param))
-					{
-						LocalMapName = arg;
-						break;
-					}
-				}
-			}
-
-			LocalFree(argv);
-		}
-
-		Log::GetLog()->info("MapName: {}", LocalMapName.ToString());
-		return LocalMapName;
-	}
-
 	ShopLog()
 	{
 		try
 		{
-			FString map_name = SetMapName();
+			FString map_name = ArkShop::SetMapName();
 
 			auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
 				ArkApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/ArkShop/ShopLog_" +

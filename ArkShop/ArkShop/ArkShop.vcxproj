@@ -123,7 +123,6 @@ copy "$(SolutionDir)$(PlatformName)\$(ConfigurationName)\*.pdb" "E:\ArkManager\A
     <ClInclude Include="Private\Database\IDatabase.h" />
     <ClInclude Include="Private\Database\MysqlDB.h" />
     <ClInclude Include="Private\Database\SqlLiteDB.h" />
-    <ClInclude Include="Private\Discord.h" />
     <ClInclude Include="Private\json.hpp" />
     <ClInclude Include="Private\ShopLog.h" />
     <ClInclude Include="Private\Database\sqlite3.h" />

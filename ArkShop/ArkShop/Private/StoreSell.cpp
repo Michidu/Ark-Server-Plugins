@@ -5,7 +5,6 @@
 #include "ArkShop.h"
 #include "DBHelper.h"
 #include "ShopLog.h"
-#include "Discord.h"
 
 namespace ArkShop::StoreSell
 {
@@ -162,22 +161,14 @@ namespace ArkShop::StoreSell
 
 			if (success)
 			{
-				const std::wstring log = fmt::format(TEXT("{}({}) sold item \"{}\". Amount - {}"),
+				const std::wstring log = fmt::format(TEXT("[{}] {}({}) Sold item: '{}' Amount: {}"),
+					*ArkShop::SetMapName(),
 					*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
 					*item_id,
 					amount);
 
 				ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
-				if (ArkShop::discord_enabled)
-				{
-					const std::wstring log = fmt::format(TEXT("{}({}) Sold item: {} Amount: {}"),
-						*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
-						*item_id,
-						amount);
-
-					PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
-						log, ArkShop::discord_sender_name);
-				}
+				ArkShop::PostToDiscord(log);
 			}
 		}
 

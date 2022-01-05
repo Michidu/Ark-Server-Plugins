@@ -26,6 +26,54 @@ DECLARE_HOOK(AShooterPlayerController_GridTravelToLocalPos, void, AShooterPlayer
 FString closed_store_reason;
 bool store_enabled = true;
 
+FString ArkShop::SetMapName()
+{
+	if (!ArkShop::MapName.IsEmpty())
+		return ArkShop::MapName;
+
+	LPWSTR* argv;
+	int argc;
+	int i;
+	FString param(L"-serverkey=");
+	FString LocalMapName;
+
+	ArkApi::GetApiUtils().GetShooterGameMode()->GetMapName(&LocalMapName);
+
+	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	if (NULL != argv)
+	{
+		for (i = 0; i < argc; i++)
+		{
+			FString arg(argv[i]);
+			if (arg.Contains(param))
+			{
+				if (arg.RemoveFromStart(param))
+				{
+					LocalMapName = arg;
+					break;
+				}
+			}
+		}
+
+		LocalFree(argv);
+	}
+
+	Log::GetLog()->info("MapName: {}", LocalMapName.ToString());
+	ArkShop::MapName = LocalMapName;
+
+	return ArkShop::MapName;
+}
+
+void ArkShop::PostToDiscord(const std::wstring log)
+{
+	if (!ArkShop::discord_enabled || ArkShop::discord_webhook_url.IsEmpty())
+		return;
+
+	FString msg = L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}";
+	FString output = FString::Format(*msg, log, ArkShop::discord_sender_name);
+	static_cast<AShooterGameState*>(ArkApi::GetApiUtils().GetWorld()->GameStateField())->HTTPPostRequest(ArkShop::discord_webhook_url, output);
+}
+
 float ArkShop::getStatValue(float StatModifier, float InitialValueConstant, float RandomizerRangeMultiplier, float StateModifierScale, bool bDisplayAsPercent)
 {
 	float ItemStatValue;
