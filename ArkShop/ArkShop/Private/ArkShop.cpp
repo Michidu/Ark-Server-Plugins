@@ -286,7 +286,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 	bool success = false;
 	const FString fblueprint(blueprint.c_str());
 	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
-	if (dino && ArkShop::config["General"].value("GiveDinosInCryopods", false))
+	if (dino)
 	{
 		if (dino->bUsesGender()())
 		{
@@ -296,49 +296,52 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 				dino->bIsFemale() = true;
 		}
 
-		bool Modded = config["General"].value("UseSoulTraps", false);
-
-		FString cryo = FString(ArkShop::config["General"].value("CryoItemPath", "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"));
-		if (Modded)
-			cryo = FString("Blueprint'/Game/Mods/DinoStorage2/SoulTrap_DS.SoulTrap_DS'");
-		if (cryo.IsEmpty())
-			cryo = FString("Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'");
-
-		UClass* Class = UVictoryCore::BPLoadClass(&cryo);
-		UPrimalItem* item = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
-		if (item)
+		if (ArkShop::config["General"].value("GiveDinosInCryopods", false))
 		{
-			if (ArkShop::config["General"].value("CryoLimitedTime", false) && !Modded)
-				item->AddItemDurability((item->ItemDurabilityField() - 3600) * -1);
+			bool Modded = config["General"].value("UseSoulTraps", false);
 
+			FString cryo = FString(ArkShop::config["General"].value("CryoItemPath", "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"));
 			if (Modded)
-				item->ItemDurabilityField() = 0.001;
+				cryo = FString("Blueprint'/Game/Mods/DinoStorage2/SoulTrap_DS.SoulTrap_DS'");
+			if (cryo.IsEmpty())
+				cryo = FString("Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'");
 
-			UPrimalItem* saddle = nullptr;
-			if (saddleblueprint.size() > 0)
+			UClass* Class = UVictoryCore::BPLoadClass(&cryo);
+			UPrimalItem* item = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
+			if (item)
 			{
-				FString fblueprint(saddleblueprint.c_str());
-				UClass* Class = UVictoryCore::BPLoadClass(&fblueprint);
-				saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
+				if (ArkShop::config["General"].value("CryoLimitedTime", false) && !Modded)
+					item->AddItemDurability((item->ItemDurabilityField() - 3600) * -1);
+
+				if (Modded)
+					item->ItemDurabilityField() = 0.001;
+
+				UPrimalItem* saddle = nullptr;
+				if (saddleblueprint.size() > 0)
+				{
+					FString fblueprint(saddleblueprint.c_str());
+					UClass* Class = UVictoryCore::BPLoadClass(&fblueprint);
+					saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
+				}
+
+				FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle, Modded);
+				item->SetCustomItemData(&customItemData);
+				item->UpdatedItem(true);
+
+				if (player_controller->GetPlayerInventoryComponent())
+				{
+					UPrimalItem* item2 = player_controller->GetPlayerInventoryComponent()->AddItemObject(item);
+
+					if (item2)
+						success = true;
+				}
 			}
 
-			FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle, Modded);
-			item->SetCustomItemData(&customItemData);
-			item->UpdatedItem(true);
-
-			if (player_controller->GetPlayerInventoryComponent())
-			{
-				UPrimalItem* item2 = player_controller->GetPlayerInventoryComponent()->AddItemObject(item);
-
-				if (item2)
-					success = true;
-			}
+			dino->Destroy(true, false);
 		}
-
-		dino->Destroy(true, false);
+		else
+			success = true;
 	}
-	else if (dino)
-		success = true;
 
 	return success;
 }
