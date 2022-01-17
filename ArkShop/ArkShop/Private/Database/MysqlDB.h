@@ -31,7 +31,7 @@ public:
 
 			result = db_.query(fmt::format("CREATE TABLE IF NOT EXISTS {} ("
 				"Id INT NOT NULL AUTO_INCREMENT,"
-				"SteamId BIGINT(11) NOT NULL DEFAULT 0,"
+				"SteamId BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,"
 				"Kits LONGTEXT NOT NULL,"
 				"Points INT DEFAULT 0,"
 				"TotalSpent INT DEFAULT 0,"
@@ -42,15 +42,7 @@ public:
 				Log::GetLog()->critical("({} {}) Failed to create table!", __FILE__, __FUNCTION__);
 			}
 
-			std::string columnType = db_.query(fmt::format("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema = '{}' AND TABLE_NAME = '{}' AND COLUMN_NAME = 'Kits';", options.dbname, table_players_)).get_value<std::string>();
-			if (columnType.c_str() != "longtext")
-				result = db_.query(fmt::format("ALTER TABLE `{}` CHANGE COLUMN `Kits` `Kits` LONGTEXT NOT NULL AFTER `SteamId`;", table_players_));
-			else
-				result = true;
-			if (!result)
-			{
-				Log::GetLog()->critical("({} {}) Failed to update column type!", __FILE__, __FUNCTION__);
-			}
+			upgradeDatabase();
 		}
 		catch (const std::exception& exception)
 		{
@@ -238,4 +230,25 @@ public:
 private:
 	daotk::mysql::connection db_;
 	std::string table_players_;
+
+	void upgradeDatabase()
+	{
+		try
+		{
+			db_.query(fmt::format("ALTER TABLE `{}` CHANGE COLUMN `Kits` `Kits` LONGTEXT NOT NULL AFTER `SteamId`;", table_players_));
+		}
+		catch (const std::exception& error)
+		{
+			Log::GetLog()->critical("({} {}) Failed to update Kits Column!", __FILE__, __FUNCTION__);
+		}
+
+		try
+		{
+			db_.query(fmt::format("ALTER TABLE `{}` CHANGE COLUMN `SteamId` `SteamId` BIGINT(20) UNSIGNED NOT NULL DEFAULT '0' AFTER `Id`;", table_players_));
+		}
+		catch (const std::exception& error)
+		{
+			Log::GetLog()->critical("({} {}) Failed to update SteamId Column!", __FILE__, __FUNCTION__);
+		}
+	}
 };
