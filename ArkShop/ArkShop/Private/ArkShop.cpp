@@ -307,7 +307,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 				cryo = FString("Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'");
 
 			UClass* Class = UVictoryCore::BPLoadClass(&cryo);
-			UPrimalItem* item = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
+			UPrimalItem* item = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0, false, false);
 			if (item)
 			{
 				if (ArkShop::config["General"].value("CryoLimitedTime", false) && !Modded)
@@ -321,7 +321,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 				{
 					FString fblueprint(saddleblueprint.c_str());
 					UClass* Class = UVictoryCore::BPLoadClass(&fblueprint);
-					saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
+					saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0, false, false);
 				}
 
 				FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle, Modded);

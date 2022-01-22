@@ -92,7 +92,7 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;SHOP_EXPORTS;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\ArkShop\Public;..\Includes;..\..\..\ARK-Server-API\version\Core\Public;..\..\Permissions\Permissions\Public</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ArkShop\Public;..\Includes;..\..\..\ARK-Server-API\version\Core\Public;..\..\Permissions\Permissions\Public;..\Includes\mysql;..\Includes\mysql\mysql</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

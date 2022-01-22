@@ -29,15 +29,18 @@ public:
 				Log::GetLog()->critical("Failed to open connection!");
 			}
 
-			result = db_.query(fmt::format("CREATE TABLE IF NOT EXISTS {} ("
-				"Id INT NOT NULL AUTO_INCREMENT,"
-				"SteamId BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,"
-				"Kits LONGTEXT NOT NULL,"
-				"Points INT DEFAULT 0,"
-				"TotalSpent INT DEFAULT 0,"
-				"PRIMARY KEY(Id),"
-				"UNIQUE INDEX SteamId_UNIQUE (SteamId ASC));", table_players_));
-			if (!result)
+			try
+			{
+				db_.exec(fmt::format("CREATE TABLE IF NOT EXISTS {} ("
+					"Id INT NOT NULL AUTO_INCREMENT,"
+					"SteamId BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,"
+					"Kits LONGTEXT NOT NULL,"
+					"Points INT DEFAULT 0,"
+					"TotalSpent INT DEFAULT 0,"
+					"PRIMARY KEY(Id),"
+					"UNIQUE INDEX SteamId_UNIQUE (SteamId ASC));", table_players_));
+			}
+			catch (const std::exception& exception)
 			{
 				Log::GetLog()->critical("({} {}) Failed to create table!", __FILE__, __FUNCTION__);
 			}
@@ -54,13 +57,15 @@ public:
 	{
 		try
 		{
-			return db_.query(fmt::format("INSERT INTO {} (SteamId, Kits) VALUES ({}, '{}'); ", table_players_, steam_id, "{}"));
+			db_.exec(fmt::format("INSERT INTO {} (SteamId, Kits) VALUES ({}, '{}'); ", table_players_, steam_id, "{}"));
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
+		return true;
 	}
 
 	bool IsPlayerExists(uint64 steam_id) override
@@ -98,26 +103,30 @@ public:
 	{
 		try
 		{
-			return db_.query(fmt::format("UPDATE {} SET Kits = '{}' WHERE SteamId = {};", table_players_, kits_data.c_str(), steam_id));
+			db_.exec(fmt::format("UPDATE {} SET Kits = '{}' WHERE SteamId = {};", table_players_, kits_data.c_str(), steam_id));
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
+		return true;
 	}
 
 	bool DeleteAllKits() override
 	{
 		try
 		{
-			return db_.query(fmt::format("UPDATE {} SET Kits = '{{}}';", table_players_));
+			db_.exec(fmt::format("UPDATE {} SET Kits = '{{}}';", table_players_));
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
+		return true;
 	}
 
 	int GetPoints(uint64 steam_id) override
@@ -140,13 +149,15 @@ public:
 	{
 		try
 		{
-			return db_.query(fmt::format("UPDATE {} SET Points = {} WHERE SteamId = {};", table_players_, amount, steam_id));
+			db_.exec(fmt::format("UPDATE {} SET Points = {} WHERE SteamId = {};", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
+		return true;
 	}
 
 	bool AddPoints(uint64 steam_id, int amount) override
@@ -156,13 +167,15 @@ public:
 
 		try
 		{
-			return db_.query(fmt::format("UPDATE {} SET Points = Points + {} WHERE SteamId = {};", table_players_, amount, steam_id));
+			db_.exec(fmt::format("UPDATE {} SET Points = Points + {} WHERE SteamId = {};", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
+		return true;
 	}
 
 	bool SpendPoints(uint64 steam_id, int amount) override
@@ -173,13 +186,15 @@ public:
 		try
 		{
 			AddTotalSpent(steam_id, amount);
-			return db_.query(fmt::format("UPDATE {} SET Points = Points - {} WHERE SteamId = {};", table_players_, amount, steam_id));
+			db_.exec(fmt::format("UPDATE {} SET Points = Points - {} WHERE SteamId = {};", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
+		return true;
 	}
 
 	bool AddTotalSpent(uint64 steam_id, int amount) override
@@ -189,13 +204,15 @@ public:
 
 		try
 		{
-			return db_.query(fmt::format("UPDATE {} SET TotalSpent = TotalSpent+{} WHERE SteamId = {}", table_players_, amount, steam_id));
+			db_.exec(fmt::format("UPDATE {} SET TotalSpent = TotalSpent+{} WHERE SteamId = {}", table_players_, amount, steam_id));
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
+		return true;
 	}
 
 	int GetTotalSpent(uint64 steam_id) override
@@ -218,13 +235,15 @@ public:
 	{
 		try
 		{
-			return db_.query(fmt::format("UPDATE {} SET Points = 0;", table_players_));
+			db_.exec(fmt::format("UPDATE {} SET Points = 0;", table_players_));
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
+		return true;
 	}
 
 private:
