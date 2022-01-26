@@ -64,7 +64,7 @@ namespace ArkShop::StoreSell
 		TArray<UPrimalItem*> items = inventory->InventoryItemsField();
 		for (UPrimalItem* item : items)
 		{
-			if (item->ClassField() != nullptr)
+			if (item->ClassField() && item->bAllowRemovalFromInventory()() && !item->bIsEngram()())
 			{
 				const FString item_bp = GetItemBlueprint(item);
 
