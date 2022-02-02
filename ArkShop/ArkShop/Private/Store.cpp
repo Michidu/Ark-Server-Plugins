@@ -69,7 +69,7 @@ namespace ArkShop::Store
 
 				FString fblueprint(blueprint.c_str());
 
-				UClass* itemClass = ArkShop::GetRemappedClass(fblueprint, Item);
+				UClass* itemClass = UVictoryCore::BPLoadClass(&fblueprint);
 				bool stacksInOne = false;
 				if (itemClass)
 				{
@@ -101,7 +101,9 @@ namespace ArkShop::Store
 									0,
 									false,
 									nullptr,
-									0
+									0,
+									false,
+									false
 								)
 							);
 						}
@@ -111,7 +113,6 @@ namespace ArkShop::Store
 					{
 						int totalAmount = amount * default_amount;
 						playerInventory->IncrementItemTemplateQuantity(itemClass, totalAmount, true, force_blueprint, nullptr, nullptr, false, false, false, false, true, false, true);
-
 					}
 				}
 			}

@@ -288,7 +288,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 	bool success = false;
 	const FString fblueprint(blueprint.c_str());
 	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
-	if (dino && ArkShop::config["General"].value("GiveDinosInCryopods", false))
+	if (dino)
 	{
 		if (dino->bUsesGender()())
 		{
@@ -323,7 +323,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 			{
 				FString fblueprint(saddleblueprint.c_str());
 				UClass* Class = UVictoryCore::BPLoadClass(&fblueprint);
-				saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
+				saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0, false, false);
 			}
 
 				FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle, Modded);
