@@ -33,7 +33,8 @@
     "DefaultKit": "",
     "GiveDinosInCryopods": true,
     "UseSoulTraps": false,
-    "CryoLimitedTime": false
+    "CryoLimitedTime": false,
+    "UseOriginalTradeCommandWithUI": false
   },
   "Kits": {
     "starter": {

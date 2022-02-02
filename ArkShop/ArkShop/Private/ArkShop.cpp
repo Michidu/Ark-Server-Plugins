@@ -26,6 +26,54 @@ DECLARE_HOOK(AShooterPlayerController_GridTravelToLocalPos, void, AShooterPlayer
 FString closed_store_reason;
 bool store_enabled = true;
 
+FString ArkShop::SetMapName()
+{
+	if (!ArkShop::MapName.IsEmpty())
+		return ArkShop::MapName;
+
+	LPWSTR* argv;
+	int argc;
+	int i;
+	FString param(L"-serverkey=");
+	FString LocalMapName;
+
+	ArkApi::GetApiUtils().GetShooterGameMode()->GetMapName(&LocalMapName);
+
+	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	if (NULL != argv)
+	{
+		for (i = 0; i < argc; i++)
+		{
+			FString arg(argv[i]);
+			if (arg.Contains(param))
+			{
+				if (arg.RemoveFromStart(param))
+				{
+					LocalMapName = arg;
+					break;
+				}
+			}
+		}
+
+		LocalFree(argv);
+	}
+
+	Log::GetLog()->info("MapName: {}", LocalMapName.ToString());
+	ArkShop::MapName = LocalMapName;
+
+	return ArkShop::MapName;
+}
+
+void ArkShop::PostToDiscord(const std::wstring log)
+{
+	if (!ArkShop::discord_enabled || ArkShop::discord_webhook_url.IsEmpty())
+		return;
+
+	FString msg = L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}";
+	FString output = FString::Format(*msg, log, ArkShop::discord_sender_name);
+	static_cast<AShooterGameState*>(ArkApi::GetApiUtils().GetWorld()->GameStateField())->HTTPPostRequest(ArkShop::discord_webhook_url, output);
+}
+
 float ArkShop::getStatValue(float StatModifier, float InitialValueConstant, float RandomizerRangeMultiplier, float StateModifierScale, bool bDisplayAsPercent)
 {
 	float ItemStatValue;
@@ -49,7 +97,8 @@ void ArkShop::ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durabili
 		{
 			bool updated = false;
 
-			static int statInfoStructSize = GetStructSize<FItemStatInfo>();
+			static int statInfoStructSize = USizeOf<FItemStatInfo>();
+			Log::GetLog()->info("statstruct: {}", statInfoStructSize);
 
 			if (armor > 0)
 			{
@@ -200,7 +249,7 @@ FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrim
 		customItemData.CustomDataStrings.Add(dinoData.DinoNameInMap); //0
 		customItemData.CustomDataStrings.Add(dinoData.DinoName); //1
 		customItemData.CustomDataStrings.Add(L"0"); //2
-		customItemData.CustomDataStrings.Add(L"0"); //3
+		customItemData.CustomDataStrings.Add(FString(std::to_string(dino->bNeutered()()))); //3
 		customItemData.CustomDataStrings.Add(FString(std::to_string(dino->bIsFemale()()))); //4
 		customItemData.CustomDataStrings.Add(L""); //5
 		customItemData.CustomDataStrings.Add(L""); //6
@@ -239,60 +288,63 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 {
 	bool success = false;
 	const FString fblueprint(blueprint.c_str());
-	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, ArkApi::GetApiUtils().GetClassBlueprint(ArkShop::GetRemappedClass(FString(fblueprint), NPC)), nullptr, level, true, neutered);
-	if (dino && ArkShop::config["General"].value("GiveDinosInCryopods", false))
+	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
+	if (dino)
 	{
 		if (dino->bUsesGender()())
 		{
-			if (gender.c_str() == "male")
+			if (strcmp(gender.c_str(), "male") == 0)
 				dino->bIsFemale() = false;
-			else if (gender.c_str() == "female")
+			else if (strcmp(gender.c_str(), "female") == 0)
 				dino->bIsFemale() = true;
 		}
 
-		bool Modded = config["General"].value("UseSoulTraps", false);
-
-		FString cryo = FString(ArkShop::config["General"].value("CryoItemPath", "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"));
-		if (Modded)
-			cryo = FString("Blueprint'/Game/Mods/DinoStorage2/SoulTrap_DS.SoulTrap_DS'");
-		if (cryo.IsEmpty())
-			cryo = FString("Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'");
-
-		UClass* Class = UVictoryCore::BPLoadClass(&cryo);
-		UPrimalItem* item = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
-		if (item)
+		if (ArkShop::config["General"].value("GiveDinosInCryopods", false))
 		{
-			if (ArkShop::config["General"].value("CryoLimitedTime", false) && !Modded)
-				item->AddItemDurability((item->ItemDurabilityField() - 3600) * -1);
+			bool Modded = config["General"].value("UseSoulTraps", false);
 
+			FString cryo = FString(ArkShop::config["General"].value("CryoItemPath", "Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'"));
 			if (Modded)
-				item->ItemDurabilityField() = 0.001;
+				cryo = FString("Blueprint'/Game/Mods/DinoStorage2/SoulTrap_DS.SoulTrap_DS'");
+			if (cryo.IsEmpty())
+				cryo = FString("Blueprint'/Game/Extinction/CoreBlueprints/Weapons/PrimalItem_WeaponEmptyCryopod.PrimalItem_WeaponEmptyCryopod'");
 
-			UPrimalItem* saddle = nullptr;
-			if (saddleblueprint.size() > 0)
+			UClass* Class = UVictoryCore::BPLoadClass(&cryo);
+			UPrimalItem* item = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0, false, false);
+			if (item)
 			{
-				FString fblueprint(saddleblueprint.c_str());
-				UClass* Class = ArkShop::GetRemappedClass(fblueprint, Item);
-				saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
+				if (ArkShop::config["General"].value("CryoLimitedTime", false) && !Modded)
+					item->AddItemDurability((item->ItemDurabilityField() - 3600) * -1);
+
+				if (Modded)
+					item->ItemDurabilityField() = 0.001;
+
+				UPrimalItem* saddle = nullptr;
+				if (saddleblueprint.size() > 0)
+				{
+					FString fblueprint(saddleblueprint.c_str());
+					UClass* Class = UVictoryCore::BPLoadClass(&fblueprint);
+					saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0, false, false);
+				}
+
+				FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle, Modded);
+				item->SetCustomItemData(&customItemData);
+				item->UpdatedItem(true);
+
+				if (player_controller->GetPlayerInventoryComponent())
+				{
+					UPrimalItem* item2 = player_controller->GetPlayerInventoryComponent()->AddItemObject(item);
+
+					if (item2)
+						success = true;
+				}
 			}
 
-			FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle, Modded);
-			item->SetCustomItemData(&customItemData);
-			item->UpdatedItem(true);
-
-			if (player_controller->GetPlayerInventoryComponent())
-			{
-				UPrimalItem* item2 = player_controller->GetPlayerInventoryComponent()->AddItemObject(item);
-
-				if (item2)
-					success = true;
-			}
+			dino->Destroy(true, false);
 		}
-
-		dino->Destroy(true, false);
+		else
+			success = true;
 	}
-	else if (dino)
-		success = true;
 
 	return success;
 }
