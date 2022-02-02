@@ -6,7 +6,6 @@
 
 #include "ArkShop.h"
 #include "ShopLog.h"
-#include "Discord.h"
 #include "ArkShopUIHelper.h"
 
 namespace ArkShop::Kits
@@ -244,14 +243,16 @@ namespace ArkShop::Kits
 		}
 
 		// Give commands
+		uint64 steam_id = ArkApi::GetApiUtils().GetSteamIdFromController(player_controller);
 		auto commands_map = kit_entry.value("Commands", nlohmann::json::array());
 		for (const auto& command_entry : commands_map)
 		{
-			const std::string command = command_entry["Command"];
+			const std::string command = command_entry.value("Command", "");
+
 			const bool exec_as_admin = command_entry.value("ExecuteAsAdmin", false);
 
 			FString fcommand = fmt::format(
-				command, fmt::arg("steamid", ArkApi::GetApiUtils().GetSteamIdFromController(player_controller)),
+				command, fmt::arg("steamid", steam_id),
 				fmt::arg("playerid", ArkApi::GetApiUtils().GetPlayerID(player_controller)),
 				fmt::arg("tribeid", ArkApi::GetApiUtils().GetTribeID(player_controller))
 			).c_str();
@@ -329,20 +330,13 @@ namespace ArkShop::Kits
 				// Log
 				if (should_log)
 				{
-					const std::wstring log = fmt::format(TEXT("{}({}) Used kit \"{}\""),
+					const std::wstring log = fmt::format(TEXT("[{}] {}({}) Used kit '{}'"),
+						*ArkShop::SetMapName(),
 						*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
 						*kit_name);
 
 					ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
-					if (ArkShop::discord_enabled)
-					{
-						const std::wstring log = fmt::format(TEXT("{}({}) Used kit: {}"),
-							*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
-							*kit_name);
-
-						PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
-							log, ArkShop::discord_sender_name);
-					}
+					ArkShop::PostToDiscord(log);
 				}
 			}
 			else if (should_log)
@@ -500,6 +494,13 @@ namespace ArkShop::Kits
 				FString kit_name = parsed[1];
 				std::string kit_name_str = kit_name.ToString();
 
+				if (!CanUseKit(player_controller, steam_id, kit_name))
+				{
+					ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
+						*GetText("CantBuyKit"));
+					return;
+				}
+
 				int amount;
 
 				try
@@ -551,22 +552,14 @@ namespace ArkShop::Kits
 						*GetText("BoughtKit"), *kit_name);
 
 					// Log
-					const std::wstring log = fmt::format(TEXT("{}({}) bought kit \"{}\". Amount - {}"),
+					const std::wstring log = fmt::format(TEXT("[{}] {}({}) Bought kit: '{}' Amount: {}"),
+						*ArkShop::SetMapName(),
 						*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
 						*kit_name,
 						amount);
 
 					ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
-					if (ArkShop::discord_enabled)
-					{
-						const std::wstring log = fmt::format(TEXT("{}({}) Bought kit: {} Amount: {}"),
-							*ArkApi::IApiUtils::GetSteamName(player_controller), steam_id,
-							*kit_name,
-							amount);
-
-						PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
-							log, ArkShop::discord_sender_name);
-					}
+					ArkShop::PostToDiscord(log);
 				}
 				else
 				{

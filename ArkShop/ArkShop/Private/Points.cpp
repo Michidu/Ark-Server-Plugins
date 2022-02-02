@@ -1,7 +1,7 @@
 #include <Points.h>
 #include <DBHelper.h>
 #include "ArkShop.h"
-#include "Discord.h"
+#include "ShopLog.h"
 #include "ArkShopUIHelper.h"
 
 namespace ArkShop::Points
@@ -76,7 +76,7 @@ namespace ArkShop::Points
 		if (DBHelper::IsPlayerExists(sender_steam_id))
 		{
 			TArray<FString> parsed;
-			if (ArkApi::Tools::IsPluginLoaded("ArkShopUI"))
+			if (ArkApi::Tools::IsPluginLoaded("ArkShopUI") && !config["General"].value("UseOriginalTradeCommandWithUI", false))
 			{
 				message->ParseIntoArray(parsed, L" ", true);
 
@@ -129,16 +129,14 @@ namespace ArkShop::Points
 						ArkApi::GetApiUtils().SendChatMessage(receiver_player, GetText("Sender"),
 							*GetText("GotPoints"), amount, *sender_name);
 
-						if (ArkShop::discord_enabled)
-						{
-							const std::wstring log = fmt::format(TEXT("{}({}) Traded points with: {}({}) Amount: {}"),
-								*ArkApi::IApiUtils::GetSteamName(player_controller), sender_steam_id,
-								*ArkApi::IApiUtils::GetSteamName(receiver_player), receiver_steam_id,
-								amount);
+						const std::wstring log = fmt::format(TEXT("[{}] {}({}) Traded points with: {}({}) Amount: {}"),
+							*ArkShop::SetMapName(),
+							*ArkApi::IApiUtils::GetSteamName(player_controller), sender_steam_id,
+							*ArkApi::IApiUtils::GetSteamName(receiver_player), receiver_steam_id,
+							amount);
 
-							PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
-								log, ArkShop::discord_sender_name);
-						}
+						ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
+						ArkShop::PostToDiscord(log);
 					}
 				}
 			}
@@ -212,16 +210,14 @@ namespace ArkShop::Points
 						ArkApi::GetApiUtils().SendChatMessage(receiver_player, GetText("Sender"),
 							*GetText("GotPoints"), amount, *sender_name);
 
-						if (ArkShop::discord_enabled)
-						{
-							const std::wstring log = fmt::format(TEXT("{}({}) Traded points with: {}({}) Amount: {}"),
-								*ArkApi::IApiUtils::GetSteamName(player_controller), sender_steam_id,
-								*ArkApi::IApiUtils::GetSteamName(receiver_player), receiver_steam_id,
-								amount);
+						const std::wstring log = fmt::format(TEXT("[{}] {}({}) Traded points with: {}({}) Amount: {}"),
+							*ArkShop::SetMapName(),
+							*ArkApi::IApiUtils::GetSteamName(player_controller), sender_steam_id,
+							*ArkApi::IApiUtils::GetSteamName(receiver_player), receiver_steam_id,
+							amount);
 
-							PostToDiscord(L"{{\"content\":\"```stylus\\n{}```\",\"username\":\"{}\",\"avatar_url\":null}}",
-								log, ArkShop::discord_sender_name);
-						}
+						ShopLog::GetLog()->info(ArkApi::Tools::Utf8Encode(log));
+						ArkShop::PostToDiscord(log);
 					}
 				}
 				else
