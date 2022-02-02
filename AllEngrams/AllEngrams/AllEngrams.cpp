@@ -20,6 +20,7 @@ struct EngramEntry
 	FString name;
 	TSubclassOf<UPrimalItem> engram;
 	int level{};
+	int cost{};
 };
 
 TArray<EngramEntry> original_engrams;
@@ -51,7 +52,7 @@ void ReadEngrams()
 
 			name.RemoveFromEnd("_1");
 
-			original_engrams.Add({name, engram_entry->BluePrintEntryField(), engram_entry->GetRequiredLevel()});
+			original_engrams.Add({name, engram_entry->BluePrintEntryField(), engram_entry->GetRequiredLevel(), engram_entry->RequiredEngramPointsField()});
 		}
 	}
 
@@ -65,7 +66,7 @@ void ReadEngrams()
 
 			if (include_engrams.Find(name) != INDEX_NONE)
 			{
-				unlock_engrams.Add({name, engram_entry.engram, engram_entry.level});
+				unlock_engrams.Add({name, engram_entry.engram, engram_entry.level, engram_entry.cost});
 			}
 		}
 	}
@@ -94,13 +95,12 @@ bool UnlockEngrams(AShooterPlayerController* player_controller)
 	UPrimalCharacterStatusComponent* char_component = primal_character->GetCharacterStatusComponent();
 
 	const bool auto_lvl = config.value("AutoDetectLevel", false);
-
 	const int required_lvl = config.value("RequiredLevel", 1);
 	const int level = char_component->GetCharacterLevel();
+
 	if (auto_lvl || level >= required_lvl)
 	{
 		auto* player_state = player_controller->GetShooterPlayerState();
-
 		for (const auto& engram_entry : unlock_engrams)
 		{
 			if (auto_lvl && level < engram_entry.level)
@@ -110,10 +110,14 @@ bool UnlockEngrams(AShooterPlayerController* player_controller)
 
 			if (!player_state->HasEngram(engram_entry.engram))
 			{
+				if (config.value("RefundUsedEngramPoints", false))
+				{
+					player_state->FreeEngramPointsField() += engram_entry.cost;
+					player_state->MulticastProperty(FName("FreeEngramPoints", EFindName::FNAME_Add));
+				}
 				player_state->ServerUnlockEngram(engram_entry.engram, false, true);
 			}
 		}
-
 		return true;
 	}
 
@@ -134,7 +138,10 @@ void Hook_UPrimalCharacterStatusComponent_ServerApplyLevelUp(UPrimalCharacterSta
 {
 	UPrimalCharacterStatusComponent_ServerApplyLevelUp_original(_this, LevelUpValueType, ByPC);
 
-	if (ByPC != nullptr)
+	if (ByPC != nullptr
+		&& _this
+		&& _this->GetOwner()
+		&& _this->GetOwner()->IsA(AShooterCharacter::GetPrivateStaticClass()))
 	{
 		const bool use_permission = config.value("UseAutoPermission", false);
 

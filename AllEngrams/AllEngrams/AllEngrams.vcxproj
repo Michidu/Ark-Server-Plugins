@@ -13,6 +13,9 @@
   <ItemGroup>
     <ClCompile Include="AllEngrams.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Configs\config.json" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{ACBD1852-7779-43A7-A482-61A1E0463C41}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
