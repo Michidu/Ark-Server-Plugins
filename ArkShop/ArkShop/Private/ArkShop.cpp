@@ -49,8 +49,7 @@ void ArkShop::ApplyItemStats(TArray<UPrimalItem*> items, int armor, int durabili
 		{
 			bool updated = false;
 
-			static int statInfoStructSize = USizeOf<FItemStatInfo>();
-			Log::GetLog()->info("statstruct: {}", statInfoStructSize);
+			static int statInfoStructSize = GetStructSize<FItemStatInfo>();
 
 			if (armor > 0)
 			{
@@ -240,7 +239,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 {
 	bool success = false;
 	const FString fblueprint(blueprint.c_str());
-	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
+	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, ArkApi::GetApiUtils().GetClassBlueprint(ArkShop::GetRemappedClass(FString(fblueprint), NPC)), nullptr, level, true, neutered);
 	if (dino && ArkShop::config["General"].value("GiveDinosInCryopods", false))
 	{
 		if (dino->bUsesGender()())
@@ -273,7 +272,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 			if (saddleblueprint.size() > 0)
 			{
 				FString fblueprint(saddleblueprint.c_str());
-				UClass* Class = UVictoryCore::BPLoadClass(&fblueprint);
+				UClass* Class = ArkShop::GetRemappedClass(fblueprint, Item);
 				saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0);
 			}
 

@@ -17,7 +17,7 @@ namespace SafeZones
 			bool prevent_building, bool kill_wild_dinos, bool prevent_leaving, bool prevent_entering, bool enable_events,
 			bool screen_notifications, bool chat_notifications, const FLinearColor& success_color,
 			const FLinearColor& fail_color, std::vector<FString> messages, bool cryopod_dinos, bool show_bubble, std::vector<float> bubble_colors,
-			bool bEnableTeleport, const std::vector<float>& teleport_destination);
+			bool bEnableTeleport, const std::vector<float>& teleport_destination, const bool onlyKillAggresiveDinos, const bool prevent_friendly_fire, const bool prevent_wild_dino_damage);
 
 		/**
 		 * \brief Safe zone name
@@ -37,6 +37,8 @@ namespace SafeZones
 		bool prevent_pvp;
 		bool prevent_structure_damage;
 		bool prevent_building;
+		bool prevent_friendly_fire;
+		bool prevent_wild_dino_damage;
 
 		/**
 		 * \brief Kills wild dinos on entering to safe zone, requires events to be enabled
@@ -84,6 +86,8 @@ namespace SafeZones
 		bool bEnableOnEnterTeleport;
 		FVector teleport_destination_on_enter;
 
+		bool bOnlyKillAggressiveDinos;
+
 		// Functions
 
 		ZONE_API bool IsOverlappingActor(AActor* other) const;
@@ -111,5 +115,7 @@ namespace SafeZones
 		TArray<AActor*> GetActorsInsideZone() const;
 
 		ZONE_API bool CanJoinZone(AShooterPlayerController* player) const;
+
+		void LogEvent(AShooterPlayerController* actor, bool bIsEnter) const;
 	};
 }

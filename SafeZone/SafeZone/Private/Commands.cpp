@@ -350,8 +350,11 @@ namespace SafeZones::Commands
 		new_zone["Radius"] = 1800;
 		new_zone["PreventPVP"] = false;
 		new_zone["PreventStructureDamage"] = false;
+		new_zone["PreventFriendlyFire"] = false;
+		new_zone["PreventWildDinoDamage"] = false;
 		new_zone["PreventBuilding"] = false;
 		new_zone["KillWildDinos"] = false;
+		new_zone["OnlyKillAggressiveDinos"] = false;
 		new_zone["PreventLeaving"] = false;
 		new_zone["PreventEntering"] = false;
 		new_zone["EnableEvents"] = false;

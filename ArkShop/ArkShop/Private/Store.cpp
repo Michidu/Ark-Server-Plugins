@@ -108,13 +108,11 @@ namespace ArkShop::Store
 						}
 						ApplyItemStats(out_items, armor, durability, damage);
 					}
-				}
-				else
-				{
-					UPrimalInventoryComponent* playerInventory = player_controller->GetPlayerInventoryComponent();
-					if (playerInventory)
+					else
 					{
-						playerInventory->IncrementItemTemplateQuantity(itemClass, amount, true, force_blueprint, nullptr, nullptr, false, false, false, false, true, false, true);
+						int totalAmount = amount * default_amount;
+						playerInventory->IncrementItemTemplateQuantity(itemClass, totalAmount, true, force_blueprint, nullptr, nullptr, false, false, false, false, true, false, true);
+
 					}
 				}
 			}
