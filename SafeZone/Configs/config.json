@@ -2,7 +2,8 @@
   "ServerName":"ServerNameHere",
   "NotificationScale":1.0,
   "NotificationDisplayTime":5.0,
-  "AdminsIgnoreRestrictions":false,
+  "AdminsIgnoreRestrictions": false,
+  "LogEnterAndLeave": true,
   "SafeZones":[
     {
       "Name": "Zone1",
@@ -13,9 +14,12 @@
       ],
       "Radius": 1800,
       "PreventPVP": true,
+      "PreventFriendlyFire": false,
+      "PreventWildDinoDamage": true,
       "PreventStructureDamage": true,
       "PreventBuilding": true,
       "KillWildDinos": true,
+      "OnlyKillAggressiveDinos": true,
       "PreventLeaving": false,
       "PreventEntering": false,
       "EnableEvents": true,
