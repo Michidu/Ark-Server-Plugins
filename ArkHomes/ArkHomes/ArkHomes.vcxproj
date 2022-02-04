@@ -11,13 +11,13 @@
     <ProjectGuid>{55AED634-A2E5-4704-ACF4-888CEEEA1F16}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ArkHomes</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -32,7 +32,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(MSBuildStartupDirectory)\..\Permissions\Permissions\Public;$(MSBuildStartupDirectory)\..\..\ARK-Server-API\version\Core\Public;$(IncludePath)</IncludePath>
+    <IncludePath>$(MSBuildStartupDirectory)\..\Permissions\Permissions\Public;\..\..\ARK-Server-API\version\Core\Public;\..\ArkShop\ArkShop\Public;$(IncludePath)</IncludePath>
     <LibraryPath>d:\Projects;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -46,13 +46,15 @@
       <PreprocessorDefinitions>NDEBUG;ARKHOMES_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>..\Includes</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Includes;\..\..\ARK-Server-API\version\Core\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>\..\..\ARK-Server-API\out_lib;\..\Ark-Server-Plugins\Permissions\out_lib;\..\ArkShop\out_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <DelayLoadDLLs>Permissions.dll;ArkShop.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

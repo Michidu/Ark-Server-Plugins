@@ -1,6 +1,9 @@
 #include "HomeSystem.h"
 #include "Helper.h"
 
+#include <ArkPermissions.h>
+#include <Points.h>
+
 namespace HomeSystem
 {
 	DECLARE_HOOK(AShooterCharacter_Die, bool, AShooterCharacter*, float, FDamageEvent*, AController*, AActor*);
@@ -236,6 +239,14 @@ namespace HomeSystem
 			if (!Helper::IsPlayerExists(steam_id))
 				AddPlayer(steam_id);
 
+			const bool use_permission = ArkHome::config["General"]["UsePermissions"];
+			if (use_permission && !Permissions::IsPlayerHasPermission(steam_id, "ArkHomes.Teleport"))
+			{
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
+					*ArkHome::GetText("NoPermissions"));
+				return;
+			}
+
 			auto player_home_json = GetPlayerHomesConfig(steam_id);
 
 			const auto home_json_iter = player_home_json.find(name);
@@ -373,6 +384,14 @@ namespace HomeSystem
 		if (!Helper::IsPlayerExists(steam_id))
 			AddPlayer(steam_id);
 
+		const bool use_permission = ArkHome::config["General"]["UsePermissions"];
+		if (use_permission && !Permissions::IsPlayerHasPermission(steam_id, "ArkHomes.Teleport"))
+		{
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
+				*ArkHome::GetText("NoPermissions"));
+			return;
+		}
+
 		FString store_str = "";
 
 		auto player_home_json = GetPlayerHomesConfig(steam_id);
@@ -380,10 +399,16 @@ namespace HomeSystem
 		{
 			auto name = iter.key();
 
-			store_str += FString::Format("{}\n", name);
+			store_str += FString::Format("{} ", name);
 		}
 
-		ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"), *store_str);
+		if (store_str.IsEmpty()) {
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"), *ArkHome::GetText("NoHomesSet"));
+		}
+		else {
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"), *ArkHome::GetText("ListOfHomes"),  *store_str);
+		}
+
 	}
 
 	void DoTp(AShooterPlayerController* player_controller, const FVector& pos)
@@ -412,6 +437,16 @@ namespace HomeSystem
 
 		ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
 		                                      *ArkHome::GetText("HomeTeleported"));
+
+
+		const bool use_points = ArkHome::config["General"]["UseArkShop"];
+		const int cost_hometp = ArkHome::config["General"]["CostPerHomeTeleport"];
+		if (use_points) {
+			ArkShop::Points::SpendPoints(cost_hometp, steam_id);
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
+				*ArkHome::GetText("ChargedPoints"), cost_hometp);
+		}
+
 	}
 
 	void TpHome(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type)
@@ -433,6 +468,24 @@ namespace HomeSystem
 			const auto player_iter = find(teleporting_players.begin(), teleporting_players.end(), steam_id);
 			if (player_iter != teleporting_players.end())
 				return;
+
+			const bool use_points = ArkHome::config["General"]["UseArkShop"];
+			const int cost_hometp = ArkHome::config["General"]["CostPerHomeTeleport"];
+
+			const bool use_permission = ArkHome::config["General"]["UsePermissions"];
+			if (use_permission && !Permissions::IsPlayerHasPermission(steam_id, "ArkHomes.Teleport"))
+			{
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
+					*ArkHome::GetText("NoPermissions"));
+				return;
+			}
+
+			const int player_points = ArkShop::Points::GetPoints(steam_id);
+			if (use_points && player_points < cost_hometp) {
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
+					*ArkHome::GetText("NoEnoughPoints"), cost_hometp);
+				return;
+			}
 
 			const bool can_tp_with_dino = ArkHome::config["General"]["CanTpWithDino"];
 			if (!can_tp_with_dino && ArkApi::IApiUtils::IsRidingDino(player_controller))
@@ -489,8 +542,9 @@ namespace HomeSystem
 
 			Helper::DisableInput(player_controller, true);
 
-			ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
-			                                      *ArkHome::GetText("HomeTeleportStart"), delay);
+			ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"), *ArkHome::GetText("HomeTeleportStart"), delay);
+			//ArkApi::GetApiUtils().SendNotification(player_controller, FColorList::Orange, 1.5, delay, nullptr, *ArkHome::GetText("HomeTeleportStart"), delay);
+
 		}
 		else
 		{
@@ -518,8 +572,7 @@ namespace HomeSystem
 		return AShooterCharacter_Die_original(_this, KillingDamage, DamageEvent, Killer, DamageCauser);
 	}
 
-	float Hook_APrimalCharacter_TakeDamage(APrimalCharacter* _this, float Damage, FDamageEvent* DamageEvent,
-	                                       AController* EventInstigator, AActor* DamageCauser)
+	float Hook_APrimalCharacter_TakeDamage(APrimalCharacter* _this, float Damage, FDamageEvent* DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 	{
 		if (_this->IsA(AShooterCharacter::GetPrivateStaticClass()))
 		{
@@ -527,7 +580,7 @@ namespace HomeSystem
 				static_cast<AShooterCharacter*>(_this));
 			if (player)
 			{
-				const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player);
+				const uint64 steam_id = ArkApi::GetApiUtils().GetSteamIdFromController(player);
 
 				const auto player_iter = find(teleporting_players.begin(), teleporting_players.end(), steam_id);
 				if (player_iter != teleporting_players.end())
@@ -561,4 +614,17 @@ namespace HomeSystem
 		ArkApi::GetHooks().SetHook("APrimalCharacter.TakeDamage", &Hook_APrimalCharacter_TakeDamage,
 		                           &APrimalCharacter_TakeDamage_original);
 	}
+
+	void RemoveHooks() {
+
+		ArkApi::GetHooks().DisableHook("APrimalCharacter.TakeDamage", &Hook_APrimalCharacter_TakeDamage);
+		ArkApi::GetHooks().DisableHook("AShooterCharacter.Die", &Hook_AShooterCharacter_Die);
+
+		ArkApi::GetCommands().RemoveChatCommand(ArkHome::GetText("AddHomeCmd"));
+		ArkApi::GetCommands().RemoveChatCommand(ArkHome::GetText("RemoveHomeCmd"));
+		ArkApi::GetCommands().RemoveChatCommand(ArkHome::GetText("ListHomesCmd"));
+		ArkApi::GetCommands().RemoveChatCommand(ArkHome::GetText("HomeCmd"));
+
+	}
+
 }
