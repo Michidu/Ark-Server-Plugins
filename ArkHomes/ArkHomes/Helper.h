@@ -11,7 +11,7 @@ namespace Helper
 		template <class callable, class... arguments>
 		Timer(int after, bool async, uint64 steam_id, callable&& f, arguments&&... args)
 		{
-			std::function<typename std::result_of<callable(arguments ...)>::type()> task(
+			std::function<typename std::invoke_result<callable, arguments...>::type()> task(
 				std::bind(std::forward<callable>(f), std::forward<arguments>(args)...));
 
 			if (async)
