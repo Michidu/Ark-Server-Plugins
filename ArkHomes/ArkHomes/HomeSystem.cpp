@@ -239,12 +239,14 @@ namespace HomeSystem
 			if (!Helper::IsPlayerExists(steam_id))
 				AddPlayer(steam_id);
 
-			const bool use_permission = ArkHome::config["General"]["UsePermissions"];
-			if (use_permission && !Permissions::IsPlayerHasPermission(steam_id, "ArkHomes.Teleport"))
-			{
-				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
-					*ArkHome::GetText("NoPermissions"));
-				return;
+			const bool use_permission = ArkHome::config["General"].value("UsePermissions", false);
+			if (ArkApi::Tools::IsPluginLoaded("Permissions")) {
+				if (use_permission && !Permissions::IsPlayerHasPermission(steam_id, "ArkHomes.Teleport"))
+				{
+					ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
+						*ArkHome::GetText("NoPermissions"));
+					return;
+				}
 			}
 
 			auto player_home_json = GetPlayerHomesConfig(steam_id);
@@ -258,7 +260,7 @@ namespace HomeSystem
 			}
 
 			const auto homes_count = player_home_json.size();
-			const int max_homes = ArkHome::config["General"]["MaxHomes"];
+			const int max_homes = ArkHome::config["General"].value("MaxHomes", 2);
 			if (homes_count >= max_homes)
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
@@ -277,8 +279,8 @@ namespace HomeSystem
 				return;
 			}
 
-			const int min_structures = ArkHome::config["General"]["MinStructures"];
-			const int radius = ArkHome::config["General"]["Radius"];
+			const int min_structures = ArkHome::config["General"].value("MinStructures", 3);
+			const int radius = ArkHome::config["General"].value("Radius", 5000);
 
 			if (const int count = GetNearbyStructuresCount(player_controller, radius);
 				count < min_structures)
@@ -307,7 +309,7 @@ namespace HomeSystem
 
 			if (SaveConfig(dump, steam_id))
 			{
-				const int add_cooldown = ArkHome::config["General"]["AddHomeCooldown"];
+				const int add_cooldown = ArkHome::config["General"].value("AddHomeCooldown", 1);
 				const auto new_cooldown = std::chrono::system_clock::to_time_t(
 					std::chrono::system_clock::now() + std::chrono::minutes(add_cooldown));
 
@@ -384,12 +386,14 @@ namespace HomeSystem
 		if (!Helper::IsPlayerExists(steam_id))
 			AddPlayer(steam_id);
 
-		const bool use_permission = ArkHome::config["General"]["UsePermissions"];
-		if (use_permission && !Permissions::IsPlayerHasPermission(steam_id, "ArkHomes.Teleport"))
-		{
-			ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
-				*ArkHome::GetText("NoPermissions"));
-			return;
+		const bool use_permission = ArkHome::config["General"].value("UsePermissions", false);
+		if (ArkApi::Tools::IsPluginLoaded("Permissions")) {
+			if (use_permission && !Permissions::IsPlayerHasPermission(steam_id, "ArkHomes.Teleport"))
+			{
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
+					*ArkHome::GetText("NoPermissions"));
+				return;
+			}
 		}
 
 		FString store_str = "";
@@ -429,7 +433,7 @@ namespace HomeSystem
 
 		Helper::DisableInput(player_controller, false);
 
-		const int tp_cooldown = ArkHome::config["General"]["TpHomeCooldown"];
+		const int tp_cooldown = ArkHome::config["General"].value("TpHomeCooldown", 1);
 		const auto cooldown = std::chrono::system_clock::to_time_t(
 			std::chrono::system_clock::now() + std::chrono::minutes(tp_cooldown));
 
@@ -439,12 +443,14 @@ namespace HomeSystem
 		                                      *ArkHome::GetText("HomeTeleported"));
 
 
-		const bool use_points = ArkHome::config["General"]["UseArkShop"];
-		const int cost_hometp = ArkHome::config["General"]["CostPerHomeTeleport"];
-		if (use_points) {
-			ArkShop::Points::SpendPoints(cost_hometp, steam_id);
-			ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
-				*ArkHome::GetText("ChargedPoints"), cost_hometp);
+		const bool use_points = ArkHome::config["General"].value("UseArkShop", false);
+		const int cost_hometp = ArkHome::config["General"].value("CostPerHomeTeleport", 20);
+		if (ArkApi::Tools::IsPluginLoaded("ArkShop")) {
+			if (use_points) {
+				ArkShop::Points::SpendPoints(cost_hometp, steam_id);
+				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
+					*ArkHome::GetText("ChargedPoints"), cost_hometp);
+			}
 		}
 
 	}
@@ -469,25 +475,28 @@ namespace HomeSystem
 			if (player_iter != teleporting_players.end())
 				return;
 
-			const bool use_points = ArkHome::config["General"]["UseArkShop"];
-			const int cost_hometp = ArkHome::config["General"]["CostPerHomeTeleport"];
-
-			const bool use_permission = ArkHome::config["General"]["UsePermissions"];
-			if (use_permission && !Permissions::IsPlayerHasPermission(steam_id, "ArkHomes.Teleport"))
-			{
-				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
-					*ArkHome::GetText("NoPermissions"));
-				return;
+			const bool use_permission = ArkHome::config["General"].value("UsePermissions", false);
+			if(ArkApi::Tools::IsPluginLoaded("Permissions")) {
+				if (use_permission && !Permissions::IsPlayerHasPermission(steam_id, "ArkHomes.Teleport"))
+				{
+					ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
+						*ArkHome::GetText("NoPermissions"));
+					return;
+				}
 			}
 
-			const int player_points = ArkShop::Points::GetPoints(steam_id);
-			if (use_points && player_points < cost_hometp) {
-				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
-					*ArkHome::GetText("NoEnoughPoints"), cost_hometp);
-				return;
+			const bool use_points = ArkHome::config["General"].value("UseArkShop", false);
+			const int cost_hometp = ArkHome::config["General"].value("CostPerHomeTeleport", 20);
+			if (ArkApi::Tools::IsPluginLoaded("ArkShop")) {
+				const int player_points = ArkShop::Points::GetPoints(steam_id);
+				if (use_points && player_points < cost_hometp) {
+					ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
+						*ArkHome::GetText("NoEnoughPoints"), cost_hometp);
+					return;
+				}
 			}
 
-			const bool can_tp_with_dino = ArkHome::config["General"]["CanTpWithDino"];
+			const bool can_tp_with_dino = ArkHome::config["General"].value("CanTpWithDino", true);
 			if (!can_tp_with_dino && ArkApi::IApiUtils::IsRidingDino(player_controller))
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
@@ -516,7 +525,7 @@ namespace HomeSystem
 				return;
 			}
 
-			const int enemy_min_distance = ArkHome::config["General"]["EnemyStructureMinDistance"];
+			const int enemy_min_distance = ArkHome::config["General"].value("EnemyStructureMinDistance", 10000);
 			if (IsEnemyStructureNear(player_controller, enemy_min_distance))
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
@@ -534,7 +543,7 @@ namespace HomeSystem
 				return;
 			}
 
-			const int delay = ArkHome::config["General"]["HomeTpDelay"];
+			const int delay = ArkHome::config["General"].value("HomeTpDelay", 20);
 
 			Helper::Timer(delay * 1000, true, steam_id, &DoTp, player_controller, pos_vec);
 

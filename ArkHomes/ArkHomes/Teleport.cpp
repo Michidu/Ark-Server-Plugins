@@ -63,7 +63,7 @@ namespace Teleport
 
 		Helper::DisableInput(player_controller, false);
 
-		const int tp_cooldown = ArkHome::config["General"]["TeleportCooldown"];
+		const int tp_cooldown = ArkHome::config["General"].value("TeleportCooldown", 1);
 		const auto cooldown = std::chrono::system_clock::to_time_t(
 			std::chrono::system_clock::now() + std::chrono::minutes(tp_cooldown));
 
@@ -111,7 +111,7 @@ namespace Teleport
 				return;
 			}
 
-			const int enemy_min_distance = ArkHome::config["General"]["EnemyStructureMinDistance"];
+			const int enemy_min_distance = ArkHome::config["General"].value("EnemyStructureMinDistance", 10000);
 			if (HomeSystem::IsEnemyStructureNear(player_controller, enemy_min_distance))
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, ArkHome::GetText("Sender"),
@@ -121,7 +121,7 @@ namespace Teleport
 
 			auto pos = teleport_poses[name];
 
-			const int delay = ArkHome::config["General"]["TeleportDelay"];
+			const int delay = ArkHome::config["General"].value("TeleportDelay", 15);
 
 			Helper::Timer(delay * 1000, true, steam_id, &DoTp, player_controller, FVector(pos[0], pos[1], pos[2]));
 
