@@ -10,8 +10,8 @@
 		"Radius": 5000,
 		"CanTpWithDino": true,
 		"EnemyStructureMinDistance": 10000,
-		"UsePermissions": true,
-		"UseArkShop": true,
+		"UsePermissions": false,
+		"UseArkShop": false,
 		"CostPerHomeTeleport": 20
 	},
 	"Teleport": {
