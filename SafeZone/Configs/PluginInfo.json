@@ -1,8 +1,8 @@
 {
   "FullName":"Safe Zone",
-  "Description":"(3.41) Create Safe Zones",
-  "Version":3.41,
-  "MinApiVersion":3.51,
+  "Description":"(3.43) Create Safe Zones",
+  "Version":3.43,
+  "MinApiVersion":3.53,
   "ResourceId":2,
   "Dependencies":[
     "Permissions"

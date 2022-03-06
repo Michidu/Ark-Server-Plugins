@@ -27,6 +27,8 @@ namespace SafeZones::Hooks
 	DECLARE_HOOK(APrimalBuff_Grappled_CanPullChar_Implementation, bool, APrimalBuff_Grappled*, APrimalCharacter*, const bool);
 	DECLARE_HOOK(AShooterProjectile_OnImpact, void, AShooterProjectile*, FHitResult*, bool);
 	DECLARE_HOOK(AShooterGameMode_IsTribeWar, bool, AShooterGameMode*, int, int);
+	DECLARE_HOOK(AShooterGameMode_StartNewShooterPlayer, void, AShooterGameMode*, APlayerController*, bool, bool, FPrimalPlayerCharacterConfigStruct*, UPrimalPlayerData*);
+	DECLARE_HOOK(APrimalDinoCharacter_BeginPlay, void, APrimalDinoCharacter*);
 
 	void Hook_AShooterGameMode_InitGame(AShooterGameMode* a_shooter_game_mode, FString* map_name, FString* options,
 	                                    FString* error_message)
@@ -59,47 +61,37 @@ namespace SafeZones::Hooks
 	float Hook_APrimalCharacter_TakeDamage(APrimalCharacter* _this, float Damage, FDamageEvent* DamageEvent,
 	                                       AController* EventInstigator, AActor* DamageCauser)
 	{
-		if (_this->IsA(AShooterCharacter::GetPrivateStaticClass()) &&
-			SafeZoneManager::Get().CheckActorAction(_this, 1, DamageCauser))
+		if (_this
+			&& !_this->IsDead())
 		{
-			return 0;
-		}
-		if (_this->IsA(APrimalDinoCharacter::GetPrivateStaticClass()) &&
-			_this->TargetingTeamField() > 50000 &&
-			SafeZoneManager::Get().CheckActorAction(_this, 1, DamageCauser))
-		{
-			return 0;
-		}
-		if (EventInstigator && EventInstigator->CharacterField() &&
-			SafeZoneManager::Get().CheckActorAction(EventInstigator->CharacterField(), 1, DamageCauser))
-		{
-			return 0;
-		}
+			if (SafeZoneManager::Get().CheckActorAction(_this, 1, DamageCauser))
+				return 0.f;
 
-		// else prevent pvp is not false, so for pve servers we proceed to implement "is tribe war"
+			// else prevent pvp is not false, so for pve servers we proceed to implement "is tribe war"
 
-		if (SafeZoneManager::ShouldDoTribeWarCheck()
-			&& _this
-			&& DamageCauser)
-		{
-			const int& thisTeamId = _this->TargetingTeamField();
-			const int& thatTeamId = DamageCauser->TargetingTeamField();
-
-			auto& playerPos = _this->RootComponentField()->RelativeLocationField();
-			std::shared_ptr<SafeZone> nearestZone = SafeZoneManager::Get().GetNearestZone(playerPos);
-
-			if (nearestZone
-				&& nearestZone->IsOverlappingActor(_this)
-				&& thisTeamId > 50000
-				&& thatTeamId > 50000)
+			if (SafeZoneManager::ShouldDoTribeWarCheck()
+				&& _this
+				&& DamageCauser)
 			{
-				nearestZone->AddTribesPairForTribeWarCheck(thisTeamId, thatTeamId);
-				const float res = APrimalCharacter_TakeDamage_original(_this, Damage, DamageEvent, EventInstigator, DamageCauser);
-				nearestZone->RemoveTribesFromTribeWarPair(thisTeamId, thatTeamId);
-				return res;
-			}
-		}
+				const int& thisTeamId = _this->TargetingTeamField();
+				const int& thatTeamId = DamageCauser->TargetingTeamField();
 
+				auto& playerPos = _this->RootComponentField()->RelativeLocationField();
+				std::shared_ptr<SafeZone> nearestZone = SafeZoneManager::Get().GetNearestZone(playerPos);
+
+				if (nearestZone
+					&& nearestZone->IsOverlappingActor(_this)
+					&& thisTeamId > 50000
+					&& thatTeamId > 50000)
+				{
+					nearestZone->AddTribesPairForTribeWarCheck(thisTeamId, thatTeamId);
+					const float res = APrimalCharacter_TakeDamage_original(_this, Damage, DamageEvent, EventInstigator, DamageCauser);
+					nearestZone->RemoveTribesFromTribeWarPair(thisTeamId, thatTeamId);
+					return res;
+				}
+			}
+
+		}
 		return APrimalCharacter_TakeDamage_original(_this, Damage, DamageEvent, EventInstigator, DamageCauser);
 	}
 
@@ -286,6 +278,59 @@ namespace SafeZones::Hooks
 		return AShooterGameMode_IsTribeWar_original(_this, TribeID1, TribeID2);
 	}
 
+	void  Hook_AShooterGameMode_StartNewShooterPlayer(AShooterGameMode* _this, APlayerController* NewPlayer, bool bForceCreateNewPlayerData, bool bIsFromLogin, FPrimalPlayerCharacterConfigStruct* charConfig, UPrimalPlayerData* ArkPlayerData)
+	{
+		AShooterGameMode_StartNewShooterPlayer_original(_this, NewPlayer, bForceCreateNewPlayerData, bIsFromLogin, charConfig, ArkPlayerData);
+
+		int spawnReg = -1;
+
+		if (NewPlayer
+			&& charConfig
+			&& !bIsFromLogin)
+		{
+			spawnReg = charConfig->PlayerSpawnRegionIndex;
+			Tools::Timer::Get().DelayExec(
+				[](TWeakObjectPtr<AShooterPlayerController> PC, const int spawnRegion)
+				{
+					if (PC)
+					{
+						UPrimalGameData* pgd = UPrimalGameData::BPGetGameData();
+						TArray<FString>* spawns = pgd->GetPlayerSpawnRegions(ArkApi::GetApiUtils().GetWorld());
+						if (spawns
+							&& spawns->IsValidIndex(spawnRegion))
+						{
+							TeleportPlayer(PC, (*spawns)[spawnRegion]);
+						}
+					}
+				},
+				0, false, GetWeakReference(static_cast<AShooterPlayerController*>(NewPlayer)), spawnReg);
+		}
+	}
+
+	void Hook_APrimalDinoCharacter_BeginPlay(APrimalDinoCharacter* _this)
+	{
+		APrimalDinoCharacter_BeginPlay_original(_this);
+
+		Tools::Timer::Get().DelayExec(
+			std::bind([](TWeakObjectPtr<APrimalDinoCharacter> _this)
+			{
+				if (_this
+					&& !_this->IsDead()
+					&& !_this->BPIsTamed())
+				{
+					for (auto& safe_zone : SafeZoneManager::Get().GetAllSafeZones())
+					{
+						if (safe_zone->IsOverlappingActor(_this))
+						{
+							safe_zone->OnEnterSafeZone(_this);
+							break;
+						}
+					}
+				}
+
+			}, GetWeakReference(_this)), 2, false);
+	}
+
 	void InitHooks()
 	{
 		auto& hooks = ArkApi::GetHooks();
@@ -315,6 +360,8 @@ namespace SafeZones::Hooks
 		hooks.SetHook("APrimalBuff_Grappled.CanPullChar_Implementation", &Hook_APrimalBuff_Grappled_CanPullChar_Implementation, &APrimalBuff_Grappled_CanPullChar_Implementation_original);
 		hooks.SetHook("AShooterProjectile.OnImpact", &Hook_AShooterProjectile_OnImpact, &AShooterProjectile_OnImpact_original);
 		hooks.SetHook("AShooterGameMode.IsTribeWar", &Hook_AShooterGameMode_IsTribeWar, &AShooterGameMode_IsTribeWar_original);
+		hooks.SetHook("AShooterGameMode.StartNewShooterPlayer", &Hook_AShooterGameMode_StartNewShooterPlayer, &AShooterGameMode_StartNewShooterPlayer_original);
+		hooks.SetHook("APrimalDinoCharacter.BeginPlay", &Hook_APrimalDinoCharacter_BeginPlay, &APrimalDinoCharacter_BeginPlay_original);
 	}
 
 	void RemoveHooks()
@@ -340,5 +387,7 @@ namespace SafeZones::Hooks
 		hooks.DisableHook("APrimalBuff_Grappled.CanPullChar_Implementation", &Hook_APrimalBuff_Grappled_CanPullChar_Implementation);
 		hooks.DisableHook("AShooterProjectile.OnImpact", &Hook_AShooterProjectile_OnImpact);
 		hooks.DisableHook("AShooterGameMode.IsTribeWar", &Hook_AShooterGameMode_IsTribeWar);
+		hooks.DisableHook("AShooterGameMode.StartNewShooterPlayer", &Hook_AShooterGameMode_StartNewShooterPlayer);
+		hooks.DisableHook("APrimalDinoCharacter.BeginPlay", &Hook_APrimalDinoCharacter_BeginPlay);
 	}
 }

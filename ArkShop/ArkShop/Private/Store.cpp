@@ -69,7 +69,7 @@ namespace ArkShop::Store
 
 				FString fblueprint(blueprint.c_str());
 
-				UClass* itemClass = ArkShop::GetRemappedClass(fblueprint, Item);
+				UClass* itemClass = UVictoryCore::BPLoadClass(&fblueprint);
 				bool stacksInOne = false;
 				if (itemClass)
 				{
@@ -101,19 +101,18 @@ namespace ArkShop::Store
 									0,
 									false,
 									nullptr,
-									0
+									0,
+									false,
+									false
 								)
 							);
 						}
 						ApplyItemStats(out_items, armor, durability, damage);
 					}
-				}
-				else
-				{
-					UPrimalInventoryComponent* playerInventory = player_controller->GetPlayerInventoryComponent();
-					if (playerInventory)
+					else
 					{
-						playerInventory->IncrementItemTemplateQuantity(itemClass, amount, true, force_blueprint, nullptr, nullptr, false, false, false, false, true, false, true);
+						int totalAmount = amount * default_amount;
+						playerInventory->IncrementItemTemplateQuantity(itemClass, totalAmount, true, force_blueprint, nullptr, nullptr, false, false, false, false, true, false, true);
 					}
 				}
 			}

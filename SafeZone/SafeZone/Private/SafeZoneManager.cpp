@@ -41,6 +41,8 @@ namespace SafeZones
 			bool kill_wild_dinos = safe_zone.value("KillWildDinos", false);
 			bool prevent_leaving = safe_zone.value("PreventLeaving", false);
 			bool prevent_entering = safe_zone.value("PreventEntering", false);
+			const bool prevent_friendly_fire = safe_zone.value("PreventFriendlyFire", false);
+			const bool prevent_wild_damage = safe_zone.value("PreventWildDinoDamage", false);
 
 			bool enable_events = safe_zone.value("EnableEvents", false);
 			bool screen_notifications = safe_zone.value("ScreenNotifications", false);
@@ -48,6 +50,8 @@ namespace SafeZones
 
 			bool cryopod_dinos = safe_zone.value("GiveDinosInCryopod", false);
 			bool show_bubble = safe_zone.value("ShowBubble", false);
+
+			bool only_kill_aggressive = safe_zone.value("OnlyKillAggressiveDinos", false);
 
 			std::vector<float> bubble_colors = safe_zone.value("BubbleColor", std::vector<float>{1, 0, 0});
 
@@ -72,7 +76,8 @@ namespace SafeZones
 			                                          prevent_building, kill_wild_dinos, prevent_leaving, prevent_entering,
 			                                          enable_events, screen_notifications, chat_notifications, success_color,
 			                                          fail_color, messages, cryopod_dinos, show_bubble, bubble_colors,
-													  enable_teleport, teleport_destination));
+													  enable_teleport, teleport_destination, only_kill_aggressive,
+													  prevent_friendly_fire, prevent_wild_damage));
 		}
 	}
 
@@ -123,6 +128,21 @@ namespace SafeZones
 				return nullptr;
 			}
 
+			TArray<UActorComponent*> comps;
+			trigger_sphere->GetComponents(&comps);
+
+			for (auto* comp : comps)
+			{
+				if (comp
+					&& comp->IsA(UPrimitiveComponent::GetPrivateStaticClass()))
+				{
+					UPrimitiveComponent* prim = static_cast<UPrimitiveComponent*>(comp);
+					prim->SetIsReplicated(true);
+					prim->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+					prim->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+				}
+			}
+
 			trigger_sphere->bPreventActorStasis() = true;
 			auto& box_comp = trigger_sphere->CollisionComponentField();
 
@@ -132,7 +152,7 @@ namespace SafeZones
 			{
 				comp->bGenerateOverlapEvents() = true;
 				comp->bForceOverlapEvents() = true;
-				comp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+				comp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 				comp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 				comp->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap);
 				comp->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
@@ -145,6 +165,7 @@ namespace SafeZones
 
 				trigger_sphere->UpdateOverlaps(true);
 
+				trigger_sphere->ForceReplicateNow(false, false);
 				return trigger_sphere;
 			}
 			else
@@ -185,12 +206,20 @@ namespace SafeZones
 
 	bool SafeZoneManager::CheckActorAction(AActor* actor, int type, AActor* CausedByActor)
 	{
+		if (!actor
+			|| !CausedByActor)
+			return false;
+
+		if (actor->ActorHasTag(SZ_IGNORE_TAG))
+			return false;
+
+		const uint64 teamid_damaged = actor->TargetingTeamField();
+		const uint64 teamid_causer = CausedByActor->TargetingTeamField();
+
 		if (actor
-			&& CausedByActor)
+			&& actor->IsA(APrimalCharacter::GetPrivateStaticClass()))
 		{
-			if (actor->TargetingTeamField() == CausedByActor->TargetingTeamField() // if they are from the same tribe nothing should be protected
-				|| ArkApi::GetApiUtils().GetShooterGameMode()->AreTribesAllied(actor->TargetingTeamField(), CausedByActor->TargetingTeamField()) // If allies let them punch each other lol
-				|| actor->TargetingTeamField() < 50000) // if actor is "wild" then it should not be protected
+			if (static_cast<APrimalCharacter*>(actor)->IsDead())
 			{
 				return false;
 			}
@@ -205,7 +234,23 @@ namespace SafeZones
 				switch (type)
 				{
 				case 1:
-					is_protected = safe_zone->prevent_pvp;
+					if (safe_zone->prevent_wild_dino_damage
+						&& (teamid_causer < 50000 || teamid_damaged < 50000))
+					{
+						is_protected = true;
+					}
+					else if (safe_zone->prevent_friendly_fire
+						&& (teamid_damaged == teamid_causer || ArkApi::GetApiUtils().GetShooterGameMode()->AreTribesAllied(teamid_damaged, teamid_causer)))
+					{
+						is_protected = true;
+					}
+					else if (safe_zone->prevent_pvp
+						&& teamid_damaged != teamid_causer
+						&& teamid_damaged >= 50000
+						&& teamid_causer >= 50000)
+					{
+						is_protected = true;
+					}
 					break;
 				case 2:
 					is_protected = safe_zone->prevent_structure_damage;
@@ -254,11 +299,13 @@ namespace SafeZones
 	void SafeZoneManager::ClearAllTriggerSpheres()
 	{
 		TArray<AActor*> out;
-		UGameplayStatics::GetAllActorsOfClass(ArkApi::GetApiUtils().GetWorld(), ATriggerSphere::GetClass(), &out);
+		UGameplayStatics::GetAllActorsOfClass(ArkApi::GetApiUtils().GetWorld(), AActor::GetPrivateStaticClass(), &out);
 
+		UClass* sphere_class = ATriggerSphere::GetClass();
 		for (AActor* actor : out)
 		{
-			if (actor)
+			if (actor
+				&& actor->IsA(sphere_class))
 			{
 				if (actor->TargetingTeamField() == SAFEZONES_TEAM)
 					actor->Destroy(false, false);

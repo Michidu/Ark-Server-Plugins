@@ -13,7 +13,8 @@ namespace SafeZones
 		bool prevent_building, bool kill_wild_dinos, bool prevent_leaving, bool prevent_entering, bool enable_events,
 		bool screen_notifications, bool chat_notifications, const FLinearColor& success_color,
 		const FLinearColor& fail_color, std::vector<FString> messages, bool cryopod_dinos, bool show_bubble, std::vector<float> bubble_colors,
-		bool bEnableTeleport, const std::vector<float>& teleport_destination)
+		bool bEnableTeleport, const std::vector<float>& teleport_destination, const bool onlyKillAggresiveDinos, const bool prevent_friendly_fire,
+		const bool prevent_wild_dino_damage)
 		: name(std::move(name)),
 		position(position),
 		radius(radius),
@@ -33,7 +34,10 @@ namespace SafeZones
 		show_bubble(show_bubble),
 		bubble_color(bubble_colors[0], bubble_colors[1], bubble_colors[2]),
 		bEnableOnEnterTeleport(bEnableTeleport),
-		teleport_destination_on_enter(teleport_destination[0], teleport_destination[1], teleport_destination[2])
+		teleport_destination_on_enter(teleport_destination[0], teleport_destination[1], teleport_destination[2]),
+		bOnlyKillAggressiveDinos(onlyKillAggresiveDinos),
+		prevent_friendly_fire(prevent_friendly_fire),
+		prevent_wild_dino_damage(prevent_wild_dino_damage)
 	{
 
 		ATriggerSphere* sphere = SafeZoneManager::Get().SpawnSphere(this->position, this->radius);
@@ -104,7 +108,21 @@ namespace SafeZones
 			}
 			else if (kill_wild_dinos && dino->TargetingTeamField() < 50000)
 			{
-				dino->Suicide();
+				if (bOnlyKillAggressiveDinos)
+				{ 
+					APrimalDinoAIController* dinoAI = static_cast<APrimalDinoAIController*>(dino->ControllerField());
+					if (dinoAI
+						&& dinoAI->bUseOverlapTargetCheckField())
+					{
+						dino->TagsField().Add(SZ_IGNORE_TAG);
+						dino->Suicide();
+					}
+				}
+				else
+				{
+					dino->TagsField().Add(SZ_IGNORE_TAG);
+					dino->Suicide();
+				}
 			}
 		}
 
@@ -126,6 +144,7 @@ namespace SafeZones
 					success_color);
 
 			CheckTeleportForCharacter((APrimalCharacter*)other_actor);
+			LogEvent(player, true);
 		}
 
 		// Execute callbacks
@@ -171,6 +190,8 @@ namespace SafeZones
 			if (SafeZones::Tools::ShouldSendNotification(other_actor, position, radius))
 				SendNotification(player, FString::Format(*messages[1], *name),
 					fail_color);
+
+			LogEvent(player, false);
 		}
 
 
@@ -198,6 +219,20 @@ namespace SafeZones
 		}
 
 		return result;
+	}
+
+	void SafeZone::LogEvent(AShooterPlayerController* actor, bool bIsEnter) const
+	{
+		if (config.value("LogEnterAndLeave", false))
+		{
+			if (actor)
+			{
+				FString pName;
+				actor->GetPlayerCharacterName(&pName);
+				Log::GetLog()->info("{0} has {2} '{1}'", API::Tools::Utf8Encode(*pName), API::Tools::Utf8Encode(*name),
+					bIsEnter ? "entered" : "left");
+			}
+		}
 	}
 
 	TArray<AActor*> SafeZone::GetActorsInsideZone() const
@@ -316,8 +351,18 @@ namespace SafeZones
 		UFunction* netUpdateFunc = actor->FindFunctionChecked(FName("NetRefreshRadiusScale", EFindName::FNAME_Add));
 		if (netUpdateFunc)
 		{ 
-			const float units_needed = (radius / 400.f);
-			int arg = (int)floor(units_needed / 0.2) + 2;
+			int offset = 0;
+
+			if (radius <= 1500)
+				offset = 35;
+			else if (radius <= 5000)
+				offset = 25;
+			else if (radius <= 10000)
+				offset = 20;
+			else
+				offset = -10;
+
+			int arg = ((radius / 8) - offset) / 10;
 
 			actor->ProcessEvent(netUpdateFunc, &arg);
 		}
