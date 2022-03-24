@@ -217,7 +217,10 @@ public:
 
 		try
 		{
-			auto groups = GetPlayerGroups(steam_id);
+			playersMutex.lock();
+			TArray<FString> groups = permissionPlayers[steam_id].Groups;
+			playersMutex.unlock();
+
 			groups.AddUnique(group);
 
 			FString query_groups("");
@@ -255,7 +258,9 @@ public:
 		if (!Permissions::IsPlayerInGroup(steam_id, group))
 			return "Player is not in group";
 
-		TArray<FString> groups = GetPlayerGroups(steam_id);
+		playersMutex.lock();
+		TArray<FString> groups = permissionPlayers[steam_id].Groups;
+		playersMutex.unlock();
 
 		FString new_groups;
 
@@ -609,7 +614,10 @@ public:
 
 		try
 		{
-			auto groups = GetTribeGroups(tribeId);
+			tribesMutex.lock();
+			TArray<FString> groups = permissionTribes[tribeId].Groups;
+			tribesMutex.unlock();
+
 			groups.AddUnique(group);
 
 			FString query_groups("");
@@ -647,7 +655,9 @@ public:
 		if (!Permissions::IsTribeInGroup(tribeId, group))
 			return "Tribe is not in group";
 
-		TArray<FString> groups = GetTribeGroups(tribeId);
+		tribesMutex.lock();
+		TArray<FString> groups = permissionTribes[tribeId].Groups;
+		tribesMutex.unlock();
 
 		FString new_groups;
 
