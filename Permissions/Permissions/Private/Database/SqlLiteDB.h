@@ -121,7 +121,7 @@ public:
 		return found;
 	}
 
-	TArray<FString> GetPlayerGroups(uint64 steam_id, bool includeTimed) override
+	TArray<FString> GetPlayerGroups(uint64 steam_id, bool includeTimed = true) override
 	{
 		TArray<FString> groups;
 
@@ -140,11 +140,6 @@ public:
 		}
 
 		return groups;
-	}
-
-	TArray<FString> GetPlayerGroups(uint64 steam_id) override
-	{
-		return GetPlayerGroups(steam_id, true);
 	}
 
 	CachedPermission HydratePlayerGroups(uint64 steam_id) override
@@ -532,7 +527,7 @@ public:
 		return false;
 	}
 
-	TArray<FString> GetTribeGroups(int tribeId, bool includeTimed) override
+	TArray<FString> GetTribeGroups(int tribeId, bool includeTimed = true) override
 	{
 		TArray<FString> groups;
 
@@ -551,11 +546,6 @@ public:
 		}
 
 		return groups;
-	}
-
-	TArray<FString> GetTribeGroups(int tribeId) override
-	{
-		return GetTribeGroups(tribeId, true);
 	}
 
 	CachedPermission HydrateTribeGroups(int tribeId) override

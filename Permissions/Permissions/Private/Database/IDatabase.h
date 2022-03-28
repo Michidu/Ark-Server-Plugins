@@ -24,8 +24,7 @@ public:
 	virtual bool AddPlayer(uint64 steam_id) = 0;
 
 	virtual bool IsGroupExists(const FString& group) = 0;
-	virtual TArray<FString> GetPlayerGroups(uint64 steam_id, bool includeTimed) = 0;
-	virtual TArray<FString> GetPlayerGroups(uint64 steam_id) = 0;
+	virtual TArray<FString> GetPlayerGroups(uint64 steam_id, bool includeTimed = true) = 0;
 	virtual CachedPermission HydratePlayerGroups(uint64 steam_id) = 0;
 	virtual TArray<FString> GetGroupPermissions(const FString& group) = 0;
 	virtual TArray<FString> GetAllGroups() = 0;
@@ -42,8 +41,7 @@ public:
 
 	virtual bool IsTribeExists(int tribeId) = 0;
 	virtual bool AddTribe(int tribeId) = 0;
-	virtual TArray<FString> GetTribeGroups(int tribeId, bool includeTimed) = 0;
-	virtual TArray<FString> GetTribeGroups(int tribeId) = 0;
+	virtual TArray<FString> GetTribeGroups(int tribeId, bool includeTimed = true) = 0;
 	virtual CachedPermission HydrateTribeGroups(int tribeId) = 0;
 	virtual std::optional<std::string> AddTribeToGroup(int tribeId, const FString& group) = 0;
 	virtual std::optional<std::string> RemoveTribeFromGroup(int tribeId, const FString& group) = 0;
