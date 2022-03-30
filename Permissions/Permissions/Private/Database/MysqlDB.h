@@ -132,15 +132,22 @@ public:
 		return true;
 	}
 
-	TArray<FString> GetPlayerGroups(uint64 steam_id) override
+	TArray<FString> GetPlayerGroups(uint64 steam_id, bool includeTimed = true) override
 	{
 		TArray<FString> groups;
-		auto nowSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 		if (IsPlayerExists(steam_id))
 		{
 			std::lock_guard<std::mutex> lg(playersMutex);
-			groups = permissionPlayers[steam_id].getGroups(nowSecs);
+			if (includeTimed)
+			{
+				auto nowSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+				groups = permissionPlayers[steam_id].getGroups(nowSecs);
+			}
+			else
+			{
+				groups = permissionPlayers[steam_id].Groups;
+			}
 		}
 
 		return groups;
@@ -217,7 +224,7 @@ public:
 
 		try
 		{
-			auto groups = GetPlayerGroups(steam_id);
+			auto groups = GetPlayerGroups(steam_id, false);
 			groups.AddUnique(group);
 
 			FString query_groups("");
@@ -255,7 +262,7 @@ public:
 		if (!Permissions::IsPlayerInGroup(steam_id, group))
 			return "Player is not in group";
 
-		TArray<FString> groups = GetPlayerGroups(steam_id);
+		TArray<FString> groups = GetPlayerGroups(steam_id, false);
 
 		FString new_groups;
 
@@ -576,15 +583,22 @@ public:
 		return false;
 	}
 
-	TArray<FString> GetTribeGroups(int tribeId) override
+	TArray<FString> GetTribeGroups(int tribeId, bool includeTimed = true) override
 	{
 		TArray<FString> groups;
-		auto nowSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 		if (IsTribeExists(tribeId))
 		{
 			std::lock_guard<std::mutex> lg(tribesMutex);
-			groups = permissionTribes[tribeId].getGroups(nowSecs);
+			if (includeTimed)
+			{
+				auto nowSecs = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+				groups = permissionTribes[tribeId].getGroups(nowSecs);
+			}
+			else
+			{
+				groups = permissionTribes[tribeId].Groups;
+			}
 		}
 
 		return groups;
@@ -609,7 +623,7 @@ public:
 
 		try
 		{
-			auto groups = GetTribeGroups(tribeId);
+			auto groups = GetTribeGroups(tribeId, false);
 			groups.AddUnique(group);
 
 			FString query_groups("");
@@ -647,7 +661,7 @@ public:
 		if (!Permissions::IsTribeInGroup(tribeId, group))
 			return "Tribe is not in group";
 
-		TArray<FString> groups = GetTribeGroups(tribeId);
+		TArray<FString> groups = GetTribeGroups(tribeId, false);
 
 		FString new_groups;
 
