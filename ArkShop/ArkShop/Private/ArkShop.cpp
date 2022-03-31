@@ -304,6 +304,7 @@ FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrim
 
 		if (saddle)
 		{
+			FCustomItemByteArray saddlebytes, emptyBytes;
 			saddle->GetItemBytes(&saddlebytes.Bytes);
 			customItemData.CustomDataBytes.ByteArrays.Add(saddlebytes);
 		}
