@@ -208,29 +208,102 @@ FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrim
 		FARKDinoData dinoData;
 		dino->GetDinoData(&dinoData);
 
+		//
+		// Custom Data Name
+		//
 		customItemData.CustomDataName = FName("Dino", EFindName::FNAME_Add);
+		
+		// one time use settings
 		customItemData.CustomDataNames.Add(FName("MissionTemporary", EFindName::FNAME_Add));
 		customItemData.CustomDataNames.Add(FName("None", EFindName::FNAME_Find));
+		
 
+		//
+		// Custom Data Floats
+		//
 		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Health]);
 		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Stamina]);
 		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Torpidity]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Oxygen]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Food]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Water]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Temperature]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::Weight]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::MeleeDamageMultiplier]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::SpeedMultiplier]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::TemperatureFortitude]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->CurrentStatusValuesField()()[EPrimalCharacterStatusValue::CraftingSpeedMultiplier]);
 		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Health]);
 		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Stamina]);
 		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Torpidity]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Oxygen]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Food]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Water]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Temperature]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::Weight]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::MeleeDamageMultiplier]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::SpeedMultiplier]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::TemperatureFortitude]);
+		customItemData.CustomDataFloats.Add(dino->MyCharacterStatusComponentField()->MaxStatusValuesField()()[EPrimalCharacterStatusValue::CraftingSpeedMultiplier]);
 		customItemData.CustomDataFloats.Add(dino->bIsFemale()());
 
+		//
+		// Custom Data Doubles
+		//
+		auto t1 = ArkApi::GetApiUtils().GetShooterGameMode()->GetWorld()->TimeSecondsField();
+		customItemData.CustomDataDoubles.Doubles.Add(t1);
+		customItemData.CustomDataDoubles.Doubles.Add(dino->BabyNextCuddleTimeField() - t1);
+		customItemData.CustomDataDoubles.Doubles.Add(dino->NextAllowedMatingTimeField());
+
+		const float d1 = static_cast<float>(dino->RandomMutationsMaleField());
+		const double d2 = static_cast<double>(d1);
+		customItemData.CustomDataDoubles.Doubles.Add(d2);
+
+		const float d3 = static_cast<float>(dino->RandomMutationsFemaleField());
+		const double d4 = static_cast<double>(d3);
+		customItemData.CustomDataDoubles.Doubles.Add(d4);
+
+		auto stat = dino->MyCharacterStatusComponentField();
+		if (stat)
+		{
+			const double d5 = static_cast<double>(stat->DinoImprintingQualityField());
+			customItemData.CustomDataDoubles.Doubles.Add(d5);
+		}
+
+		//
+		// Custom Data Strings
+		//
+		FString sNeutered{ "" };
+		FString sGender{ "Male" };
+
+		if (dino->bIsFemale()())
+			sGender = "FEMALE";
+
+		if (dino->bNeutered()())
+			sNeutered = "NEUTERED";
+
+		FString color_indices{};
+		dino->GetColorSetInidcesAsString(&color_indices);
 		customItemData.CustomDataStrings.Add(dinoData.DinoNameInMap);
 		customItemData.CustomDataStrings.Add(dinoData.DinoName);
+		customItemData.CustomDataStrings.Add(color_indices);
+		customItemData.CustomDataStrings.Add(sNeutered);
+		customItemData.CustomDataStrings.Add(sGender);
+
+		//
+		// Custom Data Classes
+		//
 		customItemData.CustomDataClasses.Add(dinoData.DinoClass);
 
-		FCustomItemByteArray dinoBytes;
+		//
+		// Custom Data Bytes
+		//
+		FCustomItemByteArray dinoBytes, saddlebytes;
 		dinoBytes.Bytes = dinoData.DinoData;
 		customItemData.CustomDataBytes.ByteArrays.Add(dinoBytes);
 
 		if (saddle)
 		{
-			FCustomItemByteArray saddlebytes;
 			saddle->GetItemBytes(&saddlebytes.Bytes);
 			customItemData.CustomDataBytes.ByteArrays.Add(saddlebytes);
 		}
