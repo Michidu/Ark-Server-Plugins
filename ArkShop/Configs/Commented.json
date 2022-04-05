@@ -35,9 +35,9 @@
         }
       }
     },
-    "UseOriginalTradeCommandWithUI": false, //You must disable the UI Trade Button in the GUS.ini if chaning to true. Setting to `true` will make the /trade work like there was no UI installed
+    "UseOriginalTradeCommandWithUI": false, //You must disable the UI Trade Button in the ArkShopUI config if changing to true. Setting to `true` will make the /trade work like there was no UI installed
     "GiveDinosInCryopods": true, //provides dinos from the /buy command in cryopods or soul traps (if UseSoulTraps is true)
-    "UseSoulTraps": false, //Use Dino Storage V2 Mod Soul Traps instead of Vanilla Cyropods
+    "UseSoulTraps": false, //Use Dino Storage V2 Mod Soul Traps instead of Vanilla Cyropods (GiveDinosInCryopods must be true)
     "CryoLimitedTime": false, //Sets a 60 minute expire time
     "CryoItemPath": "", //ONLY USE IF YOU ARE USING CUSTOM VANILLA CRYOPODS Leave blank otherwise (data structure the mod uses must be identical)
     "ItemsPerPage": 25,
