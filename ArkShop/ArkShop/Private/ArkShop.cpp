@@ -318,13 +318,13 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 				if (Modded)
 					item->ItemDurabilityField() = 0.001;
 
-			UPrimalItem* saddle = nullptr;
-			if (saddleblueprint.size() > 0)
-			{
-				FString fblueprint(saddleblueprint.c_str());
-				UClass* Class = UVictoryCore::BPLoadClass(&fblueprint);
-				saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0, false, false);
-			}
+				UPrimalItem* saddle = nullptr;
+				if (saddleblueprint.size() > 0)
+				{
+					FString fblueprint(saddleblueprint.c_str());
+					UClass* Class = UVictoryCore::BPLoadClass(&fblueprint);
+					saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0, false, false);
+				}
 
 				FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle, Modded);
 				item->SetCustomItemData(&customItemData);
@@ -440,37 +440,6 @@ void ArkShop::ToogleStore(bool enabled, const FString& reason)
 {
 	store_enabled = enabled;
 	closed_store_reason = reason;
-}
-
-UClass* ArkShop::GetRemappedClass(FString& objectBp, RemapType remapType)
-{
-	UClass* remap = nullptr;
-	TArray<FClassRemapping> remaps{};
-	UPrimalGameData* PGD = UPrimalGameData::BPGetGameData();
-
-	switch (remapType)
-	{
-	case Engram:
-		remaps = PGD->Remap_EngramsField();
-		break;
-	case Item:
-		remaps = PGD->Remap_ItemsField();
-		break;
-	case NPC:
-		remaps = PGD->Remap_EngramsField();
-		break;
-	}
-
-	if (remaps.Num() > 0)
-	{
-		TSubclassOf<UObject> remappedClass;
-		PGD->GetRemappedClass(&remappedClass, &remaps, UVictoryCore::BPLoadClass(&objectBp));
-		return remappedClass.uClass;
-	}
-	else
-	{
-		return UVictoryCore::BPLoadClass(&objectBp);
-	}
 }
 
 void ReadConfig()
