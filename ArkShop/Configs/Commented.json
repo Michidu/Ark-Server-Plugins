@@ -35,18 +35,100 @@
         }
       }
     },
-    "UseOriginalTradeCommandWithUI": false, //You must disable the UI Trade Button in the ArkShopUI config if changing to true. Setting to `true` will make the /trade work like there was no UI installed
+    "ItemsPerPage": 15,
+    "ShopDisplayTime": 15.0,
+    "ShopTextSize": 1.3,
+    "DbPathOverride": "",
+    "DefaultKit": "",
     "GiveDinosInCryopods": true, //provides dinos from the /buy command in cryopods or soul traps (if UseSoulTraps is true)
     "UseSoulTraps": false, //Use Dino Storage V2 Mod Soul Traps instead of Vanilla Cyropods (GiveDinosInCryopods must be true)
     "CryoLimitedTime": false, //Sets a 60 minute expire time
     "CryoItemPath": "", //ONLY USE IF YOU ARE USING CUSTOM VANILLA CRYOPODS Leave blank otherwise (data structure the mod uses must be identical)
-    "ItemsPerPage": 25,
-    "ShopDisplayTime": 5,
-    "ShopTextSize": 1,
-    "DbPathOverride": "",
-    "DefaultKit": ""
+    "UseOriginalTradeCommandWithUI": false, //You must disable the UI Trade Button in the ArkShopUI config if changing to true. Setting to `true` will make the /trade work like there was no UI installed
+    "PreventUseNoglin": true, //Prevent using buy/kit commands while controlled by a Noglin
+    "PreventUseUnconscious": true, //Prevent using buy/kit commands while unconcious
+    "PreventUseHandcuffed": true //Prevent using buy/kit commands while hancuffed
   },
   "Kits": {
+    "inicio": {
+      "DefaultAmount": 2,
+      "Description": "Kit Ecuus(Con montura) y herramientas y armadura camuflaje",
+      "Permissions": "Default",
+      "Items": [
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_EquusSaddle.PrimalItemArmor_EquusSaddle'"
+        },
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponStoneHatchet.PrimalItem_WeaponStoneHatchet'"
+        },
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponStonePick.PrimalItem_WeaponStonePick'"
+        },
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Ghillie/PrimalItemArmor_GhillieHelmet.PrimalItemArmor_GhillieHelmet'"
+        },
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Ghillie/PrimalItemArmor_GhillieShirt.PrimalItemArmor_GhillieShirt'"
+        },
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Ghillie/PrimalItemArmor_GhilliePants.PrimalItemArmor_GhilliePants'"
+        },
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Ghillie/PrimalItemArmor_GhillieBoots.PrimalItemArmor_GhillieBoots'"
+        },
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Consumables/PrimalItemConsumable_WaterJarCraftable.PrimalItemConsumable_WaterJarCraftable'"
+        },
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Weapons/PrimalItem_WeaponSpear.PrimalItem_WeaponSpear'"
+        },
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Skin/ChibiDinos/PrimalItemSkin_ChibiDino_WitchingOwl.PrimalItemSkin_ChibiDino_WitchingOwl'"
+        },
+        {
+          "Amount": 1,
+          "Quality": 0,
+          "ForceBlueprint": false,
+          "Blueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Ghillie/PrimalItemArmor_GhillieGloves.PrimalItemArmor_GhillieGloves'"
+        }
+      ],
+      "Dinos": [
+        {
+          "Level": 100,
+          "Blueprint": "Blueprint'/Game/Genesis2/Dinos/BiomeVariants/Equus_Character_BP_Eden.Equus_Character_BP_Eden'"
+        }
+      ]
+    },
     "starter": {
       "DefaultAmount": 2,
       "Price": 90,
@@ -111,6 +193,36 @@
     }
   },
   "ShopItems": {
+    "stryder": {
+      "Type": "dino",
+      "Description": "Styder Mining Drill/Saddlebags",
+      "Level": 150,
+      "Price": 1,
+      "Blueprint": "Blueprint'/Game/Genesis2/Dinos/TekStrider/TekStrider_Character_BP.TekStrider_Character_BP'",
+      "StryderHead": 0, //-1 random, 0 harvester, 1 silence cannon, 2 machine gun, 3 radar (valid on kits also) omit this on other dinos
+      "StryderChest": 3 //-1 random, 0 shield, 1 onesided shield, 2 cannon, 3 saddlebags (valid on kits also) omit this on other dinos
+    },
+    "gacha": {
+      "Type": "dino",
+      "Description": "Gacha Ele Dust",
+      "Level": 150,
+      "Price": 1,
+      "Blueprint": "Blueprint'/Game/Extinction/Dinos/Gacha/Gacha_Character_BP.Gacha_Character_BP'",
+      "GachaResources": { //Only need this section on Gacha's if you want to change their resources (can put upto 6 entries)
+        //Normally Gacha'a can only have 1 Very Rare or Rare resource, 2 uncommon resources and 3 common resources
+        //You should make the entries in decending order like the example here
+        //very rare:60 (element dust only normally)
+        //rare:10 (black pearl etc)
+        //uncommon:20
+        //common:40
+        "Blueprint'/Game/Extinction/CoreBlueprints/Resources/PrimalItemResource_ElementDust.PrimalItemResource_ElementDust'": 60, //"rare resource bp" : qty
+        "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Silicon.PrimalItemResource_Silicon'": 20, //"uncommon resource bp" : qty
+        "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Crystal.PrimalItemResource_Crystal'": 20, //"uncommon resource bp" : qty
+        "Blueprint'/Game/Extinction/CoreBlueprints/Resources/PrimalItemResource_CorruptedWood.PrimalItemResource_CorruptedWood'": 40, //"common resource bp" : qty
+        "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Thatch.PrimalItemResource_Thatch'": 40, //"common resource bp" : qty
+        "Blueprint'/Game/ScorchedEarth/CoreBlueprints/Resources/PrimalItemResource_RawSalt.PrimalItemResource_RawSalt'": 40 //"common resource bp" : qty
+      }
+    },
     "ingots100": {
       "Type": "item",
       "Description": "Metal Ingot (100x)",

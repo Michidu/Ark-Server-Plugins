@@ -238,8 +238,11 @@ namespace ArkShop::Kits
 			std::string gender = dino.value("Gender", "random");
 			std::string saddleblueprint = dino.value("SaddleBlueprint", "");
 			std::string blueprint = dino.value("Blueprint", "");
+			const int stryderhead = dino.value("StryderHead", -1);
+			const int stryderchest = dino.value("StryderChest", -1);
+			nlohmann::json resourceoverrides = dino.value("GachaResources", nlohmann::json());
 
-			bool success = ArkShop::GiveDino(player_controller, level, neutered, gender, blueprint, saddleblueprint);
+			bool success = ArkShop::GiveDino(player_controller, level, neutered, gender, blueprint, saddleblueprint, stryderhead, stryderchest, resourceoverrides);
 		}
 
 		// Give commands
@@ -447,9 +450,10 @@ namespace ArkShop::Kits
 	void Kit(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		if (!IsStoreEnabled(player_controller))
-		{
 			return;
-		}
+
+		if (ShouldPreventStoreUse(player_controller))
+			return;
 
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);
@@ -478,9 +482,7 @@ namespace ArkShop::Kits
 	void BuyKit(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		if (ArkApi::IApiUtils::IsPlayerDead(player_controller))
-		{
 			return;
-		}
 
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);
