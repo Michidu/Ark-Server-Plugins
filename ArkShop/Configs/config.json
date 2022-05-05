@@ -34,7 +34,10 @@
     "GiveDinosInCryopods": true,
     "UseSoulTraps": false,
     "CryoLimitedTime": false,
-    "UseOriginalTradeCommandWithUI": false
+    "UseOriginalTradeCommandWithUI": false,
+    "PreventUseNoglin": true,
+    "PreventUseUnconscious": true,
+    "PreventUseHandcuffed": true
   },
   "Kits": {
     "starter": {
@@ -50,6 +53,12 @@
           "Level": 10,
           "Blueprint": "Blueprint'/Game/PrimalEarth/Dinos/Carno/Carno_Character_BP.Carno_Character_BP'",
           "SaddleBlueprint": "Blueprint'/Game/PrimalEarth/CoreBlueprints/Items/Armor/Saddles/PrimalItemArmor_CarnoSaddle.PrimalItemArmor_CarnoSaddle'"
+        },
+        {
+          "Level": 150,
+          "Blueprint": "Blueprint'/Game/Genesis2/Dinos/TekStrider/TekStrider_Character_BP.TekStrider_Character_BP'",
+          "StryderHead": 3,
+          "StyderChest": 0
         }
       ]
     },
@@ -105,6 +114,30 @@
     }
   },
   "ShopItems": {
+    "stryder": {
+      "Type": "dino",
+      "Description": "Styder Mining Drill/Saddlebags",
+      "Level": 150,
+      "Price": 1,
+      "Blueprint": "Blueprint'/Game/Genesis2/Dinos/TekStrider/TekStrider_Character_BP.TekStrider_Character_BP'",
+      "StryderHead": 0,
+      "StryderChest": 3
+    },
+    "gacha": {
+      "Type": "dino",
+      "Description": "Gacha",
+      "Level": 150,
+      "Price": 1,
+      "Blueprint": "Blueprint'/Game/Extinction/Dinos/Gacha/Gacha_Character_BP.Gacha_Character_BP'",
+      "GachaResources": {
+        "Blueprint'/Game/Extinction/CoreBlueprints/Resources/PrimalItemResource_ElementDust.PrimalItemResource_ElementDust'": 60,
+        "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Silicon.PrimalItemResource_Silicon'": 20,
+        "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Crystal.PrimalItemResource_Crystal'": 20,
+        "Blueprint'/Game/Extinction/CoreBlueprints/Resources/PrimalItemResource_CorruptedWood.PrimalItemResource_CorruptedWood'": 40,
+        "Blueprint'/Game/PrimalEarth/CoreBlueprints/Resources/PrimalItemResource_Thatch.PrimalItemResource_Thatch'": 40,
+        "Blueprint'/Game/ScorchedEarth/CoreBlueprints/Resources/PrimalItemResource_RawSalt.PrimalItemResource_RawSalt'": 40
+      }
+    },
     "ingots100": {
       "Type": "item",
       "Description": "Metal Ingot (100x)",

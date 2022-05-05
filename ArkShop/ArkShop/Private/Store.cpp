@@ -11,27 +11,6 @@
 
 namespace ArkShop::Store
 {
-	bool HasBuff(AShooterPlayerController* player_controller)
-	{
-		if (!NoglinBuffClass)
-		{
-			try
-			{
-				FString buffClassString = "Blueprint'/Game/Genesis2/Dinos/BrainSlug/Buff_BrainSlugPostProccess.Buff_BrainSlugPostProccess'";
-				NoglinBuffClass = UVictoryCore::BPLoadClass(&buffClassString);
-			}
-			catch (const std::exception& error)
-			{
-				Log::GetLog()->error(error.what());
-			}
-		}
-
-		if (player_controller && player_controller->GetPlayerCharacter())
-			return player_controller->GetPlayerCharacter()->HasBuff(NoglinBuffClass, true);
-		else
-			return false;
-	}
-
 	/**
 	 * \brief Buy an item from shop
 	 */
@@ -233,12 +212,15 @@ namespace ArkShop::Store
 		std::string gender = item_entry.value("Gender", "random");
 		std::string saddleblueprint = item_entry.value("SaddleBlueprint", "");
 		std::string blueprint = item_entry.value("Blueprint", "");
+		const int stryderhead = item_entry.value("StryderHead", -1);
+		const int stryderchest = item_entry.value("StryderChest", -1);
+		nlohmann::json resourceoverrides = item_entry.value("GachaResources", nlohmann::json());
 
 		const int points = Points::GetPoints(steam_id);
 
 		if (points >= price && Points::SpendPoints(price, steam_id))
 		{
-			success = ArkShop::GiveDino(player_controller, level, neutered, gender, blueprint, saddleblueprint);
+			success = ArkShop::GiveDino(player_controller, level, neutered, gender, blueprint, saddleblueprint, stryderhead, stryderchest, resourceoverrides);
 		}
 		else
 		{
@@ -455,14 +437,10 @@ namespace ArkShop::Store
 	void ChatBuy(AShooterPlayerController* player_controller, FString* message, EChatSendMode::Type /*unused*/)
 	{
 		if (!IsStoreEnabled(player_controller))
-		{
 			return;
-		}
 
-		if (HasBuff(player_controller))
-		{
+		if (ShouldPreventStoreUse(player_controller))
 			return;
-		}
 
 		TArray<FString> parsed;
 		message->ParseIntoArray(parsed, L" ", true);

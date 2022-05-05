@@ -212,11 +212,10 @@ FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrim
 		// Custom Data Name
 		//
 		customItemData.CustomDataName = FName("Dino", EFindName::FNAME_Add);
-		
+
 		// one time use settings
 		customItemData.CustomDataNames.Add(FName("MissionTemporary", EFindName::FNAME_Add));
 		customItemData.CustomDataNames.Add(FName("None", EFindName::FNAME_Find));
-		
 
 		//
 		// Custom Data Floats
@@ -355,14 +354,152 @@ FCustomItemData ArkShop::GetDinoCustomItemData(APrimalDinoCharacter* dino, UPrim
 	return customItemData;
 }
 
+void HandleStryder(APrimalDinoCharacter* dino, int stryderhead, int stryderchest)
+{
+	if (stryderhead >= 0 && stryderhead < 3)
+	{
+		FString attachmentBP("");
+		switch (stryderhead)
+		{
+		case 0:
+			attachmentBP = L"Blueprint'/Game/Genesis2/CoreBlueprints/Items/Saddle/PrimalItemArmor_TekStriderHarvester.PrimalItemArmor_TekStriderHarvester'";
+			break;
+		case 1:
+			attachmentBP = "Blueprint'/Game/Genesis2/CoreBlueprints/Items/Saddle/PrimalItemArmor_TekStriderSilenceCannon.PrimalItemArmor_TekStriderSilenceCannon'";
+			break;
+		case 2:
+			attachmentBP = "Blueprint'/Game/Genesis2/CoreBlueprints/Items/Saddle/PrimalItemArmor_TekStriderMachinegun.PrimalItemArmor_TekStriderMachinegun'";
+			break;
+		case 3:
+			attachmentBP = "Blueprint'/Game/Genesis2/CoreBlueprints/Items/Saddle/PrimalItemArmor_TekStriderRadar.PrimalItemArmor_TekStriderRadar'";
+			break;
+		}
+
+		UClass* Class = UVictoryCore::BPLoadClass(&attachmentBP);
+		UPrimalItem* item = UPrimalItem::AddNewItem(Class, dino->MyInventoryComponentField(), true, true, 1, true, 1, false, 0, false, nullptr, 0, false, false);
+		if (!item)
+		{
+			dino->Destroy(false, false);
+			return;
+		}
+	}
+
+	if (stryderchest >= 0 && stryderchest < 4)
+	{
+		FString attachmentBP("");
+		switch (stryderchest)
+		{
+		case 0:
+			attachmentBP = L"Blueprint'/Game/Genesis2/CoreBlueprints/Items/Saddle/PrimalItemArmor_TekStriderShield.PrimalItemArmor_TekStriderShield'";
+			break;
+		case 1:
+			attachmentBP = "Blueprint'/Game/Genesis2/CoreBlueprints/Items/Saddle/PrimalItemArmor_TekStriderOnesidedShield.PrimalItemArmor_TekStriderOnesidedShield'";
+			break;
+		case 2:
+			attachmentBP = "Blueprint'/Game/Genesis2/CoreBlueprints/Items/Saddle/PrimalItemArmor_TekStriderLargeCannon.PrimalItemArmor_TekStriderLargeCannon'";
+			break;
+		case 3:
+			attachmentBP = "Blueprint'/Game/Genesis2/CoreBlueprints/Items/Saddle/PrimalItemArmor_TekStriderSaddlebags.PrimalItemArmor_TekStriderSaddlebags'";
+			break;
+		}
+
+		UClass* Class = UVictoryCore::BPLoadClass(&attachmentBP);
+		UPrimalItem* item = UPrimalItem::AddNewItem(Class, dino->MyInventoryComponentField(), true, true, 1, true, 1, false, 0, false, nullptr, 0, false, false);
+		if (!item)
+		{
+			dino->Destroy(false, false);
+			return;
+		}
+
+		for (UPrimalItem* item : dino->MyInventoryComponentField()->InventoryItemsField())
+			dino->MyInventoryComponentField()->RemoveItem(&item->ItemIDField(), false, false, true, false);
+	}
+}
+
+FString GetBlueprintFromClass(UClass* object, bool fullPath)
+{
+	if (object != nullptr)
+	{
+		FString path_name;
+		object->GetDefaultObject(true)->GetFullName(&path_name, nullptr);
+
+		if (int find_index = 0; path_name.FindChar(' ', find_index))
+		{
+			if (fullPath)
+			{
+				path_name = path_name.Mid(find_index + 1, path_name.Len() - find_index - 1);
+				return path_name;
+			}
+
+			path_name = "Blueprint'" + path_name.Mid(find_index + 1,
+				path_name.Len() - (find_index + (path_name.EndsWith(
+					"_C", ESearchCase::
+					CaseSensitive)
+					? 3
+					: 1))) + "'";
+			return path_name.Replace(L"Default__", L"", ESearchCase::CaseSensitive);
+		}
+	}
+
+	return FString("");
+}
+
+void HandleGacha(APrimalDinoCharacter* dino, nlohmann::json resourceOverrides)
+{
+	if (resourceOverrides.empty())
+		return;
+
+	struct Gacha_ResourceStruct
+	{
+		UClass* Class;
+		float BaseQuantity;
+	};
+
+	TArray<Gacha_ResourceStruct> X;
+	for (auto Iter = resourceOverrides.begin(); Iter != resourceOverrides.end(); ++Iter)
+	{
+		FString tempResource(Iter.key());
+		UClass* tempClass = UVictoryCore::BPLoadClass(&tempResource);
+		X.Emplace(Gacha_ResourceStruct{ tempClass, Iter.value() });
+	}
+
+	UProperty* resourceProduction = dino->FindProperty(FName("ResourceProduction", EFindName::FNAME_Find));
+	if (resourceProduction)
+	{
+		if (dino->StaticClass()->HasProperty(resourceProduction))
+		{
+			auto* currentList = ((TArray<Gacha_ResourceStruct>*)(dino + resourceProduction->Offset_InternalField()));
+			if (currentList)
+			{
+				int counter = 0;
+				for (auto Iter = currentList->CreateIterator(); Iter; ++Iter)
+				{
+					if (X.IsValidIndex(counter))
+					{
+						Iter->Class = X[counter].Class;
+						Iter->BaseQuantity = X[counter].BaseQuantity;
+					}
+
+					counter += 1;
+				}
+			}
+		}
+	}
+}
+
 //Spawns dino or gives in cryopod
-bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, bool neutered, std::string gender, std::string blueprint, std::string saddleblueprint)
+bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, bool neutered, std::string gender, std::string blueprint, std::string saddleblueprint, int stryderhead, int stryderchest, nlohmann::json resourceOverrides)
 {
 	bool success = false;
 	const FString fblueprint(blueprint.c_str());
 	APrimalDinoCharacter* dino = ArkApi::GetApiUtils().SpawnDino(player_controller, fblueprint, nullptr, level, true, neutered);
 	if (dino)
 	{
+		if (fblueprint.Contains("Blueprint'/Game/Genesis2/Dinos/TekStrider/TekStrider_Character_BP.TekStrider_Character_BP'"))
+			HandleStryder(dino, stryderhead, stryderchest);
+		else if (fblueprint.Contains("Blueprint'/Game/Extinction/Dinos/Gacha/Gacha_Character_BP.Gacha_Character_BP'"))
+			HandleGacha(dino, resourceOverrides);
+
 		if (dino->bUsesGender()())
 		{
 			if (strcmp(gender.c_str(), "male") == 0)
@@ -391,13 +528,13 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 				if (Modded)
 					item->ItemDurabilityField() = 0.001;
 
-			UPrimalItem* saddle = nullptr;
-			if (saddleblueprint.size() > 0)
-			{
-				FString fblueprint(saddleblueprint.c_str());
-				UClass* Class = UVictoryCore::BPLoadClass(&fblueprint);
-				saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0, false, false);
-			}
+				UPrimalItem* saddle = nullptr;
+				if (saddleblueprint.size() > 0)
+				{
+					FString fblueprint(saddleblueprint.c_str());
+					UClass* Class = UVictoryCore::BPLoadClass(&fblueprint);
+					saddle = UPrimalItem::AddNewItem(Class, nullptr, false, false, 0, false, 0, false, 0, false, nullptr, 0, false, false);
+				}
 
 				FCustomItemData customItemData = GetDinoCustomItemData(dino, saddle, Modded);
 				item->SetCustomItemData(&customItemData);
@@ -419,6 +556,46 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 	}
 
 	return success;
+}
+
+bool ArkShop::ShouldPreventStoreUse(AShooterPlayerController* player_controller)
+{
+	bool preventBuying = false;
+
+	if (player_controller && player_controller->GetPlayerCharacter())
+	{
+		AShooterCharacter* character = player_controller->GetPlayerCharacter();
+
+		//Noglin Buff Cache
+		if (config["General"].value("PreventUseNoglin", true) && !NoglinBuffClass)
+		{
+			try
+			{
+				FString buffClassString = "Blueprint'/Game/Genesis2/Dinos/BrainSlug/Buff_BrainSlugPostProccess.Buff_BrainSlugPostProccess'";
+				NoglinBuffClass = UVictoryCore::BPLoadClass(&buffClassString);
+			}
+			catch (const std::exception& error)
+			{
+				Log::GetLog()->error(error.what());
+			}
+		}
+
+		if (!preventBuying && config["General"].value("PreventUseNoglin", true) && character->HasBuff(NoglinBuffClass, true))
+			preventBuying = true;
+
+		if (!preventBuying && config["General"].value("PreventUseUnconscious", true) && !character->IsConscious())
+			preventBuying = true;
+
+		if (!preventBuying && config["General"].value("PreventUseHandcuffed", true) && character->CurrentWeaponField() && character->CurrentWeaponField()->AssociatedPrimalItemField())
+		{
+			FString WeaponName;
+			character->CurrentWeaponField()->AssociatedPrimalItemField()->GetItemName(&WeaponName, false, true, nullptr);
+			if (WeaponName.Contains(L"Handcuffs"))
+				preventBuying = true;
+		}
+	}
+
+	return preventBuying;
 }
 
 bool Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlayerController* new_player,
@@ -513,37 +690,6 @@ void ArkShop::ToogleStore(bool enabled, const FString& reason)
 {
 	store_enabled = enabled;
 	closed_store_reason = reason;
-}
-
-UClass* ArkShop::GetRemappedClass(FString& objectBp, RemapType remapType)
-{
-	UClass* remap = nullptr;
-	TArray<FClassRemapping> remaps{};
-	UPrimalGameData* PGD = UPrimalGameData::BPGetGameData();
-
-	switch (remapType)
-	{
-	case Engram:
-		remaps = PGD->Remap_EngramsField();
-		break;
-	case Item:
-		remaps = PGD->Remap_ItemsField();
-		break;
-	case NPC:
-		remaps = PGD->Remap_EngramsField();
-		break;
-	}
-
-	if (remaps.Num() > 0)
-	{
-		TSubclassOf<UObject> remappedClass;
-		PGD->GetRemappedClass(&remappedClass, &remaps, UVictoryCore::BPLoadClass(&objectBp));
-		return remappedClass.uClass;
-	}
-	else
-	{
-		return UVictoryCore::BPLoadClass(&objectBp);
-	}
 }
 
 void ReadConfig()
