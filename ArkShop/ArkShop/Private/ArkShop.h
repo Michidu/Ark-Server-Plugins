@@ -9,6 +9,8 @@ namespace ArkShop
 	inline nlohmann::json config;
 	inline std::unique_ptr<IDatabase> database;
 	inline UClass* NoglinBuffClass = nullptr;
+	inline UClass* NoglinBuffClass2 = nullptr;
+	inline UClass* NoglinBuffClass3 = nullptr;
 	inline FString MapName;
 
 	FString SetMapName();

@@ -72,9 +72,7 @@ public:
 	{
 		try
 		{
-			const auto result = db_.query(fmt::format("SELECT count(1) FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<int>();
-
-			return result > 0;
+			auto result = db_.query(fmt::format("SELECT count(1) FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<int>();
 		}
 		catch (const std::exception& exception)
 		{

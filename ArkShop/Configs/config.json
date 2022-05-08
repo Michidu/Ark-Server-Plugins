@@ -37,7 +37,8 @@
     "UseOriginalTradeCommandWithUI": false,
     "PreventUseNoglin": true,
     "PreventUseUnconscious": true,
-    "PreventUseHandcuffed": true
+    "PreventUseHandcuffed": true,
+    "PreventUseCarried": true
   },
   "Kits": {
     "starter": {

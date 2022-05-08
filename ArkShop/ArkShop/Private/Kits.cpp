@@ -679,13 +679,13 @@ namespace ArkShop::Kits
 		const std::string default_kit = config["General"].value("DefaultKit", "");
 		if (!default_kit.empty())
 		{
-			AShooterPlayerController* player = ArkApi::GetApiUtils().FindControllerFromCharacter(
-				static_cast<AShooterCharacter*>(_this));
+			AShooterPlayerController* player = ArkApi::GetApiUtils().FindControllerFromCharacter(static_cast<AShooterCharacter*>(_this));
 			if (player != nullptr)
 			{
 				try
 				{
 					const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player);
+					database->TryAddNewPlayer(steam_id);
 
 					const FString fdefault_kit(default_kit);
 

@@ -47,7 +47,8 @@
     "UseOriginalTradeCommandWithUI": false, //You must disable the UI Trade Button in the ArkShopUI config if changing to true. Setting to `true` will make the /trade work like there was no UI installed
     "PreventUseNoglin": true, //Prevent using buy/kit commands while controlled by a Noglin
     "PreventUseUnconscious": true, //Prevent using buy/kit commands while unconcious
-    "PreventUseHandcuffed": true //Prevent using buy/kit commands while hancuffed
+    "PreventUseHandcuffed": true, //Prevent using buy/kit commands while hancuffed
+    "PreventUseCarried": true //Prevent using buy/kit commands while being carried
   },
   "Kits": {
     "inicio": {

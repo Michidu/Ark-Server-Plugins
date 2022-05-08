@@ -375,12 +375,28 @@ void HandleStryder(APrimalDinoCharacter* dino, int stryderhead, int stryderchest
 			break;
 		}
 
-		UClass* Class = UVictoryCore::BPLoadClass(&attachmentBP);
-		UPrimalItem* item = UPrimalItem::AddNewItem(Class, dino->MyInventoryComponentField(), true, true, 1, true, 1, false, 0, false, nullptr, 0, false, false);
-		if (!item)
+		UPrimalItem* head = dino->MyInventoryComponentField()->GetEquippedItemOfType(EPrimalEquipmentType::Hat);
+		if (head)
 		{
-			dino->Destroy(false, false);
-			return;
+			dino->MyInventoryComponentField()->RemoveItem(&head->ItemIDField(), true, false, true, false);
+
+			UClass* Class = UVictoryCore::BPLoadClass(&attachmentBP);
+			UPrimalItem* item = UPrimalItem::AddNewItem(Class, dino->MyInventoryComponentField(), true, true, 1, true, 1, false, 0, false, nullptr, 0, false, false);
+			if (item)
+			{
+				UProperty* setHeadAttachment = dino->FindProperty(FName("set head attachment", EFindName::FNAME_Add));
+				if (setHeadAttachment)
+					setHeadAttachment->Set(dino, true);
+
+				UProperty* headAttachmentIndex = dino->FindProperty(FName("head attachment index", EFindName::FNAME_Add));
+				if (headAttachmentIndex)
+					headAttachmentIndex->Set(dino, stryderhead);
+			}
+			else
+			{
+				dino->Destroy(false, false);
+				return;
+			}
 		}
 	}
 
@@ -403,45 +419,30 @@ void HandleStryder(APrimalDinoCharacter* dino, int stryderhead, int stryderchest
 			break;
 		}
 
-		UClass* Class = UVictoryCore::BPLoadClass(&attachmentBP);
-		UPrimalItem* item = UPrimalItem::AddNewItem(Class, dino->MyInventoryComponentField(), true, true, 1, true, 1, false, 0, false, nullptr, 0, false, false);
-		if (!item)
+		UPrimalItem* chest = dino->MyInventoryComponentField()->GetEquippedItemOfType(EPrimalEquipmentType::Shirt);
+		if (chest)
 		{
-			dino->Destroy(false, false);
-			return;
-		}
+			dino->MyInventoryComponentField()->RemoveItem(&chest->ItemIDField(), true, false, true, false);
 
-		for (UPrimalItem* item : dino->MyInventoryComponentField()->InventoryItemsField())
-			dino->MyInventoryComponentField()->RemoveItem(&item->ItemIDField(), false, false, true, false);
-	}
-}
-
-FString GetBlueprintFromClass(UClass* object, bool fullPath)
-{
-	if (object != nullptr)
-	{
-		FString path_name;
-		object->GetDefaultObject(true)->GetFullName(&path_name, nullptr);
-
-		if (int find_index = 0; path_name.FindChar(' ', find_index))
-		{
-			if (fullPath)
+			UClass* Class = UVictoryCore::BPLoadClass(&attachmentBP);
+			UPrimalItem* item = UPrimalItem::AddNewItem(Class, dino->MyInventoryComponentField(), true, true, 1, true, 1, false, 0, false, nullptr, 0, false, false);
+			if (item)
 			{
-				path_name = path_name.Mid(find_index + 1, path_name.Len() - find_index - 1);
-				return path_name;
-			}
+				UProperty* setChestAttachment = dino->FindProperty(FName("set chest attachment", EFindName::FNAME_Add));
+				if (setChestAttachment)
+					setChestAttachment->Set(dino, true);
 
-			path_name = "Blueprint'" + path_name.Mid(find_index + 1,
-				path_name.Len() - (find_index + (path_name.EndsWith(
-					"_C", ESearchCase::
-					CaseSensitive)
-					? 3
-					: 1))) + "'";
-			return path_name.Replace(L"Default__", L"", ESearchCase::CaseSensitive);
+				UProperty* chestAttachmentIndex = dino->FindProperty(FName("chest attachment index", EFindName::FNAME_Add));
+				if (chestAttachmentIndex)
+					chestAttachmentIndex->Set(dino, stryderchest);
+			}
+			else
+			{
+				dino->Destroy(false, false);
+				return;
+			}
 		}
 	}
-
-	return FString("");
 }
 
 void HandleGacha(APrimalDinoCharacter* dino, nlohmann::json resourceOverrides)
@@ -566,7 +567,7 @@ bool ArkShop::ShouldPreventStoreUse(AShooterPlayerController* player_controller)
 	{
 		AShooterCharacter* character = player_controller->GetPlayerCharacter();
 
-		//Noglin Buff Cache
+		//Noglin Buff Cache Controlling Player
 		if (config["General"].value("PreventUseNoglin", true) && !NoglinBuffClass)
 		{
 			try
@@ -580,7 +581,35 @@ bool ArkShop::ShouldPreventStoreUse(AShooterPlayerController* player_controller)
 			}
 		}
 
-		if (!preventBuying && config["General"].value("PreventUseNoglin", true) && character->HasBuff(NoglinBuffClass, true))
+		//Noglin Buff Cache Controlled Player
+		if (config["General"].value("PreventUseNoglin", true) && !NoglinBuffClass2)
+		{
+			try
+			{
+				FString buffClassString = "Blueprint'/Game/Genesis2/Dinos/BrainSlug/Buff_BrainSlug_HumanControl.Buff_BrainSlug_HumanControl'";
+				NoglinBuffClass2 = UVictoryCore::BPLoadClass(&buffClassString);
+			}
+			catch (const std::exception& error)
+			{
+				Log::GetLog()->error(error.what());
+			}
+		}
+
+		//Noglin Buff Cache Controlled Dino
+		if (config["General"].value("PreventUseNoglin", true) && !NoglinBuffClass2)
+		{
+			try
+			{
+				FString buffClassString = "Blueprint'/Game/Genesis2/Dinos/BrainSlug/Buff_BrainSlugControl.Buff_BrainSlugControl'";
+				NoglinBuffClass3 = UVictoryCore::BPLoadClass(&buffClassString);
+			}
+			catch (const std::exception& error)
+			{
+				Log::GetLog()->error(error.what());
+			}
+		}
+
+		if (!preventBuying && config["General"].value("PreventUseNoglin", true) && (character->HasBuff(NoglinBuffClass, true) || character->HasBuff(NoglinBuffClass2, true) || character->HasBuff(NoglinBuffClass3, true)))
 			preventBuying = true;
 
 		if (!preventBuying && config["General"].value("PreventUseUnconscious", true) && !character->IsConscious())
@@ -593,6 +622,9 @@ bool ArkShop::ShouldPreventStoreUse(AShooterPlayerController* player_controller)
 			if (WeaponName.Contains(L"Handcuffs"))
 				preventBuying = true;
 		}
+
+		if (!preventBuying && config["General"].value("PreventUseCarried", true) && character->bIsCarried()())
+			preventBuying = true;
 	}
 
 	return preventBuying;
