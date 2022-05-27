@@ -342,7 +342,7 @@ namespace ArkShop::Kits
 					ArkShop::PostToDiscord(log);
 				}
 			}
-			else if (should_log)
+			else
 			{
 				ArkApi::GetApiUtils().SendChatMessage(player_controller, GetText("Sender"),
 					*GetText("NoKitsLeft"), *kit_name);

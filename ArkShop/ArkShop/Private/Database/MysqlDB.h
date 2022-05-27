@@ -72,13 +72,14 @@ public:
 	{
 		try
 		{
-			auto result = db_.query(fmt::format("SELECT count(1) FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<int>();
+			return db_.query(fmt::format("SELECT count(1) FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<int>() > 0;
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
-			return false;
 		}
+		
+		return false;
 	}
 
 	std::string GetPlayerKits(uint64 steam_id) override
