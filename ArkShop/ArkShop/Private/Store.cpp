@@ -64,8 +64,9 @@ namespace ArkShop::Store
 				{
 					if (stacksInOne)
 					{
+						int loops = amount * default_amount;
 						TArray<UPrimalItem*> out_items{};
-						for (int i = 0; i < amount; ++i)
+						for (int i = 0; i < loops; ++i)
 						{
 							out_items.Add(
 								UPrimalItem::AddNewItem(
@@ -75,7 +76,7 @@ namespace ArkShop::Store
 									false,
 									quality,
 									!force_blueprint,
-									default_amount,
+									1,
 									force_blueprint,
 									0,
 									false,

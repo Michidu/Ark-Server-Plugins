@@ -57,7 +57,8 @@ public:
 	{
 		try
 		{
-			db_.query(fmt::format("INSERT INTO {} (SteamId, Kits) VALUES ({}, '{}') ON DUPLICATE KEY UPDATE kits = kits; ", table_players_, steam_id, "{}"));
+			if (!IsPlayerExists(steam_id))
+				db_.exec(fmt::format("INSERT INTO {} (SteamId, Kits) VALUES ({}, '{}')", table_players_, steam_id, "{}"));
 		}
 		catch (const std::exception& exception)
 		{
@@ -70,15 +71,22 @@ public:
 
 	bool IsPlayerExists(uint64 steam_id) override
 	{
+		bool found = false;
+		int Id = 0;
 		try
 		{
-			auto result = db_.query(fmt::format("SELECT count(1) FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<int>();
+			std::string sql = fmt::format("SELECT COUNT(*) FROM {} WHERE SteamId = {};", table_players_, steam_id);
+			auto result = db_.query(sql);
+			if (ValidResult(&result, 1))
+				result.fetch(found);
 		}
 		catch (const std::exception& exception)
 		{
 			Log::GetLog()->error("({} {}) Unexpected DB error {}", __FILE__, __FUNCTION__, exception.what());
 			return false;
 		}
+
+		return found;
 	}
 
 	std::string GetPlayerKits(uint64 steam_id) override
@@ -87,7 +95,9 @@ public:
 
 		try
 		{
-			kits_config = db_.query(fmt::format("SELECT Kits FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<std::string>();
+			auto result = db_.query(fmt::format("SELECT Kits FROM {} WHERE SteamId = {};", table_players_, steam_id));
+			if (ValidResult(&result, 1))
+				result.fetch(kits_config);
 		}
 		catch (const std::exception& exception)
 		{
@@ -133,7 +143,9 @@ public:
 
 		try
 		{
-			points = db_.query(fmt::format("SELECT Points FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<int>();
+			auto result = db_.query(fmt::format("SELECT Points FROM {} WHERE SteamId = {};", table_players_, steam_id));
+			if (ValidResult(&result, 1))
+				result.fetch(points);
 		}
 		catch (const std::exception& exception)
 		{
@@ -219,7 +231,9 @@ public:
 
 		try
 		{
-			points = db_.query(fmt::format("SELECT TotalSpent FROM {} WHERE SteamId = {};", table_players_, steam_id)).get_value<int>();
+			auto result = db_.query(fmt::format("SELECT TotalSpent FROM {} WHERE SteamId = {};", table_players_, steam_id));
+			if (ValidResult(&result, 1))
+				result.fetch(points);
 		}
 		catch (const std::exception& exception)
 		{
@@ -267,5 +281,21 @@ private:
 		{
 			Log::GetLog()->critical("({} {}) Failed to update SteamId Column!", __FILE__, __FUNCTION__);
 		}
+	}
+
+	bool ValidResult(daotk::mysql::result* result, int numFields)
+	{
+		if (result->count() > 0 && result->fields() == numFields)
+			return true;
+		else
+			return false;
+
+		return false;
+	}
+
+	template <typename T>
+	bool ValidResult(T* result, int numFields)
+	{
+		return false;
 	}
 };
