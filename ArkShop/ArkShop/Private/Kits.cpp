@@ -676,17 +676,18 @@ namespace ArkShop::Kits
 	{
 		AShooterCharacter_AuthPostSpawnInit_original(_this);
 
-		const std::string default_kit = config["General"].value("DefaultKit", "");
-		if (!default_kit.empty())
+		AShooterPlayerController* player = ArkApi::GetApiUtils().FindControllerFromCharacter(static_cast<AShooterCharacter*>(_this));
+		if (player != nullptr)
 		{
-			AShooterPlayerController* player = ArkApi::GetApiUtils().FindControllerFromCharacter(static_cast<AShooterCharacter*>(_this));
-			if (player != nullptr)
+			const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player);
+			if (steam_id > 0)
+				database->TryAddNewPlayer(steam_id);
+
+			const std::string default_kit = config["General"].value("DefaultKit", "");
+			if (!default_kit.empty())
 			{
 				try
 				{
-					const uint64 steam_id = ArkApi::IApiUtils::GetSteamIdFromController(player);
-					database->TryAddNewPlayer(steam_id);
-
 					const FString fdefault_kit(default_kit);
 
 					TArray<FString> kits;
