@@ -213,6 +213,7 @@ namespace ArkShop::Store
 		std::string gender = item_entry.value("Gender", "random");
 		std::string saddleblueprint = item_entry.value("SaddleBlueprint", "");
 		std::string blueprint = item_entry.value("Blueprint", "");
+		bool preventCryo = item_entry.value("PreventCryo", false);
 		const int stryderhead = item_entry.value("StryderHead", -1);
 		const int stryderchest = item_entry.value("StryderChest", -1);
 		nlohmann::json resourceoverrides = item_entry.value("GachaResources", nlohmann::json());
@@ -221,7 +222,7 @@ namespace ArkShop::Store
 
 		if (points >= price && Points::SpendPoints(price, steam_id))
 		{
-			success = ArkShop::GiveDino(player_controller, level, neutered, gender, blueprint, saddleblueprint, stryderhead, stryderchest, resourceoverrides);
+			success = ArkShop::GiveDino(player_controller, level, neutered, gender, blueprint, saddleblueprint, preventCryo, stryderhead, stryderchest, resourceoverrides);
 		}
 		else
 		{

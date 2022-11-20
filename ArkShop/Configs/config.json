@@ -122,7 +122,8 @@
       "Price": 1,
       "Blueprint": "Blueprint'/Game/Genesis2/Dinos/TekStrider/TekStrider_Character_BP.TekStrider_Character_BP'",
       "StryderHead": 0,
-      "StryderChest": 3
+      "StryderChest": 3,
+      "PreventCryo": true
     },
     "gacha": {
       "Type": "dino",

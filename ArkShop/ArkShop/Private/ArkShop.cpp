@@ -378,7 +378,8 @@ void HandleStryder(APrimalDinoCharacter* dino, int stryderhead, int stryderchest
 		UPrimalItem* head = dino->MyInventoryComponentField()->GetEquippedItemOfType(EPrimalEquipmentType::Hat);
 		if (head)
 		{
-			dino->MyInventoryComponentField()->RemoveItem(&head->ItemIDField(), true, false, true, false);
+			head->bForceDropDestruction().Set(true);
+			head->RemoveItemFromInventory(true, false);
 
 			UClass* Class = UVictoryCore::BPLoadClass(&attachmentBP);
 			UPrimalItem* item = UPrimalItem::AddNewItem(Class, dino->MyInventoryComponentField(), true, true, 1, true, 1, false, 0, false, nullptr, 0, false, false);
@@ -422,7 +423,8 @@ void HandleStryder(APrimalDinoCharacter* dino, int stryderhead, int stryderchest
 		UPrimalItem* chest = dino->MyInventoryComponentField()->GetEquippedItemOfType(EPrimalEquipmentType::Shirt);
 		if (chest)
 		{
-			dino->MyInventoryComponentField()->RemoveItem(&chest->ItemIDField(), true, false, true, false);
+			chest->bForceDropDestruction().Set(true);
+			chest->RemoveItemFromInventory(true, false);
 
 			UClass* Class = UVictoryCore::BPLoadClass(&attachmentBP);
 			UPrimalItem* item = UPrimalItem::AddNewItem(Class, dino->MyInventoryComponentField(), true, true, 1, true, 1, false, 0, false, nullptr, 0, false, false);
@@ -489,7 +491,7 @@ void HandleGacha(APrimalDinoCharacter* dino, nlohmann::json resourceOverrides)
 }
 
 //Spawns dino or gives in cryopod
-bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, bool neutered, std::string gender, std::string blueprint, std::string saddleblueprint, int stryderhead, int stryderchest, nlohmann::json resourceOverrides)
+bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, bool neutered, std::string gender, std::string blueprint, std::string saddleblueprint, bool PreventCryo, int stryderhead, int stryderchest, nlohmann::json resourceOverrides)
 {
 	bool success = false;
 	const FString fblueprint(blueprint.c_str());
@@ -509,7 +511,7 @@ bool ArkShop::GiveDino(AShooterPlayerController* player_controller, int level, b
 				dino->bIsFemale() = true;
 		}
 
-		if (ArkShop::config["General"].value("GiveDinosInCryopods", false))
+		if (!PreventCryo && ArkShop::config["General"].value("GiveDinosInCryopods", false))
 		{
 			bool Modded = config["General"].value("UseSoulTraps", false);
 
