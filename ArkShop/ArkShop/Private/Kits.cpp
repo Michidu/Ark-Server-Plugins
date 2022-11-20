@@ -238,11 +238,12 @@ namespace ArkShop::Kits
 			std::string gender = dino.value("Gender", "random");
 			std::string saddleblueprint = dino.value("SaddleBlueprint", "");
 			std::string blueprint = dino.value("Blueprint", "");
+			bool preventCryo = dino.value("PreventCryo", false);
 			const int stryderhead = dino.value("StryderHead", -1);
 			const int stryderchest = dino.value("StryderChest", -1);
 			nlohmann::json resourceoverrides = dino.value("GachaResources", nlohmann::json());
 
-			bool success = ArkShop::GiveDino(player_controller, level, neutered, gender, blueprint, saddleblueprint, stryderhead, stryderchest, resourceoverrides);
+			bool success = ArkShop::GiveDino(player_controller, level, neutered, gender, blueprint, saddleblueprint, preventCryo, stryderhead, stryderchest, resourceoverrides);
 		}
 
 		// Give commands
