@@ -201,7 +201,8 @@
       "Price": 1,
       "Blueprint": "Blueprint'/Game/Genesis2/Dinos/TekStrider/TekStrider_Character_BP.TekStrider_Character_BP'",
       "StryderHead": 0, //-1 random, 0 harvester, 1 silence cannon, 2 machine gun, 3 radar (valid on kits also) omit this on other dinos
-      "StryderChest": 3 //-1 random, 0 shield, 1 onesided shield, 2 cannon, 3 saddlebags (valid on kits also) omit this on other dinos
+      "StryderChest": 3, //-1 random, 0 shield, 1 onesided shield, 2 cannon, 3 saddlebags (valid on kits also) omit this on other dinos
+      "PreventCryo": true //true will not give the dino in a cryo if cryo's are enabled //false or setting missing will default to giving normally or in cryo depending your settings
     },
     "gacha": {
       "Type": "dino",
