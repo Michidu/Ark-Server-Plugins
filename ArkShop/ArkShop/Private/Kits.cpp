@@ -546,7 +546,11 @@ namespace ArkShop::Kits
 				{
 					return;
 				}
-
+				//	The value is out of bounds
+				if (amount > final_price / price)
+				{
+					return false;
+				}
 				if (Points::GetPoints(steam_id) >= final_price && Points::SpendPoints(final_price, steam_id))
 				{
 					ChangeKitAmount(kit_name, amount, steam_id);
