@@ -30,7 +30,11 @@ namespace ArkShop::Store
 		{
 			return false;
 		}
-
+		//	The value is out of bounds
+		if (amount > final_price / price)
+		{
+			return false;
+		}
 		const int points = Points::GetPoints(steam_id);
 
 		if (points >= final_price && Points::SpendPoints(final_price, steam_id))
